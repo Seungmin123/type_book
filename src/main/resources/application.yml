@@ -1,0 +1,65 @@
+spring:
+  jmx:
+    enabled: false
+  devtools:
+    restart:
+      enabled: false
+  jpa:
+    database-platform: org.hibernate.dialect.MariaDBDialect
+    hibernate:
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+    properties:
+      hibernate:
+        show_sql: false
+        format_sql: false
+        use_sql_comments: false
+        query:
+          in_clause_parameter_padding: false
+        jdbc:
+          lob:
+            non_contextual_creation: false
+    com.zaxxer.hikari.HikariConfig: INFO
+  servlet:
+    multipart:
+      enabled: true
+      file-size-threshold: 2KB
+      max-file-size: 200MB
+      max-request-size: 200MB
+  http:
+    multipart:
+      max-file-size: 200MB
+      max-request-size: 200MB
+  task:
+    execution:
+      pool:
+        core-size: 2
+        max-size: 2
+  thymeleaf:
+    prefix: classpath:/templates/
+    suffix: .html
+    cache: false
+    view-names: thymeleaf/*
+  main:
+    allow-circular-references: false
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
+  messages:
+    always-use-message-format: false
+    basename: messages/messages
+    cache-seconds: 10
+    encoding: UTF-8
+    fallback-to-system-locale: true
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+server:
+  port: 8080
+  jsp-servlet:
+    init-parameters:
+      development: true
+  tomcat:
+    max-http-form-post-size: 200MB
