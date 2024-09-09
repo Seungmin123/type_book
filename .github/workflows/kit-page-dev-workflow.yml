@@ -77,8 +77,6 @@ jobs:
       - name: Copy files to build directory
         run: |
           cp src/appspec.yml build/libs/appspec.yml
-          cp -rf src/scripts/start.sh build/libs/start.sh
-          cp -rf src/scripts/stop.sh build/libs/stop.sh
 
       - name: Zip files
         run: |
