@@ -12,7 +12,7 @@ public class KitPageApplication {
 			+ "classpath:application.yml,"
 			+ "optional:/Users/leeseumgin/Documents/source/kitpage/application-local.yml,"
 			+ "optional:/source/application-dev.yml,"
-			+ "optional:/source/application-prod.yml,";
+			+ "optional:/source/application-prod.yml";
 
 		new SpringApplicationBuilder(KitPageApplication.class)
 			.properties(APPLICATION_LOCATIONS)
