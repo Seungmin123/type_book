@@ -24,15 +24,9 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addInterceptors(InterceptorRegistry registry){
+        // TODO 수정
         registry.addInterceptor(tokenInterceptor)
-                .addPathPatterns("/v1/album/**")
-                .addPathPatterns("/v1/member/**")
-                .addPathPatterns("/v1/sticker/**")
-                .addPathPatterns("/v1/tag/**")
-                .addPathPatterns("/v1/like/**")
-                .addPathPatterns("/v1/search/**")
-                .addPathPatterns("/v1/alarm/**")
-                .addPathPatterns("/v1/push/**")
+                .addPathPatterns("/v1/**")
         ;
     }
 
