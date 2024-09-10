@@ -36,19 +36,13 @@ public class SecurityConfig {
 
 			.and()
 			.authorizeRequests()
-			// TODO 권한 수정 필요
 			.antMatchers("/swagger-ui*/**").permitAll()
 			.antMatchers("/v3/api-docs/**").permitAll()
 			.antMatchers("/webjars/**").permitAll()
+			.antMatchers("/actuator/health").permitAll()
 
-			.antMatchers("/v1/member/**").permitAll()
-			.antMatchers("/v1/album/**").permitAll()
-			.antMatchers("/v1/sticker/**").permitAll()
-			.antMatchers("/v1/tag/**").permitAll()
-			.antMatchers("/v1/like/**").permitAll()
-			.antMatchers("/v1/search/**").permitAll()
-			.antMatchers("/v1/alarm/**").permitAll()
-			.antMatchers("/v1/push/**").permitAll()
+			// TODO 권한 수정
+			.antMatchers("/v1/**").permitAll()
 			.anyRequest().authenticated();
 //			.and()
 //			.addFilterBefore(swaggerFilter, FilterSecurityInterceptor.class)

@@ -18,14 +18,8 @@ import org.springframework.web.servlet.HandlerInterceptor;
 public class TokenInterceptor implements HandlerInterceptor {
 
     private static final List<String> ALLOWED_PATHS
-            = Arrays.asList("/h2-console", "/v3/api-docs/**", "/swagger-ui/**", "/webjars/**", "/swagger-url"
-                , "/v1/member/mic", "/v1/member/checkTag", "/v1/member/checkStatus", "/v1/member/unmapping", "/v1/member/password", "/v1/member/version"
-                , "/v1/album/profile", "/v1/album/list", "/v1/album/view"
-                , "/v1/alarm/list", "/v1/alarm/view", "/v1/alarm/unconfirmed"
-                , "/v1/push"
-                // TODO Delete
-                , "/v1/album/reset/act", "/v1/album/reset/firstTag"
-                ,"/v1/album"
+            = Arrays.asList("/h2-console", "/v3/api-docs/**", "/swagger-ui/**", "/webjars/**", "/swagger-url", "/actuator/health"
+                , "/v1"
     );
 
     private final JwtTokenProvider jwtTokenProvider;
