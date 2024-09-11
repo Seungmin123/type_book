@@ -29,6 +29,10 @@ jobs:
           ./gradlew build -x test --no-build-cache
         continue-on-error: false
 
+      - name: Get Github Actions IP
+        id: ip
+        uses: haythem/public-ip@v1.3
+
       - name: add security group github action ip
         run: |
           echo "To Insert steps' ip : ${{ steps.ip.outputs.ipv4 }}"
