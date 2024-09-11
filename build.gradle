@@ -60,6 +60,7 @@ dependencies {
 
 	// database
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	implementation group: 'com.mysql', name: 'mysql-connector-j', version: '8.0.32'
 	implementation group: 'org.mariadb.jdbc', name: 'mariadb-java-client', version: '2.4.1'
 	implementation ("com.querydsl:querydsl-core:$querydslVersion")
 	implementation ("com.querydsl:querydsl-apt:$querydslVersion")
