@@ -4,6 +4,7 @@ import com.muzlive.kitpage.kitpage.domain.common.BaseTimeEntity;
 import com.muzlive.kitpage.kitpage.utils.enums.Region;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -44,6 +45,7 @@ public class ComicBookDetail extends BaseTimeEntity {
 	@Column(name = "imageUid")
 	private Long imageUid;
 
+	@Enumerated
 	@Column(name = "region")
 	private Region region;
 }
