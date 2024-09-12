@@ -1,8 +1,10 @@
 package com.muzlive.kitpage.kitpage.domain.page.comicbook;
 
 import com.muzlive.kitpage.kitpage.domain.common.BaseTimeEntity;
+import com.muzlive.kitpage.kitpage.utils.enums.VideoCode;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -40,7 +42,8 @@ public class Video extends BaseTimeEntity {
 	@Column(name = "cover_image_uid")
 	private Long coverImageUid;
 
+	@Enumerated
 	@Column(name = "video_code")
-	private String videCode;
+	private VideoCode videCode;
 
 }
