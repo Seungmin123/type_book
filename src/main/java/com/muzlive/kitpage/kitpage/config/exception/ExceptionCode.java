@@ -10,6 +10,8 @@ public enum ExceptionCode {
     INVALID_JWT("401", "JWT token is invalid", HttpStatus.UNAUTHORIZED),
     METHOD_NOT_ALLOWED("400", "http method not allowed", HttpStatus.METHOD_NOT_ALLOWED),
 
+    CANNOT_FIND_MATCHED_ITEM(HttpStatus.UNPROCESSABLE_ENTITY),
+
     INTERNAL_SERVER_ERROR("500", "server error", HttpStatus.INTERNAL_SERVER_ERROR)
     ;
 
@@ -26,6 +28,12 @@ public enum ExceptionCode {
         this.code = code;
         this.message = message;
         this.status = HttpStatus.OK;
+    }
+
+    ExceptionCode(HttpStatus status) {
+        this.code = String.valueOf(status.value());
+        this.message = status.getReasonPhrase();
+        this.status = status;
     }
 
     ExceptionCode(String code, String message, HttpStatus status) {
