@@ -11,6 +11,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.DynamicInsert;
@@ -28,9 +29,6 @@ public class Page extends BaseTimeEntity {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "page_uid", nullable = false)
 	private Long pageUid;
-
-	@Column(name = "contents_uid", nullable = false)
-	private Long contentsUid;
 
 	@Column(name = "content_id", nullable = false)
 	private String contentId;
@@ -65,4 +63,19 @@ public class Page extends BaseTimeEntity {
 	@Column(name = "region")
 	private Region region;
 
+	@Builder
+	public Page(String contentId, PageContentType contentType,
+		Long coverImageUid, String title, String subTitle, String infoText, String company,
+		PageGenre genre, Double rate, Region region) {
+		this.contentId = contentId;
+		this.contentType = contentType;
+		this.coverImageUid = coverImageUid;
+		this.title = title;
+		this.subTitle = subTitle;
+		this.infoText = infoText;
+		this.company = company;
+		this.genre = genre;
+		this.rate = rate;
+		this.region = region;
+	}
 }

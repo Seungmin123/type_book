@@ -7,8 +7,10 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 
@@ -43,6 +45,19 @@ public class Music extends BaseTimeEntity {
 	@Column(name = "play_time")
 	private String playTime;
 
+	@Setter
 	@Column(name = "cover_image_uid")
 	private Long coverImageUid;
+
+	@Builder
+	public Music(String contentId, String album, String artist, String title,
+		String filePath, String playTime, Long coverImageUid) {
+		this.contentId = contentId;
+		this.album = album;
+		this.artist = artist;
+		this.title = title;
+		this.filePath = filePath;
+		this.playTime = playTime;
+		this.coverImageUid = coverImageUid;
+	}
 }

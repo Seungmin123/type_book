@@ -1,7 +1,9 @@
 package com.muzlive.kitpage.kitpage.utils.enums;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 
+@AllArgsConstructor
 @Getter
 public enum PageContentType {
 
@@ -9,7 +11,4 @@ public enum PageContentType {
 
 	private final String code;
 
-	PageContentType(String code) {
-		this.code = code;
-	}
 }

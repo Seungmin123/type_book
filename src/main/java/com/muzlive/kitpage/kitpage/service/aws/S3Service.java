@@ -1,0 +1,42 @@
+package com.muzlive.kitpage.kitpage.service.aws;
+
+import com.muzlive.kitpage.kitpage.config.encryptor.AesSecurityProvider;
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+
+@RequiredArgsConstructor
+@Service
+public class S3Service {
+
+	@Value("${spring.aws.s3.bucket}")
+	private String BUCKET;
+
+	private final S3Client s3Client;
+
+	private final AesSecurityProvider aesSecurityProvider;
+
+	public void uploadFile(String key, MultipartFile multipartFile) throws Exception {
+		this.uploadFile(BUCKET, key, multipartFile.getBytes());
+	}
+
+	public void uploadFile(String key, byte[] bytes) throws Exception {
+		this.uploadFile(BUCKET, key, bytes);
+	}
+
+	private void uploadFile(String bucket, String key, byte[] bytes) throws Exception {
+
+		byte[] encryptContent = aesSecurityProvider.encrypt(bytes);
+		InputStream encryptInputStream = new ByteArrayInputStream(encryptContent);
+
+		s3Client.putObject(PutObjectRequest.builder().bucket(bucket).key(key).build(),
+			RequestBody.fromInputStream(encryptInputStream, encryptContent.length));
+	}
+
+}
