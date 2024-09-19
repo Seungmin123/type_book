@@ -9,8 +9,10 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 
@@ -39,6 +41,7 @@ public class Video extends BaseTimeEntity {
 	@Column(name = "stream_url", nullable = false)
 	private String streamUrl;
 
+	@Setter
 	@Column(name = "cover_image_uid")
 	private Long coverImageUid;
 
@@ -46,4 +49,14 @@ public class Video extends BaseTimeEntity {
 	@Column(name = "video_code")
 	private VideoCode videCode;
 
+	@Builder
+	public Video(String contentId, String artist, String title, String streamUrl,
+		Long coverImageUid, VideoCode videCode) {
+		this.contentId = contentId;
+		this.artist = artist;
+		this.title = title;
+		this.streamUrl = streamUrl;
+		this.coverImageUid = coverImageUid;
+		this.videCode = videCode;
+	}
 }

@@ -4,6 +4,7 @@ import com.muzlive.kitpage.kitpage.domain.common.dto.resp.CommonResp;
 import com.muzlive.kitpage.kitpage.domain.page.dto.req.UploadComicBookDetailReq;
 import com.muzlive.kitpage.kitpage.domain.page.dto.req.UploadComicBookReq;
 import com.muzlive.kitpage.kitpage.domain.page.dto.req.UploadMusicReq;
+import com.muzlive.kitpage.kitpage.domain.page.dto.req.UploadVideoReq;
 import com.muzlive.kitpage.kitpage.service.page.PageService;
 import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -38,8 +39,8 @@ public class AdminController {
 	}
 
 	@PostMapping("/comic/video")
-	CommonResp<Void> uploadVideo() throws Exception {
-
+	CommonResp<Void> uploadVideo(@Valid @ModelAttribute UploadVideoReq uploadVideoReq) throws Exception {
+		pageService.insertVideo(uploadVideoReq);
 		return new CommonResp<>();
 	}
 }
