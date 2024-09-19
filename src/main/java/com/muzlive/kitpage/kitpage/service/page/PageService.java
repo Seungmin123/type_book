@@ -6,12 +6,15 @@ import com.muzlive.kitpage.kitpage.domain.page.Page;
 import com.muzlive.kitpage.kitpage.domain.page.comicbook.ComicBook;
 import com.muzlive.kitpage.kitpage.domain.page.comicbook.ComicBookDetail;
 import com.muzlive.kitpage.kitpage.domain.page.comicbook.Music;
+import com.muzlive.kitpage.kitpage.domain.page.comicbook.Video;
 import com.muzlive.kitpage.kitpage.domain.page.comicbook.repository.ComicBookDetailRepository;
 import com.muzlive.kitpage.kitpage.domain.page.comicbook.repository.ComicBookRepository;
 import com.muzlive.kitpage.kitpage.domain.page.comicbook.repository.MusicRepository;
+import com.muzlive.kitpage.kitpage.domain.page.comicbook.repository.VideoRepository;
 import com.muzlive.kitpage.kitpage.domain.page.dto.req.UploadComicBookDetailReq;
 import com.muzlive.kitpage.kitpage.domain.page.dto.req.UploadComicBookReq;
 import com.muzlive.kitpage.kitpage.domain.page.dto.req.UploadMusicReq;
+import com.muzlive.kitpage.kitpage.domain.page.dto.req.UploadVideoReq;
 import com.muzlive.kitpage.kitpage.domain.page.repository.PageRepository;
 import com.muzlive.kitpage.kitpage.domain.user.Image;
 import com.muzlive.kitpage.kitpage.domain.user.repository.ImageRepository;
@@ -19,6 +22,7 @@ import com.muzlive.kitpage.kitpage.service.aws.S3Service;
 import com.muzlive.kitpage.kitpage.utils.constants.ApplicationConstants;
 import com.muzlive.kitpage.kitpage.utils.enums.ImageCode;
 import com.muzlive.kitpage.kitpage.utils.enums.PageContentType;
+import com.muzlive.kitpage.kitpage.utils.enums.VideoCode;
 import java.util.Objects;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -29,8 +33,6 @@ import org.springframework.web.multipart.MultipartFile;
 @Service
 public class PageService {
 
-	private final PageRepository pageRepository;
-
 	private final ComicService comicService;
 
 	private final S3Service s3Service;
@@ -39,9 +41,9 @@ public class PageService {
 
 	private final ComicBookRepository comicBookRepository;
 
-	private final ComicBookDetailRepository comicBookDetailRepository;
-
 	private final MusicRepository musicRepository;
+
+	private final VideoRepository videoRepository;
 
 	public void insertComicBook(UploadComicBookReq uploadComicBookReq) throws Exception {
 
@@ -122,11 +124,51 @@ public class PageService {
 			s3Service.uploadFile(coverImagePath, uploadMusicReq.getImage());
 
 			// Image DB Insert
-			Image image = imageRepository.save(Image.of(coverImagePath, ImageCode.COVER_IMAGE, uploadMusicReq.getImage()));
+			Image image = imageRepository.save(Image.of(coverImagePath, ImageCode.MUSIC_COVER_IMAGE, uploadMusicReq.getImage()));
 
 			music.setCoverImageUid(image.getImageUid());
 		}
 
 		musicRepository.save(music);
+	}
+
+	public void insertVideo(UploadVideoReq uploadVideoReq) throws Exception {
+
+		ComicBook comicBook = comicBookRepository.findByContentId(uploadVideoReq.getContentId())
+			.orElseThrow(() -> new CommonException(ExceptionCode.CANNOT_FIND_MATCHED_ITEM));
+
+		String streamUrl = uploadVideoReq.getStreamUrl();
+		VideoCode videoCode = VideoCode.STREAM;
+
+		if(Objects.nonNull(uploadVideoReq.getFile())) {
+			// S3 Music Upload
+			String filePath = uploadVideoReq.getContentId() + "/" + ApplicationConstants.VIDEO + "/" + UUID.randomUUID().toString().substring(0, 8) + "_" + uploadVideoReq.getFile().getOriginalFilename();
+			s3Service.uploadFile(filePath, uploadVideoReq.getFile());
+
+			streamUrl = filePath;
+			videoCode = VideoCode.S3;
+		}
+
+		Video video = Video.builder()
+			.contentId(uploadVideoReq.getContentId())
+			.artist(uploadVideoReq.getArtist())
+			.title(uploadVideoReq.getTitle())
+			.streamUrl(streamUrl)
+			.videCode(videoCode)
+			.build();
+
+		if(Objects.nonNull(uploadVideoReq.getImage())) {
+			// S3 Cover Image Upload
+			String coverImagePath = uploadVideoReq.getContentId() + "/" + ApplicationConstants.VIDEO + "/" + UUID.randomUUID().toString().substring(0, 8) + "_" + uploadVideoReq.getImage().getOriginalFilename();
+			s3Service.uploadFile(coverImagePath, uploadVideoReq.getImage());
+
+			// Image DB Insert
+			Image image = imageRepository.save(Image.of(coverImagePath, ImageCode.VIDEO_COVER_IMAGE, uploadVideoReq.getImage()));
+
+			video.setCoverImageUid(image.getImageUid());
+		}
+
+		videoRepository.save(video);
+
 	}
 }

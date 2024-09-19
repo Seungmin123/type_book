@@ -7,7 +7,9 @@ import lombok.Getter;
 @Getter
 public enum ImageCode {
 
-	COVER_IMAGE("COVER_IMAGE");
+	COVER_IMAGE("COVER_IMAGE"),
+	MUSIC_COVER_IMAGE("MUSIC_COVER_IMAGE"),
+	VIDEO_COVER_IMAGE("VIDEO_COVER_IMAGE");
 
 	private String code;
 }
