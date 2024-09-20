@@ -77,7 +77,7 @@ public class PageService {
 	}
 
 	public void insertComicBookDetail(UploadComicBookDetailReq uploadComicBookDetailReq) throws Exception {
-		ComicBook comicBook = comicBookRepository.findByContentId(uploadComicBookDetailReq.getContentId())
+		ComicBook comicBook = comicBookRepository.findByPageContentId(uploadComicBookDetailReq.getContentId())
 			.orElseThrow(() -> new CommonException(ExceptionCode.CANNOT_FIND_MATCHED_ITEM));
 
 		for(MultipartFile multipartFile : uploadComicBookDetailReq.getImages()) {
@@ -101,7 +101,7 @@ public class PageService {
 	}
 
 	public void insertMusic(UploadMusicReq uploadMusicReq) throws Exception {
-		ComicBook comicBook = comicBookRepository.findByContentId(uploadMusicReq.getContentId())
+		ComicBook comicBook = comicBookRepository.findByPageContentId(uploadMusicReq.getContentId())
 			.orElseThrow(() -> new CommonException(ExceptionCode.CANNOT_FIND_MATCHED_ITEM));
 
 		// S3 Music Upload

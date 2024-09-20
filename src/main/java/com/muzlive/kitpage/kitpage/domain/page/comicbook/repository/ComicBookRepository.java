@@ -8,5 +8,5 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface ComicBookRepository extends JpaRepository<ComicBook, Long> {
 
-	Optional<ComicBook> findByContentId(String contentId);
+	Optional<ComicBook> findByPageContentId(String contentId);
 }

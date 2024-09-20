@@ -1,8 +1,6 @@
 package com.muzlive.kitpage.kitpage.service.transfer.kihno.dto.resp;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.muzlive.fuji.domain.member.dto.DeviceMikeEarphoneInfoDto;
-import com.muzlive.fuji.utils.constants.ApplicationConstants;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -46,19 +44,4 @@ public class KihnoMicLocationResp {
     @JsonProperty("skin_info")
     private String skinInfo;
 
-    public DeviceMikeEarphoneInfoDto toDto(){
-        DeviceMikeEarphoneInfoDto dto = new DeviceMikeEarphoneInfoDto();
-        dto.setModelName(this.modelName);
-        dto.setMikePlace(this.mikePlace);
-        dto.setEarphonePlace(this.earphonePlace);
-        dto.setMikeFaceScreenLength(this.mikeFaceScreenLength);
-        dto.setLocationMikeTop(this.locationMikeTop);
-        dto.setLocationMikeLeft(this.locationMikeLeft);
-        dto.setEarphoneFaceScreenLength(this.earphoneFaceScreenLength);
-        dto.setLocationEarphoneTop(this.locationEarphoneTop);
-        dto.setLocationEarphoneLeft(this.locationEarphoneLeft);
-        dto.setFoldableYN((this.isFoldable) ? ApplicationConstants.Y : ApplicationConstants.N);
-
-        return dto;
-    }
 }
