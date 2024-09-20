@@ -13,6 +13,7 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 
@@ -29,15 +30,18 @@ public class Kit extends BaseTimeEntity {
 	@Column(name = "kit_uid", nullable = false)
 	private Long kitUid;
 
+	@Setter
 	@Column(name = "device_id")
 	private String deviceId;
 
+	@Setter
 	@Column(name = "token")
 	private String token;
 
 	@Column(name = "page_uid")
 	private Long pageUid;
 
+	@Setter
 	@Column(name = "kihno_kit_uid")
 	private Long kihnoKitUid;
 

@@ -2,7 +2,13 @@ package com.muzlive.kitpage.kitpage.utils.constants;
 
 public class ApplicationConstants {
 
+	public static final String PAGE = "PAGE";
+
 	public static final String SUCCESS = "SUCCESS";
+
+	public static final String OK = "OK";
+
+	public static final String DATA = "data";
 
 	public static final String AUTHORIZATION = "Authorization";
 
@@ -15,5 +21,9 @@ public class ApplicationConstants {
 	public static final String MUSIC = "music";
 
 	public static final String VIDEO = "video";
+
+	public static final String KOR_COUNTRY_CODE = "KOR";
+
+	public static final String JPN_COUNTRY_CODE = "JPN";
 
 }

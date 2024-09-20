@@ -11,6 +11,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.DynamicInsert;
@@ -27,7 +28,7 @@ public class KitLog extends BaseTimeEntity {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "kit_log_uid", nullable = false)
-	private Long pageUid;
+	private Long kitLogUid;
 
 	@Column(name = "kit_uid", nullable = false)
 	private Long kitUid;
@@ -35,4 +36,16 @@ public class KitLog extends BaseTimeEntity {
 	@Column(name = "device_id", nullable = false)
 	private String deviceId;
 
+	@Builder
+	public KitLog(Long kitUid, String deviceId) {
+		this.kitUid = kitUid;
+		this.deviceId = deviceId;
+	}
+
+	public static KitLog of(Kit kit) {
+		return KitLog.builder()
+			.kitUid(kit.getKitUid())
+			.deviceId(kit.getDeviceId())
+			.build();
+	}
 }
