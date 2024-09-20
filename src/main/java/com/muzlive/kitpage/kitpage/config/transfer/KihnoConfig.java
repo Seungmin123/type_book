@@ -1,0 +1,28 @@
+package com.muzlive.kitpage.kitpage.config.transfer;
+
+import com.muzlive.kitpage.kitpage.config.transfer.domain.KihnoV1Domain;
+import com.muzlive.kitpage.kitpage.config.transfer.domain.KihnoV2Domain;
+import lombok.Setter;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Setter
+@Configuration
+@ConfigurationProperties(prefix = "spring.kihno")
+public class KihnoConfig {
+
+    private String v1Domain;
+
+    private String v2Domain;
+
+    @Bean(name = "kihnoV1Domain")
+    public KihnoV1Domain getKihnoV1Domain() {
+        return new KihnoV1Domain(this.v1Domain);
+    }
+
+    @Bean(name = "kihnoV2Domain")
+    public KihnoV2Domain getKihnoV2Domain() {
+        return new KihnoV2Domain(this.v2Domain);
+    }
+}
