@@ -82,6 +82,8 @@ dependencies {
 	implementation group: 'com.googlecode.log4jdbc', name: 'log4jdbc', version: '1.2'
 	implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.17.0'
 
+	implementation 'org.springdoc:springdoc-openapi-ui:1.7.0'
+
 	// ffmpeg
 	implementation group: 'net.bramp.ffmpeg', name: 'ffmpeg', version: '0.6.2'
 
