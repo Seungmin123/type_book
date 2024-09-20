@@ -1,6 +1,7 @@
 package com.muzlive.kitpage.kitpage.utils;
 
 import java.util.Random;
+import javax.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -16,6 +17,28 @@ public class CommonUtils {
 		int randomNum = rand.nextInt(256); // 0 ~ 255 사이의 랜덤 숫자 생성
 
 		return String.format("%02X", randomNum);
+	}
+
+	public String getIp(HttpServletRequest request) {
+		String ip = request.getHeader("X-Forwarded-For");
+
+		if(ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+			ip = request.getHeader("Proxy-Client-IP");
+		}
+		if(ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+			ip = request.getHeader("WL-Proxy-Client-IP");
+		}
+		if(ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+			ip = request.getHeader("HTTP_CLIENT_IP");
+		}
+		if(ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+			ip = request.getHeader("HTTP_X_FORWARDED_FOR");
+		}
+		if(ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+			ip = request.getRemoteAddr();
+		}
+
+		return ip;
 	}
 
 }
