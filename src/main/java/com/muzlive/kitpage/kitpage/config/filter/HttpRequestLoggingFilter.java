@@ -50,7 +50,8 @@ public class HttpRequestLoggingFilter implements Filter {
         info.setIp(wrappedRequest.getRemoteAddr());
         info.setMethod(wrappedRequest.getMethod());
         info.setPath(wrappedRequest.getRequestURI());
-        log.info("Request: " + info.toString());
+        if(!wrappedRequest.getRequestURI().equals("/actuator/health"))
+            log.info("Request: " + info.toString());
 
         filterChain.doFilter(wrappedRequest, servletResponse);
     }
