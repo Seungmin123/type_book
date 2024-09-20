@@ -18,8 +18,11 @@ import org.springframework.web.servlet.HandlerInterceptor;
 public class TokenInterceptor implements HandlerInterceptor {
 
     private static final List<String> ALLOWED_PATHS
-            = Arrays.asList("/h2-console", "/v3/api-docs/**", "/swagger-ui/**", "/webjars/**", "/swagger-url", "/actuator/health"
-                , "/v1"
+            = Arrays.asList("/h2-console", "/actuator/health",
+        "/v3/api-docs/**", "/swagger-ui/**", "/swagger-resources/**", "/swagger-ui.html", "/webjars/**",
+
+        // TODO
+        "/v1"
     );
 
     private final JwtTokenProvider jwtTokenProvider;
@@ -31,9 +34,6 @@ public class TokenInterceptor implements HandlerInterceptor {
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception{
 
-//        log.info("request url : {}", request.getRequestURL());
-//        log.info("request remote addr : {}", getIp(request));
-
         String uri = request.getRequestURI();
         if (ALLOWED_PATHS.stream().anyMatch(uri::startsWith) || uri.endsWith("/health")) {
             return true;
@@ -43,27 +43,4 @@ public class TokenInterceptor implements HandlerInterceptor {
 
         return jwtTokenProvider.validateAccessToken(givenAccessToken);
     }
-
-    private String getIp(HttpServletRequest request) {
-        String ip = request.getHeader("X-Forwarded-For");
-
-        if(ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
-            ip = request.getHeader("Proxy-Client-IP");
-        }
-        if(ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
-            ip = request.getHeader("WL-Proxy-Client-IP");
-        }
-        if(ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
-            ip = request.getHeader("HTTP_CLIENT_IP");
-        }
-        if(ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
-            ip = request.getHeader("HTTP_X_FORWARDED_FOR");
-        }
-        if(ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
-            ip = request.getRemoteAddr();
-        }
-
-        return ip;
-    }
-
 }
