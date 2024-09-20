@@ -31,6 +31,10 @@ public class Kit extends BaseTimeEntity {
 	private Long kitUid;
 
 	@Setter
+	@Column(name = "serial_number")
+	private String serialNumber;
+
+	@Setter
 	@Column(name = "device_id")
 	private String deviceId;
 

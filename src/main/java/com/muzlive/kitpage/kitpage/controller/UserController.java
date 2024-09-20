@@ -1,6 +1,5 @@
 package com.muzlive.kitpage.kitpage.controller;
 
-import com.muzlive.kitpage.kitpage.config.jwt.JwtTokenProvider;
 import com.muzlive.kitpage.kitpage.domain.common.dto.resp.CommonResp;
 import com.muzlive.kitpage.kitpage.domain.user.Kit;
 import com.muzlive.kitpage.kitpage.domain.user.dto.req.CheckTagReq;

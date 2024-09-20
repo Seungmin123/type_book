@@ -14,6 +14,7 @@ import javax.persistence.Table;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 
@@ -30,6 +31,10 @@ public class KitLog extends BaseTimeEntity {
 	@Column(name = "kit_log_uid", nullable = false)
 	private Long kitLogUid;
 
+	@Setter
+	@Column(name = "serial_number", nullable = false)
+	private String serialNumber;
+
 	@Column(name = "kit_uid", nullable = false)
 	private Long kitUid;
 
@@ -37,13 +42,15 @@ public class KitLog extends BaseTimeEntity {
 	private String deviceId;
 
 	@Builder
-	public KitLog(Long kitUid, String deviceId) {
+	public KitLog(String serialNumber, Long kitUid, String deviceId) {
+		this.serialNumber = serialNumber;
 		this.kitUid = kitUid;
 		this.deviceId = deviceId;
 	}
 
 	public static KitLog of(Kit kit) {
 		return KitLog.builder()
+			.serialNumber(kit.getSerialNumber())
 			.kitUid(kit.getKitUid())
 			.deviceId(kit.getDeviceId())
 			.build();
