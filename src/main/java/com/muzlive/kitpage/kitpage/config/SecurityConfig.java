@@ -1,6 +1,7 @@
 package com.muzlive.kitpage.kitpage.config;
 
 import com.muzlive.kitpage.kitpage.config.filter.HttpRequestLoggingFilter;
+import com.muzlive.kitpage.kitpage.config.filter.SwaggerFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
@@ -10,7 +11,6 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.intercept.FilterSecurityInterceptor;
-import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 import org.springframework.security.web.firewall.HttpFirewall;
 import org.springframework.security.web.firewall.StrictHttpFirewall;
 
@@ -19,7 +19,7 @@ import org.springframework.security.web.firewall.StrictHttpFirewall;
 @EnableWebSecurity
 public class SecurityConfig {
 
-//	private final SwaggerFilter swaggerFilter;
+	private final SwaggerFilter swaggerFilter;
 
 	@Bean
 	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -43,9 +43,9 @@ public class SecurityConfig {
 
 			// TODO 권한 수정
 			.antMatchers("/v1/**").permitAll()
-			.anyRequest().authenticated();
-//			.and()
-//			.addFilterBefore(swaggerFilter, FilterSecurityInterceptor.class)
+			.anyRequest().authenticated()
+			.and()
+			.addFilterBefore(swaggerFilter, FilterSecurityInterceptor.class);
 
 		return http.build();
 	}
