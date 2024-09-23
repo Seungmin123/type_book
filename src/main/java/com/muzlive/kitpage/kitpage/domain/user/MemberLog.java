@@ -6,6 +6,7 @@ import com.muzlive.kitpage.kitpage.utils.enums.PageGenre;
 import com.muzlive.kitpage.kitpage.utils.enums.Region;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -35,7 +36,7 @@ public class MemberLog extends BaseTimeEntity {
 	@Column(name = "ip_address")
 	private String ipAddress;
 
-	@Enumerated
+	@Enumerated(EnumType.STRING)
 	@Column(name = "region")
 	private Region region;
 

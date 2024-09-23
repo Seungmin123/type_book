@@ -7,7 +7,6 @@ import com.muzlive.kitpage.kitpage.domain.page.comicbook.ComicBook;
 import com.muzlive.kitpage.kitpage.domain.page.comicbook.ComicBookDetail;
 import com.muzlive.kitpage.kitpage.domain.page.comicbook.Music;
 import com.muzlive.kitpage.kitpage.domain.page.comicbook.Video;
-import com.muzlive.kitpage.kitpage.domain.page.comicbook.repository.ComicBookDetailRepository;
 import com.muzlive.kitpage.kitpage.domain.page.comicbook.repository.ComicBookRepository;
 import com.muzlive.kitpage.kitpage.domain.page.comicbook.repository.MusicRepository;
 import com.muzlive.kitpage.kitpage.domain.page.comicbook.repository.VideoRepository;
@@ -17,25 +16,34 @@ import com.muzlive.kitpage.kitpage.domain.page.dto.req.UploadMusicReq;
 import com.muzlive.kitpage.kitpage.domain.page.dto.req.UploadVideoReq;
 import com.muzlive.kitpage.kitpage.domain.page.repository.PageRepository;
 import com.muzlive.kitpage.kitpage.domain.user.Image;
+import com.muzlive.kitpage.kitpage.domain.user.dto.req.VersionInfoReq;
+import com.muzlive.kitpage.kitpage.domain.user.dto.resp.VersionInfoResp;
 import com.muzlive.kitpage.kitpage.domain.user.repository.ImageRepository;
 import com.muzlive.kitpage.kitpage.service.aws.S3Service;
 import com.muzlive.kitpage.kitpage.utils.constants.ApplicationConstants;
 import com.muzlive.kitpage.kitpage.utils.enums.ImageCode;
 import com.muzlive.kitpage.kitpage.utils.enums.PageContentType;
 import com.muzlive.kitpage.kitpage.utils.enums.VideoCode;
+import com.querydsl.jpa.impl.JPAQueryFactory;
 import java.util.Objects;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 @RequiredArgsConstructor
 @Service
 public class PageService {
 
+	private final JPAQueryFactory queryFactory;
+
 	private final ComicService comicService;
 
 	private final S3Service s3Service;
+
+	private final PageRepository pageRepository;
 
 	private final ImageRepository imageRepository;
 
@@ -45,10 +53,17 @@ public class PageService {
 
 	private final VideoRepository videoRepository;
 
+	@Transactional
 	public void insertComicBook(UploadComicBookReq uploadComicBookReq) throws Exception {
 
+		Long nextPageUid = pageRepository.findFirstByOrderByPageUidDesc()
+			.map(page -> page.getPageUid() != null ? page.getPageUid() + 1L : 1L)
+			.orElse(1L);
+
+		String contentId = ApplicationConstants.COMIC + "_" + String.format("%08d", nextPageUid);
+
 		// S3 Cover Image Upload
-		String coverImagePath = uploadComicBookReq.getContentId() + "/" + ApplicationConstants.IMAGE + "/" + UUID.randomUUID().toString().substring(0, 8) + "_" + uploadComicBookReq.getCoverImage().getOriginalFilename();
+		String coverImagePath = contentId + "/" + ApplicationConstants.IMAGE + "/" + UUID.randomUUID().toString().substring(0, 8) + "_" + uploadComicBookReq.getCoverImage().getOriginalFilename();
 		s3Service.uploadFile(coverImagePath, uploadComicBookReq.getCoverImage());
 
 		// Image DB Insert
@@ -61,7 +76,7 @@ public class PageService {
 				.illustrator(uploadComicBookReq.getIllustrator())
 				.page(
 					Page.builder()
-						.contentId(uploadComicBookReq.getContentId())
+						.contentId(contentId)
 						.contentType(PageContentType.COMICBOOK)
 						.coverImageUid(image.getImageUid())
 						.title(uploadComicBookReq.getTitle())
@@ -76,9 +91,13 @@ public class PageService {
 		);
 	}
 
+	@Transactional
 	public void insertComicBookDetail(UploadComicBookDetailReq uploadComicBookDetailReq) throws Exception {
 		ComicBook comicBook = comicBookRepository.findByPageContentId(uploadComicBookDetailReq.getContentId())
 			.orElseThrow(() -> new CommonException(ExceptionCode.CANNOT_FIND_MATCHED_ITEM));
+
+		String episode = Objects.nonNull(uploadComicBookDetailReq.getEpisode()) ? uploadComicBookDetailReq.getEpisode() : "";
+		int page = comicService.findComicBookMaxPage(comicBook.getComicBookUid(), uploadComicBookDetailReq.getVolume());
 
 		for(MultipartFile multipartFile : uploadComicBookDetailReq.getImages()) {
 			// S3 Cover Image Upload
@@ -88,15 +107,13 @@ public class PageService {
 			// Image DB Insert
 			Image image = imageRepository.save(Image.of(imagePath, ImageCode.COVER_IMAGE, multipartFile));
 
-			comicService.createComicBookDetail(
-				ComicBookDetail.builder()
+			comicService.upsertComicBookDetail(ComicBookDetail.builder()
 				.comicBookUid(comicBook.getComicBookUid())
-				.title(uploadComicBookDetailReq.getTitle())
-				.chapter(uploadComicBookDetailReq.getChapter())
+				.volume(uploadComicBookDetailReq.getVolume())
+				.episode(episode)
+				.page(page++)
 				.imageUid(image.getImageUid())
-				.region(uploadComicBookDetailReq.getRegion())
-				.build()
-			);
+				.build());
 		}
 	}
 
@@ -134,7 +151,7 @@ public class PageService {
 
 	public void insertVideo(UploadVideoReq uploadVideoReq) throws Exception {
 
-		ComicBook comicBook = comicBookRepository.findByContentId(uploadVideoReq.getContentId())
+		ComicBook comicBook = comicBookRepository.findByPageContentId(uploadVideoReq.getContentId())
 			.orElseThrow(() -> new CommonException(ExceptionCode.CANNOT_FIND_MATCHED_ITEM));
 
 		String streamUrl = uploadVideoReq.getStreamUrl();
@@ -169,6 +186,51 @@ public class PageService {
 		}
 
 		videoRepository.save(video);
+	}
 
+	public VersionInfoResp getVersionInfo(VersionInfoReq versionInfoReq) throws Exception {
+		/*// Client Test 용
+		if(versionInfoReq.getCurrentVersion().endsWith("-dev") || versionInfoReq.getCurrentVersion().endsWith("-test"))
+			return new VersionInfoResp(false, false);
+
+		if(!this.isVersionFormat(versionInfoReq.getCurrentVersion())
+			|| !this.isVersionFormat(versionInfoReq.getOsVersion()))
+			throw new CommonException(ExceptionCode.INVALID_REQUEST_PRAMETER);
+
+		VersionInfoResp versionInfoResp;
+
+		VersionInfo version = queryFactory
+			.selectFrom(versionInfo)
+			.where(versionInfo.osType.eq(versionInfoReq.getPlatform()))
+			.orderBy(versionInfo.versionInfoUid.desc())
+			.fetchFirst();
+
+		return Optional.ofNullable(version).map(v -> {
+			String latestVersion = v.getLatestVersion();
+			String forcedVersion = v.getForcedVersion();
+			String osVersion = v.getOsVersion();
+
+			int currentVersionCompare = versionInfoReq.CurrentVersionCompareTo(latestVersion);
+			Boolean needUpdate = currentVersionCompare < 0;
+			Boolean isForced = (versionInfoReq.isCurrentVersionLessThanTo(forcedVersion) && versionInfoReq.isOsVersionGreaterThanTo(osVersion));
+
+//            if(currentVersionCompare > 0) {
+//                version.setLatestVersion(versionInfoReq.getCurrentVersion());
+//                versionInfoRepository.save(version);
+//            }
+
+			return new VersionInfoResp(needUpdate, isForced);
+		}).orElse(null);*/
+
+		return null;
+	}
+
+	private boolean isVersionFormat(String version) {
+		String pattern = "^\\d+(\\.\\d+)?(\\.\\d+)?$";
+		if (!version.matches(pattern)) {
+			return false;
+		}
+
+		return true;
 	}
 }

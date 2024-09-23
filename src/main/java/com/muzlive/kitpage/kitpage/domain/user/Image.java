@@ -6,6 +6,7 @@ import java.awt.image.BufferedImage;
 import javax.imageio.ImageIO;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -45,7 +46,7 @@ public class Image extends BaseTimeEntity {
 	@Column(name = "height")
 	private Integer height;
 
-	@Enumerated
+	@Enumerated(EnumType.STRING)
 	@Column(name = "image_code", nullable = false)
 	private ImageCode imageCode;
 

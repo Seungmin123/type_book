@@ -4,7 +4,10 @@ import com.muzlive.kitpage.kitpage.domain.common.dto.resp.CommonResp;
 import com.muzlive.kitpage.kitpage.domain.user.Kit;
 import com.muzlive.kitpage.kitpage.domain.user.dto.req.CheckTagReq;
 import com.muzlive.kitpage.kitpage.domain.user.dto.req.MicLocationReq;
+import com.muzlive.kitpage.kitpage.domain.user.dto.req.VersionInfoReq;
+import com.muzlive.kitpage.kitpage.domain.user.dto.resp.VersionInfoResp;
 import com.muzlive.kitpage.kitpage.service.page.KitService;
+import com.muzlive.kitpage.kitpage.service.page.PageService;
 import com.muzlive.kitpage.kitpage.service.transfer.kihno.KihnoV2TransferSerivce;
 import com.muzlive.kitpage.kitpage.service.transfer.kihno.dto.req.KihnoKitCheckReq;
 import com.muzlive.kitpage.kitpage.service.transfer.kihno.dto.req.KihnoMicLocationReq;
@@ -13,6 +16,8 @@ import com.muzlive.kitpage.kitpage.service.transfer.kihno.dto.resp.KihnoKitCheck
 import com.muzlive.kitpage.kitpage.service.transfer.kihno.dto.resp.KihnoMicLocationResp;
 import com.muzlive.kitpage.kitpage.service.transfer.kihno.dto.resp.KihnoMicProcessedResp;
 import com.muzlive.kitpage.kitpage.utils.CommonUtils;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,16 +28,20 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RequiredArgsConstructor
+@Tag(name = "사용자 관리 API")
 @RequestMapping("/v1/user")
 @RestController
 public class UserController {
 
 	private final KihnoV2TransferSerivce kihnoV2TransferSerivce;
 
+	private final PageService pageService;
+
 	private final KitService kitService;
 
 	private final CommonUtils commonUtils;
 
+	@Operation(summary = "체크 태그 API", description = "키노 서버를 통한 체크 태그 API")
 	@PostMapping("/checkTag")
 	public CommonResp<Void> connect(@Valid @RequestBody CheckTagReq checkTagReq) throws Exception {
 		String requestSerialNumber = (checkTagReq.getSerialNumber().length() > 8) ? checkTagReq.getSerialNumber().substring(0, 8) : checkTagReq.getSerialNumber();
@@ -55,14 +64,25 @@ public class UserController {
 		return new CommonResp<>();
 	}
 
+	@Operation(summary = "마이크 Processed 체크", description = "마이크 Processed 체크")
 	@GetMapping("/mic/processed")
 	public CommonResp<KihnoMicProcessedResp> checkMicProcessed(@ModelAttribute @Valid MicLocationReq micLocationReq) throws Exception {
 		return new CommonResp<>(kihnoV2TransferSerivce.checkMicProcessed(new KihnoMicProcessedReq(micLocationReq)));
 	}
 
+	@Operation(summary = "마이크 위치 조회 API", description = "마이크 위치 조회 API")
 	@GetMapping("/mic")
 	public CommonResp<KihnoMicLocationResp> getMicLocation(@ModelAttribute @Valid MicLocationReq micLocationReq) throws Exception {
 		return new CommonResp<>(kihnoV2TransferSerivce.getMicLocation(new KihnoMicLocationReq(micLocationReq)));
+	}
+
+	@Operation(summary = "버전 정보 조회 API", description = "버전 정보 조회 API<br>" +
+		"currentVersion:String | required | 현재 앱 버전(x.x.x)<br>" +
+		"platform:String | required | AOS 또는 IOS<br>" +
+		"osVersion:String | required | os 버전(x.x)")
+	@GetMapping("/version")
+	public CommonResp<VersionInfoResp> getVersion(@ModelAttribute @Valid VersionInfoReq versionInfoReq) throws Exception {
+		return new CommonResp<>(pageService.getVersionInfo(versionInfoReq));
 	}
 
 	// TODO Log in API

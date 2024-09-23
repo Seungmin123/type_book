@@ -4,6 +4,7 @@ import com.muzlive.kitpage.kitpage.domain.common.BaseTimeEntity;
 import com.muzlive.kitpage.kitpage.utils.enums.BookmarkStatus;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -39,7 +40,7 @@ public class ComicBookBookmark extends BaseTimeEntity {
 	@Column(name = "kit_uid", nullable = false)
 	private Long kitUid;
 
-	@Enumerated
+	@Enumerated(EnumType.STRING)
 	@Column(name = "status")
 	private BookmarkStatus status;
 

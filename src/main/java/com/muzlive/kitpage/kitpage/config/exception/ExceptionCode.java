@@ -10,7 +10,10 @@ public enum ExceptionCode {
     INVALID_JWT("10401", "JWT token is invalid", HttpStatus.UNAUTHORIZED),
     METHOD_NOT_ALLOWED("10400", "http method not allowed", HttpStatus.METHOD_NOT_ALLOWED),
 
-    DIFFERENT_APP_KIT("10403", "The kit is not available in cues", HttpStatus.FORBIDDEN),
+    INVALID_REQUEST_PRAMETER("10400", "invalid request parameter", HttpStatus.BAD_REQUEST),
+    CANNOT_FIND_ITEM_THAT_MATCH_THE_PARAM("10400", "There are no items that match the parameters.", HttpStatus.BAD_REQUEST),
+
+    DIFFERENT_APP_KIT("10403", "The kit is not available in kit-page", HttpStatus.FORBIDDEN),
     CANNOT_FIND_MATCHED_ITEM(HttpStatus.UNPROCESSABLE_ENTITY),
     CANNOT_FIND_MATCHED_KIHNO_ITEM("10403", "There are no items in kihno that match the parameters.", HttpStatus.FORBIDDEN),
 

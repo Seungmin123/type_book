@@ -4,6 +4,8 @@ import com.muzlive.kitpage.kitpage.domain.common.dto.resp.CommonResp;
 import com.muzlive.kitpage.kitpage.domain.page.comicbook.ComicBook;
 import com.muzlive.kitpage.kitpage.domain.page.comicbook.dto.resp.ComicBookResp;
 import com.muzlive.kitpage.kitpage.service.page.ComicService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -12,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RequiredArgsConstructor
+@Tag(name = "ComicBook API")
 @RequestMapping("/v1/comic")
 @RestController
 public class ComicController {
@@ -19,10 +22,23 @@ public class ComicController {
 	private final ComicService comicService;
 
 	// get Install ComicBook List
+	@Operation(summary = "ComicBook 목록 API", description = "Device Id 별 ComicBook 리스트")
 	@GetMapping("/list/{deviceId}")
 	public CommonResp<List<ComicBookResp>> getInstallList(@PathVariable String deviceId) throws Exception {
 		return new CommonResp<>(ComicBookResp.of(comicService.getComicBooksByDeviceId(deviceId)));
 	}
+
+	// TODO !!! 북마크 로컬, 이어보기 로
+	// TODO 비디오 비트무빈 유튜브
+	// m368
+	// TODO Kihno API 확인
+	// TODO 설정 마이페이지 -> 통합로그인...
+	// TODO 책 방향 왼쪽 오른쪽 주기 알려주기
+
+
+	// TODO 알려줄 것
+	// 암호화 방식
+	// 데이터 구조 어떤 방식으로 할 건지 알려주기
 
 	// TODO download comicBook
 	public CommonResp<Void> downloadComicBook() throws Exception {
