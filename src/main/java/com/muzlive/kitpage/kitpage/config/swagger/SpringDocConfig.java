@@ -27,13 +27,23 @@ public class SpringDocConfig {
                 //.servers(List.of(new Server().url("http://localhost:8080").description("General Server")))
                 .info(apiInfo());
     }
+
     @Bean
-    public GroupedOpenApi createAlbumApi(){
+    public GroupedOpenApi createComicBookApi(){
         return GroupedOpenApi.builder()
                 .group("ComicBook")
                 .pathsToMatch("/v1/comic/**")
                 .addOpenApiCustomiser(swaggerKitCustomApi)
                 .build();
+    }
+
+    @Bean
+    public GroupedOpenApi createUserApi(){
+        return GroupedOpenApi.builder()
+            .group("User")
+            .pathsToMatch("/v1/user/**")
+            .addOpenApiCustomiser(swaggerKitCustomApi)
+            .build();
     }
 
     private Info apiInfo() {

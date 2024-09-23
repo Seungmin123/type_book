@@ -4,6 +4,8 @@ public class ApplicationConstants {
 
 	public static final String PAGE = "PAGE";
 
+	public static final String COMIC = "COMIC";
+
 	public static final String SUCCESS = "SUCCESS";
 
 	public static final String OK = "OK";
@@ -25,5 +27,9 @@ public class ApplicationConstants {
 	public static final String KOR_COUNTRY_CODE = "KOR";
 
 	public static final String JPN_COUNTRY_CODE = "JPN";
+
+	public static final String VERSION_TYPE_OS = "osVersion";
+
+	public static final String VERSION_TYPE_CURRENT = "currentVersion";
 
 }

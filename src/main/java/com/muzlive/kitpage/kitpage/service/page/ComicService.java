@@ -34,18 +34,13 @@ public class ComicService {
 		return comicBookRepository.save(comicBook);
 	}
 
-	/**
-	 * Page 자동 증가 Insert
-	 * @param comicBookDetail
-	 * @return
-	 * @throws Exception
-	 */
-	public ComicBookDetail createComicBookDetail(ComicBookDetail comicBookDetail) throws Exception {
-		comicBookDetail.setPage(
-			comicBookDetailRepository.findMaxPage(comicBookDetail.getComicBookUid(), comicBookDetail.getChapter())
-		);
-
+	public ComicBookDetail upsertComicBookDetail(ComicBookDetail comicBookDetail) throws Exception {
 		return comicBookDetailRepository.save(comicBookDetail);
+	}
+
+	public int findComicBookMaxPage(Long comicBookUid, Integer volume) throws Exception {
+		Integer page = comicBookDetailRepository.findMaxPage(comicBookUid, volume);
+		return page == null ? 0 : page;
 	}
 
 	public List<ComicBook> getComicBooksByDeviceId(String deviceId) throws Exception {

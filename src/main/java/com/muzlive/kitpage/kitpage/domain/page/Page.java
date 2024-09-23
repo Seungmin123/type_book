@@ -6,6 +6,7 @@ import com.muzlive.kitpage.kitpage.utils.enums.PageGenre;
 import com.muzlive.kitpage.kitpage.utils.enums.Region;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -14,6 +15,7 @@ import javax.persistence.Table;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 
@@ -33,7 +35,7 @@ public class Page extends BaseTimeEntity {
 	@Column(name = "content_id", nullable = false)
 	private String contentId;
 
-	@Enumerated
+	@Enumerated(EnumType.STRING)
 	@Column(name = "content_type", nullable = false)
 	private PageContentType contentType;
 
@@ -52,14 +54,14 @@ public class Page extends BaseTimeEntity {
 	@Column(name = "company")
 	private String company;
 
-	@Enumerated
+	@Enumerated(EnumType.STRING)
 	@Column(name = "genre")
 	private PageGenre genre;
 
 	@Column(name = "rate")
 	private Double rate;
 
-	@Enumerated
+	@Enumerated(EnumType.STRING)
 	@Column(name = "region")
 	private Region region;
 

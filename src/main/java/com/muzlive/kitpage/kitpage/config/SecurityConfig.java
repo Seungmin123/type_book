@@ -59,7 +59,6 @@ public class SecurityConfig {
 
 	@Bean
 	public FilterRegistrationBean<HttpRequestLoggingFilter> filterRegistrationBean() {
-		FilterRegistrationBean<HttpRequestLoggingFilter> bean = new FilterRegistrationBean<HttpRequestLoggingFilter>(new HttpRequestLoggingFilter());
-		return bean;
+		return new FilterRegistrationBean<HttpRequestLoggingFilter>(new HttpRequestLoggingFilter());
 	}
 }

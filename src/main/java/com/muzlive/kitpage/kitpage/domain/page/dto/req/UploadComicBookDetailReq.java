@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.muzlive.kitpage.kitpage.utils.enums.PageGenre;
 import com.muzlive.kitpage.kitpage.utils.enums.Region;
 import java.util.List;
+import javax.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.web.multipart.MultipartFile;
@@ -12,22 +13,19 @@ import org.springframework.web.multipart.MultipartFile;
 @Setter
 public class UploadComicBookDetailReq {
 
+	@NotNull
 	@JsonProperty("contentId")
 	private String contentId;
 
-	@JsonProperty("title")
-	private String title;
+	@NotNull
+	@JsonProperty("volume")
+	private Integer volume;
 
-	@JsonProperty("chapter")
-	private String chapter;
+	@JsonProperty("episode")
+	private String episode;
 
-	@JsonProperty("page")
-	private Integer page;
-
+	@NotNull
 	@JsonProperty("images")
 	private List<MultipartFile> images;
-
-	@JsonProperty("region")
-	private Region region;
 
 }

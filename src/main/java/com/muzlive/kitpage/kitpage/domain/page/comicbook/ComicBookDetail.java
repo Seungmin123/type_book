@@ -4,6 +4,7 @@ import com.muzlive.kitpage.kitpage.domain.common.BaseTimeEntity;
 import com.muzlive.kitpage.kitpage.utils.enums.Region;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -34,12 +35,12 @@ public class ComicBookDetail extends BaseTimeEntity {
 	@Column(name = "comic_book_uid", nullable = false)
 	private Long comicBookUid;
 
-	@Column(name = "title")
-	private String title;
-
 	@Setter
-	@Column(name = "chapter")
-	private String chapter;
+	@Column(name = "volume")
+	private Integer volume;
+
+	@Column(name = "episode")
+	private String episode;
 
 	@Setter
 	@Column(name = "page")
@@ -48,25 +49,21 @@ public class ComicBookDetail extends BaseTimeEntity {
 	@Column(name = "rate")
 	private Double rate;
 
-	@Column(name = "imageUid")
+	@Column(name = "image_uid")
 	private Long imageUid;
-
-	@Enumerated
-	@Column(name = "region")
-	private Region region;
 
 	@ManyToOne
 	@JoinColumn(name = "comic_book_uid", insertable = false, updatable = false)
 	private ComicBook comicBook;
 
 	@Builder
-	public ComicBookDetail(Long comicBookUid, String title, String chapter,
-		Double rate, Long imageUid, Region region) {
+	public ComicBookDetail(Long comicBookUid, Integer volume, String episode, Integer page,
+		Double rate, Long imageUid) {
 		this.comicBookUid = comicBookUid;
-		this.title = title;
-		this.chapter = chapter;
+		this.volume = volume;
+		this.episode = episode;
+		this.page = page;
 		this.rate = rate;
 		this.imageUid = imageUid;
-		this.region = region;
 	}
 }

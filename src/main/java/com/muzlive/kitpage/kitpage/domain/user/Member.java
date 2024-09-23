@@ -5,6 +5,7 @@ import com.muzlive.kitpage.kitpage.utils.enums.Region;
 import com.muzlive.kitpage.kitpage.utils.enums.UserRole;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -37,7 +38,7 @@ public class Member extends BaseTimeEntity {
 	@Column(name = "name")
 	private String name;
 
-	@Enumerated
+	@Enumerated(EnumType.STRING)
 	@Column(name = "role")
 	private UserRole role;
 
@@ -50,7 +51,7 @@ public class Member extends BaseTimeEntity {
 	@Column(name = "ip_address")
 	private String ipAddress;
 
-	@Enumerated
+	@Enumerated(EnumType.STRING)
 	@Column(name = "region")
 	private Region region;
 
