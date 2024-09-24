@@ -8,6 +8,7 @@ import com.muzlive.kitpage.kitpage.domain.page.comicbook.ComicBook;
 import com.muzlive.kitpage.kitpage.domain.page.comicbook.dto.resp.ComicBookDetailResp;
 import com.muzlive.kitpage.kitpage.domain.page.comicbook.dto.resp.ComicBookEpisodeResp;
 import com.muzlive.kitpage.kitpage.domain.page.comicbook.dto.resp.ComicBookResp;
+import com.muzlive.kitpage.kitpage.domain.page.dto.resp.PageResp;
 import com.muzlive.kitpage.kitpage.service.page.ComicService;
 import com.muzlive.kitpage.kitpage.service.page.PageService;
 import com.muzlive.kitpage.kitpage.utils.constants.ApplicationConstants;
@@ -32,13 +33,6 @@ public class ComicController {
 
 	private final ComicService comicService;
 
-	// get Install ComicBook List
-	@Operation(summary = "ComicBook 목록 API", description = "Device Id 별 ComicBook 리스트")
-	@GetMapping("/list/{deviceId}")
-	public CommonResp<List<ComicBookResp>> getInstallList(@PathVariable String deviceId) throws Exception {
-		return new CommonResp<>(ComicBookResp.of(comicService.getComicBooksByDeviceId(deviceId)));
-	}
-
 	// TODO !!! 북마크 로컬, 이어보기 로
 	// TODO 비디오 비트무빈 유튜브
 	// m368
@@ -58,9 +52,9 @@ public class ComicController {
 		return new CommonResp<>();
 	}
 
-	@GetMapping("/{pageUid}")
+	@GetMapping("/detail/{pageUid}")
 	public CommonResp<ComicBookDetailResp> getComicBookInfo(@PathVariable Long pageUid) throws Exception {
-		Page page = pageService.findById(pageUid);
+		Page page = pageService.findPageById(pageUid);
 		if(CollectionUtils.isEmpty(page.getComicBooks()))
 			throw new CommonException(ExceptionCode.CANNOT_FIND_ITEM_THAT_MATCH_THE_PARAM);
 
