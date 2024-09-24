@@ -41,4 +41,12 @@ public class CommonUtils {
 		return ip;
 	}
 
+	public static String makeEpisodeName(Integer volume, String episode) {
+		String name = "";
+		if(volume != null) name += volume + " 권";
+		if(episode != null) name += " " + episode;
+
+		return name;
+	}
+
 }

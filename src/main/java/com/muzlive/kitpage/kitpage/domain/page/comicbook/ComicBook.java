@@ -13,6 +13,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
@@ -35,23 +36,34 @@ public class ComicBook extends BaseTimeEntity {
 	@Column(name = "comic_book_uid", nullable = false)
 	private Long comicBookUid;
 
+	@Column(name = "page_uid", nullable = false)
+	private Long pageUid;
+
+	@Column(name = "cover_image_uid")
+	private Long coverImageUid;
+
 	@Column(name = "writer")
 	private String writer;
 
 	@Column(name = "illustrator")
 	private String illustrator;
 
-	@OneToOne(cascade = CascadeType.ALL)
-	@JoinColumn(name = "page_uid")
+	@Column(name = "volume")
+	private Integer volume;
+
+	@ManyToOne
+	@JoinColumn(name = "page_uid", insertable = false, updatable = false)
 	private Page page;
 
 	@OneToMany(mappedBy = "comicBook")
 	private List<ComicBookDetail> comicBookDetails;
 
 	@Builder
-	public ComicBook(String writer, String illustrator, Page page) {
+	public ComicBook(Long pageUid, Long coverImageUid, String writer, String illustrator, Integer volume) {
+		this.pageUid = pageUid;
+		this.coverImageUid = coverImageUid;
 		this.writer = writer;
 		this.illustrator = illustrator;
-		this.page = page;
+		this.volume = volume;
 	}
 }

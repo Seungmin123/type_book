@@ -1,6 +1,7 @@
 package com.muzlive.kitpage.kitpage.controller;
 
 import com.muzlive.kitpage.kitpage.domain.common.dto.resp.CommonResp;
+import com.muzlive.kitpage.kitpage.domain.page.dto.req.CreatePageReq;
 import com.muzlive.kitpage.kitpage.domain.page.dto.req.UploadComicBookDetailReq;
 import com.muzlive.kitpage.kitpage.domain.page.dto.req.UploadComicBookReq;
 import com.muzlive.kitpage.kitpage.domain.page.dto.req.UploadMusicReq;
@@ -19,6 +20,12 @@ import org.springframework.web.bind.annotation.RestController;
 public class AdminController {
 
 	private final PageService pageService;
+
+	@PostMapping("/page")
+	CommonResp<Void> createPage(@Valid @ModelAttribute CreatePageReq createPageReq) throws Exception {
+		pageService.createPage(createPageReq);
+		return new CommonResp<>();
+	}
 
 	@PostMapping("/comic")
 	CommonResp<Void> uploadComicBook(@Valid @ModelAttribute UploadComicBookReq uploadComicBookReq) throws Exception {

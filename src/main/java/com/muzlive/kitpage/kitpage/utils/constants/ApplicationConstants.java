@@ -32,4 +32,5 @@ public class ApplicationConstants {
 
 	public static final String VERSION_TYPE_CURRENT = "currentVersion";
 
+	public static final String COMIC_BOOK_UNIT_1 = "권";
 }

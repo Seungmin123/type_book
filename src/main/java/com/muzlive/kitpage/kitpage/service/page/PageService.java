@@ -1,5 +1,7 @@
 package com.muzlive.kitpage.kitpage.service.page;
 
+import static com.muzlive.kitpage.kitpage.domain.user.QVersionInfo.versionInfo;
+
 import com.muzlive.kitpage.kitpage.config.exception.CommonException;
 import com.muzlive.kitpage.kitpage.config.exception.ExceptionCode;
 import com.muzlive.kitpage.kitpage.domain.page.Page;
@@ -10,12 +12,14 @@ import com.muzlive.kitpage.kitpage.domain.page.comicbook.Video;
 import com.muzlive.kitpage.kitpage.domain.page.comicbook.repository.ComicBookRepository;
 import com.muzlive.kitpage.kitpage.domain.page.comicbook.repository.MusicRepository;
 import com.muzlive.kitpage.kitpage.domain.page.comicbook.repository.VideoRepository;
+import com.muzlive.kitpage.kitpage.domain.page.dto.req.CreatePageReq;
 import com.muzlive.kitpage.kitpage.domain.page.dto.req.UploadComicBookDetailReq;
 import com.muzlive.kitpage.kitpage.domain.page.dto.req.UploadComicBookReq;
 import com.muzlive.kitpage.kitpage.domain.page.dto.req.UploadMusicReq;
 import com.muzlive.kitpage.kitpage.domain.page.dto.req.UploadVideoReq;
 import com.muzlive.kitpage.kitpage.domain.page.repository.PageRepository;
 import com.muzlive.kitpage.kitpage.domain.user.Image;
+import com.muzlive.kitpage.kitpage.domain.user.VersionInfo;
 import com.muzlive.kitpage.kitpage.domain.user.dto.req.VersionInfoReq;
 import com.muzlive.kitpage.kitpage.domain.user.dto.resp.VersionInfoResp;
 import com.muzlive.kitpage.kitpage.domain.user.repository.ImageRepository;
@@ -26,6 +30,7 @@ import com.muzlive.kitpage.kitpage.utils.enums.PageContentType;
 import com.muzlive.kitpage.kitpage.utils.enums.VideoCode;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -53,63 +58,80 @@ public class PageService {
 
 	private final VideoRepository videoRepository;
 
-	@Transactional
-	public void insertComicBook(UploadComicBookReq uploadComicBookReq) throws Exception {
+	public Page findById(Long pageUid) throws Exception {
+		return pageRepository.findById(pageUid).orElseThrow(() -> new CommonException(ExceptionCode.CANNOT_FIND_MATCHED_ITEM));
+	}
 
+	@Transactional
+	public void createPage(CreatePageReq createPageReq) throws Exception {
 		Long nextPageUid = pageRepository.findFirstByOrderByPageUidDesc()
 			.map(page -> page.getPageUid() != null ? page.getPageUid() + 1L : 1L)
 			.orElse(1L);
 
-		String contentId = ApplicationConstants.COMIC + "_" + String.format("%08d", nextPageUid);
+		String contentId = createPageReq.getContentType() + "_" + String.format("%08d", nextPageUid);
 
 		// S3 Cover Image Upload
-		String coverImagePath = contentId + "/" + ApplicationConstants.IMAGE + "/" + UUID.randomUUID().toString().substring(0, 8) + "_" + uploadComicBookReq.getCoverImage().getOriginalFilename();
+		String coverImagePath = contentId + "/" + ApplicationConstants.IMAGE + "/" + UUID.randomUUID().toString().substring(0, 8) + "_" + createPageReq.getCoverImage().getOriginalFilename();
+		s3Service.uploadFile(coverImagePath, createPageReq.getCoverImage());
+
+		// Image DB Insert
+		Image image = imageRepository.save(Image.of(coverImagePath, ImageCode.PAGE_IMAGE, createPageReq.getCoverImage()));
+
+		pageRepository.save(
+			Page.builder()
+			.contentId(contentId)
+			.contentType(createPageReq.getContentType())
+			.coverImageUid(image.getImageUid())
+			.title(createPageReq.getTitle())
+			.subTitle(createPageReq.getSubtitle())
+			.infoText(createPageReq.getInfoText())
+			.company(createPageReq.getCompany())
+			.genre(createPageReq.getGenre())
+			.region(createPageReq.getRegion())
+			.build());
+	}
+
+	@Transactional
+	public void insertComicBook(UploadComicBookReq uploadComicBookReq) throws Exception {
+		Page page = pageRepository.findById(uploadComicBookReq.getPageUid()).orElseThrow(() -> new CommonException(ExceptionCode.CANNOT_FIND_MATCHED_ITEM));
+
+		// S3 Cover Image Upload
+		String coverImagePath = page.getContentId() + "/" + ApplicationConstants.IMAGE + "/" + UUID.randomUUID().toString().substring(0, 8) + "_" + uploadComicBookReq.getCoverImage().getOriginalFilename();
 		s3Service.uploadFile(coverImagePath, uploadComicBookReq.getCoverImage());
 
 		// Image DB Insert
-		Image image = imageRepository.save(Image.of(coverImagePath, ImageCode.COVER_IMAGE, uploadComicBookReq.getCoverImage()));
+		Image image = imageRepository.save(Image.of(coverImagePath, ImageCode.COMIC_COVER_IMAGE, uploadComicBookReq.getCoverImage()));
 
 		// Page, ComicBook DB Insert
 		comicBookRepository.save(
 			ComicBook.builder()
+				.pageUid(uploadComicBookReq.getPageUid())
+				.coverImageUid(image.getImageUid())
 				.writer(uploadComicBookReq.getWriter())
 				.illustrator(uploadComicBookReq.getIllustrator())
-				.page(
-					Page.builder()
-						.contentId(contentId)
-						.contentType(PageContentType.COMICBOOK)
-						.coverImageUid(image.getImageUid())
-						.title(uploadComicBookReq.getTitle())
-						.subTitle(uploadComicBookReq.getSubtitle())
-						.infoText(uploadComicBookReq.getInfoText())
-						.company(uploadComicBookReq.getCompany())
-						.genre(uploadComicBookReq.getGenre())
-						.region(uploadComicBookReq.getRegion())
-						.build()
-				)
+				.volume(uploadComicBookReq.getVolume())
 				.build()
 		);
 	}
 
 	@Transactional
 	public void insertComicBookDetail(UploadComicBookDetailReq uploadComicBookDetailReq) throws Exception {
-		ComicBook comicBook = comicBookRepository.findByPageContentId(uploadComicBookDetailReq.getContentId())
+		ComicBook comicBook = comicBookRepository.findById(uploadComicBookDetailReq.getComicBookUid())
 			.orElseThrow(() -> new CommonException(ExceptionCode.CANNOT_FIND_MATCHED_ITEM));
 
 		String episode = Objects.nonNull(uploadComicBookDetailReq.getEpisode()) ? uploadComicBookDetailReq.getEpisode() : "";
-		int page = comicService.findComicBookMaxPage(comicBook.getComicBookUid(), uploadComicBookDetailReq.getVolume());
+		int page = comicService.findComicBookMaxPage(comicBook.getComicBookUid());
 
 		for(MultipartFile multipartFile : uploadComicBookDetailReq.getImages()) {
 			// S3 Cover Image Upload
-			String imagePath = uploadComicBookDetailReq.getContentId() + "/" + ApplicationConstants.CONTENT + "/" + UUID.randomUUID().toString().substring(0, 8) + "_" + multipartFile.getOriginalFilename();
+			String imagePath = comicBook.getPage().getContentId() + "/" + ApplicationConstants.CONTENT + "/" + UUID.randomUUID().toString().substring(0, 8) + "_" + multipartFile.getOriginalFilename();
 			s3Service.uploadFile(imagePath, multipartFile);
 
 			// Image DB Insert
-			Image image = imageRepository.save(Image.of(imagePath, ImageCode.COVER_IMAGE, multipartFile));
+			Image image = imageRepository.save(Image.of(imagePath, ImageCode.COMIC_COVER_IMAGE, multipartFile));
 
 			comicService.upsertComicBookDetail(ComicBookDetail.builder()
 				.comicBookUid(comicBook.getComicBookUid())
-				.volume(uploadComicBookDetailReq.getVolume())
 				.episode(episode)
 				.page(page++)
 				.imageUid(image.getImageUid())
@@ -189,7 +211,7 @@ public class PageService {
 	}
 
 	public VersionInfoResp getVersionInfo(VersionInfoReq versionInfoReq) throws Exception {
-		/*// Client Test 용
+		// Client Test 용
 		if(versionInfoReq.getCurrentVersion().endsWith("-dev") || versionInfoReq.getCurrentVersion().endsWith("-test"))
 			return new VersionInfoResp(false, false);
 
@@ -214,23 +236,12 @@ public class PageService {
 			Boolean needUpdate = currentVersionCompare < 0;
 			Boolean isForced = (versionInfoReq.isCurrentVersionLessThanTo(forcedVersion) && versionInfoReq.isOsVersionGreaterThanTo(osVersion));
 
-//            if(currentVersionCompare > 0) {
-//                version.setLatestVersion(versionInfoReq.getCurrentVersion());
-//                versionInfoRepository.save(version);
-//            }
-
 			return new VersionInfoResp(needUpdate, isForced);
-		}).orElse(null);*/
-
-		return null;
+		}).orElse(null);
 	}
 
 	private boolean isVersionFormat(String version) {
 		String pattern = "^\\d+(\\.\\d+)?(\\.\\d+)?$";
-		if (!version.matches(pattern)) {
-			return false;
-		}
-
-		return true;
+		return version.matches(pattern);
 	}
 }
