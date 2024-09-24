@@ -1,5 +1,7 @@
 package com.muzlive.kitpage.kitpage.service.page;
 
+import static com.muzlive.kitpage.kitpage.domain.page.QPage.page;
+import static com.muzlive.kitpage.kitpage.domain.user.QKit.kit;
 import static com.muzlive.kitpage.kitpage.domain.user.QVersionInfo.versionInfo;
 
 import com.muzlive.kitpage.kitpage.config.exception.CommonException;
@@ -29,6 +31,8 @@ import com.muzlive.kitpage.kitpage.utils.enums.ImageCode;
 import com.muzlive.kitpage.kitpage.utils.enums.PageContentType;
 import com.muzlive.kitpage.kitpage.utils.enums.VideoCode;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
@@ -58,8 +62,24 @@ public class PageService {
 
 	private final VideoRepository videoRepository;
 
-	public Page findById(Long pageUid) throws Exception {
+	public Page findPageById(Long pageUid) throws Exception {
 		return pageRepository.findById(pageUid).orElseThrow(() -> new CommonException(ExceptionCode.CANNOT_FIND_MATCHED_ITEM));
+	}
+
+	public Image findImageById(Long imageUid) throws Exception {
+		return imageRepository.findById(imageUid).orElseThrow(() -> new CommonException(ExceptionCode.CANNOT_FIND_MATCHED_ITEM));
+	}
+
+	public List<Page> findByDeviceId(String deviceId) throws Exception {
+		List<Page> pages = queryFactory
+			.selectFrom(page)
+				.innerJoin(kit).on(kit.pageUid.eq(page.pageUid))
+			.where(kit.deviceId.eq(deviceId))
+			.fetch();
+
+		if(CollectionUtils.isEmpty(pages)) pages = new ArrayList<>();
+
+		return pages;
 	}
 
 	@Transactional
