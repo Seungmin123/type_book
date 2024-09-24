@@ -8,6 +8,6 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface ComicBookDetailRepository extends JpaRepository<ComicBookDetail, Long> {
 
-	@Query("SELECT MAX(cbd.page) FROM ComicBookDetail cbd WHERE cbd.comicBookUid = :comicBookUid AND cbd.volume = :volume")
-	Integer findMaxPage(Long comicBookUid, Integer volume);
+	@Query("SELECT MAX(cbd.page) FROM ComicBookDetail cbd WHERE cbd.comicBookUid = :comicBookUid")
+	Integer findMaxPage(Long comicBookUid);
 }

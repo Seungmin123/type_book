@@ -1,9 +1,11 @@
 package com.muzlive.kitpage.kitpage.domain.page;
 
 import com.muzlive.kitpage.kitpage.domain.common.BaseTimeEntity;
+import com.muzlive.kitpage.kitpage.domain.page.comicbook.ComicBook;
 import com.muzlive.kitpage.kitpage.utils.enums.PageContentType;
 import com.muzlive.kitpage.kitpage.utils.enums.PageGenre;
 import com.muzlive.kitpage.kitpage.utils.enums.Region;
+import java.util.List;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -11,11 +13,11 @@ import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 
@@ -64,6 +66,9 @@ public class Page extends BaseTimeEntity {
 	@Enumerated(EnumType.STRING)
 	@Column(name = "region")
 	private Region region;
+
+	@OneToMany(mappedBy = "page")
+	private List<ComicBook> comicBooks;
 
 	@Builder
 	public Page(String contentId, PageContentType contentType,

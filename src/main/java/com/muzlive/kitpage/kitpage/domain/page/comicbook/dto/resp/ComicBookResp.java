@@ -29,14 +29,6 @@ public class ComicBookResp {
 
 	private String subTitle;
 
-	private String infoText;
-
-	private String company;
-
-	private PageGenre genre;
-
-	private Double rate;
-
 	public static ComicBookResp of(ComicBook comicBook) {
 		return ComicBookResp.builder()
 			.comicBookUid(comicBook.getComicBookUid())
@@ -46,10 +38,6 @@ public class ComicBookResp {
 			.illustrator(comicBook.getIllustrator())
 			.title(comicBook.getPage().getTitle())
 			.subTitle(comicBook.getPage().getSubTitle())
-			.infoText(comicBook.getPage().getInfoText())
-			.company(comicBook.getPage().getCompany())
-			.genre(comicBook.getPage().getGenre())
-			.rate(comicBook.getPage().getRate())
 			.build();
 	}
 

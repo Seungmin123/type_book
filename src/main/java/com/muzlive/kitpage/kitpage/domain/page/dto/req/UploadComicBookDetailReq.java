@@ -14,12 +14,8 @@ import org.springframework.web.multipart.MultipartFile;
 public class UploadComicBookDetailReq {
 
 	@NotNull
-	@JsonProperty("contentId")
-	private String contentId;
-
-	@NotNull
-	@JsonProperty("volume")
-	private Integer volume;
+	@JsonProperty("comicBookUid")
+	private Long comicBookUid;
 
 	@JsonProperty("episode")
 	private String episode;

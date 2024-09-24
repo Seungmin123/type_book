@@ -3,11 +3,14 @@ package com.muzlive.kitpage.kitpage.service.page;
 import static com.muzlive.kitpage.kitpage.domain.page.comicbook.QComicBook.comicBook;
 import static com.muzlive.kitpage.kitpage.domain.user.QKit.kit;
 
+import com.muzlive.kitpage.kitpage.config.exception.CommonException;
+import com.muzlive.kitpage.kitpage.config.exception.ExceptionCode;
+import com.muzlive.kitpage.kitpage.domain.page.Page;
 import com.muzlive.kitpage.kitpage.domain.page.comicbook.ComicBook;
 import com.muzlive.kitpage.kitpage.domain.page.comicbook.ComicBookDetail;
-import com.muzlive.kitpage.kitpage.domain.page.comicbook.repository.ComicBookBookmarkRepository;
+import com.muzlive.kitpage.kitpage.domain.page.comicbook.dto.resp.ComicBookDetailResp;
+import com.muzlive.kitpage.kitpage.domain.page.comicbook.dto.resp.ComicBookEpisodeResp;
 import com.muzlive.kitpage.kitpage.domain.page.comicbook.repository.ComicBookDetailRepository;
-import com.muzlive.kitpage.kitpage.domain.page.comicbook.repository.ComicBookLogRepository;
 import com.muzlive.kitpage.kitpage.domain.page.comicbook.repository.ComicBookRepository;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import java.util.ArrayList;
@@ -26,9 +29,10 @@ public class ComicService {
 
 	private final ComicBookDetailRepository comicBookDetailRepository;
 
-	private final ComicBookLogRepository comicBookLogRepository;
-
-	private final ComicBookBookmarkRepository comicBookBookmarkRepository;
+	public ComicBook getComicBook(Long comicBookUid) throws Exception {
+		return comicBookRepository.findById(comicBookUid)
+			.orElseThrow(() -> new CommonException(ExceptionCode.CANNOT_FIND_ITEM_THAT_MATCH_THE_PARAM));
+	}
 
 	public ComicBook upsertComicBook(ComicBook comicBook) throws Exception {
 		return comicBookRepository.save(comicBook);
@@ -38,8 +42,8 @@ public class ComicService {
 		return comicBookDetailRepository.save(comicBookDetail);
 	}
 
-	public int findComicBookMaxPage(Long comicBookUid, Integer volume) throws Exception {
-		Integer page = comicBookDetailRepository.findMaxPage(comicBookUid, volume);
+	public int findComicBookMaxPage(Long comicBookUid) throws Exception {
+		Integer page = comicBookDetailRepository.findMaxPage(comicBookUid);
 		return page == null ? 0 : page;
 	}
 
@@ -47,7 +51,7 @@ public class ComicService {
 
 		List<ComicBook> comicBooks = queryFactory
 			.selectFrom(comicBook)
-			.innerJoin(kit).on(kit.pageUid.eq(comicBook.page.pageUid))
+				.innerJoin(kit).on(kit.pageUid.eq(comicBook.page.pageUid))
 			.where(kit.deviceId.eq(deviceId))
 			.fetch();
 

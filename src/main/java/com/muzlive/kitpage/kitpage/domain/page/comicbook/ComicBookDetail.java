@@ -1,11 +1,8 @@
 package com.muzlive.kitpage.kitpage.domain.page.comicbook;
 
 import com.muzlive.kitpage.kitpage.domain.common.BaseTimeEntity;
-import com.muzlive.kitpage.kitpage.utils.enums.Region;
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -35,10 +32,6 @@ public class ComicBookDetail extends BaseTimeEntity {
 	@Column(name = "comic_book_uid", nullable = false)
 	private Long comicBookUid;
 
-	@Setter
-	@Column(name = "volume")
-	private Integer volume;
-
 	@Column(name = "episode")
 	private String episode;
 
@@ -57,10 +50,9 @@ public class ComicBookDetail extends BaseTimeEntity {
 	private ComicBook comicBook;
 
 	@Builder
-	public ComicBookDetail(Long comicBookUid, Integer volume, String episode, Integer page,
+	public ComicBookDetail(Long comicBookUid, String episode, Integer page,
 		Double rate, Long imageUid) {
 		this.comicBookUid = comicBookUid;
-		this.volume = volume;
 		this.episode = episode;
 		this.page = page;
 		this.rate = rate;
