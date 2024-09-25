@@ -1,6 +1,7 @@
 package com.muzlive.kitpage.kitpage.controller;
 
 import com.muzlive.kitpage.kitpage.domain.common.dto.resp.CommonResp;
+import com.muzlive.kitpage.kitpage.domain.common.dto.resp.SimpleResult;
 import com.muzlive.kitpage.kitpage.domain.user.Kit;
 import com.muzlive.kitpage.kitpage.domain.user.dto.req.CheckTagReq;
 import com.muzlive.kitpage.kitpage.domain.user.dto.req.MicLocationReq;
@@ -15,6 +16,13 @@ import com.muzlive.kitpage.kitpage.service.transfer.kihno.dto.req.KihnoMicProces
 import com.muzlive.kitpage.kitpage.service.transfer.kihno.dto.resp.KihnoKitCheckResp;
 import com.muzlive.kitpage.kitpage.service.transfer.kihno.dto.resp.KihnoMicLocationResp;
 import com.muzlive.kitpage.kitpage.service.transfer.kihno.dto.resp.KihnoMicProcessedResp;
+import com.muzlive.kitpage.kitpage.service.transfer.kittor.KittorTransferSerivce;
+import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.KittorChangePasswordReq;
+import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.KittorResetPasswordReq;
+import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.KittorUserReq;
+import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.SendVerificationReq;
+import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.resp.KittorSimpleResult;
+import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.resp.KittorTokenResp;
 import com.muzlive.kitpage.kitpage.utils.CommonUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -24,6 +32,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -33,6 +42,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class UserController {
 
+	private final KittorTransferSerivce kittorTransferSerivce;
+
 	private final KihnoV2TransferSerivce kihnoV2TransferSerivce;
 
 	private final PageService pageService;
@@ -40,6 +51,39 @@ public class UserController {
 	private final KitService kitService;
 
 	private final CommonUtils commonUtils;
+
+	@Operation(summary = "회원가입 API")
+	@PostMapping("/join")
+	public CommonResp<KittorTokenResp> userJoin(@Valid @RequestBody KittorUserReq kittorUserReq) throws Exception {
+		return new CommonResp<>(kittorTransferSerivce.userJoin(kittorUserReq));
+	}
+
+	@Operation(summary = "로그인 API")
+	@PostMapping("/login")
+	public CommonResp<KittorTokenResp> userLogin(@Valid @RequestBody KittorUserReq kittorUserReq) throws Exception {
+		return new CommonResp<>(kittorTransferSerivce.userLogin(kittorUserReq));
+	}
+
+	@Operation(summary = "인증코드 발송 API", description = "비밀번호 변경용 인증코드 발송")
+	@PostMapping("/send/verification-code")
+	public CommonResp<Boolean> sendVerificationCode(@Valid @RequestBody SendVerificationReq sendVerificationReq) throws Exception {
+		return new CommonResp<>(kittorTransferSerivce.sendVerificationCode(sendVerificationReq));
+	}
+
+	@Operation(summary = "비밀번호 초기화 API", description = "인증코드 발송 API 를 통한 비밀번호 초기화")
+	@PostMapping("/password/reset")
+	public CommonResp<Boolean> resetPassword(@Valid @RequestBody KittorResetPasswordReq kittorResetPasswordReq) throws Exception {
+		return new CommonResp<>(kittorTransferSerivce.resetPassword(kittorResetPasswordReq));
+	}
+
+	@Operation(summary = "비밀번호 변경 API")
+	@PostMapping("/password/change")
+	public CommonResp<Boolean> changePassword(
+		@RequestHeader("Authorization") String authorizationHeader,
+		@Valid @RequestBody KittorChangePasswordReq kittorChangePasswordReq
+	) throws Exception {
+		return new CommonResp<>(kittorTransferSerivce.changePassword(authorizationHeader, kittorChangePasswordReq));
+	}
 
 	@Operation(summary = "체크 태그 API", description = "키노 서버를 통한 체크 태그 API")
 	@PostMapping("/checkTag")
@@ -85,9 +129,4 @@ public class UserController {
 		return new CommonResp<>(pageService.getVersionInfo(versionInfoReq));
 	}
 
-	// TODO Log in API
-
-	// TODO Register API
-
-	// TODO Get User Info API
 }

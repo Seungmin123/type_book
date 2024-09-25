@@ -46,6 +46,7 @@ public class ComicController {
 	// 데이터 구조 어떤 방식으로 할 건지 알려주기
 
 	// TODO download comicBook
+	// TODO 통합 다운로드 -> ZIP 파일 괜찮?
 	@GetMapping("/download")
 	public CommonResp<Void> downloadComicBook() throws Exception {
 
@@ -72,38 +73,6 @@ public class ComicController {
 
 
 		return new CommonResp<>(comicBookDetailResp);
-	}
-
-	// TODO get ComicBook Detail list By contentId
-	public CommonResp<Void> getComicBookDetaiList() throws Exception {
-		return new CommonResp<>();
-	}
-
-	// TODO get ComicBook Detail By comicBookDetailUid
-	public CommonResp<Void> getComicBookDetailInfo() throws Exception {
-		return new CommonResp<>();
-	}
-
-	// TODO get BookMark list
-	public CommonResp<Void> getBookMarkList() throws Exception {
-		return new CommonResp<>();
-	}
-
-	// TODO Insert BookMark
-	public CommonResp<Void> insertBookMark() throws Exception {
-		return new CommonResp<>();
-	}
-
-	// TODO Delete BookMark
-	public CommonResp<Void> deleteBookMark() throws Exception {
-		return new CommonResp<>();
-	}
-
-	// TODO Image View APi -> ? -> Online -> image return
-
-	// TODO get Last View Location
-	public CommonResp<Void> getComicBookLatestView() throws Exception {
-		return new CommonResp<>();
 	}
 
 	// TODO get Music Info

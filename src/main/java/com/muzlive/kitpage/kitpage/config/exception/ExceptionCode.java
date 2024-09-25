@@ -17,7 +17,8 @@ public enum ExceptionCode {
     CANNOT_FIND_MATCHED_ITEM(HttpStatus.UNPROCESSABLE_ENTITY),
     CANNOT_FIND_MATCHED_KIHNO_ITEM("10403", "There are no items in kihno that match the parameters.", HttpStatus.FORBIDDEN),
 
-    INTERNAL_SERVER_ERROR("10500", "server error", HttpStatus.INTERNAL_SERVER_ERROR)
+    INTERNAL_SERVER_ERROR("10500", "server error", HttpStatus.INTERNAL_SERVER_ERROR),
+    KITTOR_EXTERNAL_SERVER_ERROR("10501", "kittor external server error", HttpStatus.INTERNAL_SERVER_ERROR)
     ;
 
     // add error code -> update

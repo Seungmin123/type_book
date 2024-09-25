@@ -35,6 +35,8 @@ public class ComicBookDetailResp {
 		this.title = page.getTitle();
 		this.genre = page.getGenre();
 		this.infoText = page.getInfoText();
+		this.writer = "";
+		this.illustrator = "";
 	}
 
 }
