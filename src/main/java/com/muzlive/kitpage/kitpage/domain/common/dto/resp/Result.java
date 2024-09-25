@@ -22,8 +22,8 @@ public class Result<K> extends SimpleResult {
         this.data = data;
     }
 
-    public Result(String code, String message, K data) {
-        this.code = code;
+    public Result(int status, String message, K data) {
+        this.status = status;
         this.message = message;
         this.data = data;
     }

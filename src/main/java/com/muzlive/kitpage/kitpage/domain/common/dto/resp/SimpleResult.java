@@ -9,7 +9,7 @@ import lombok.Setter;
 @NoArgsConstructor
 public class SimpleResult {
 
-    protected String code = "200";
+    protected int status = 200;
 
     protected String message = "";
 
