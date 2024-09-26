@@ -45,20 +45,6 @@ jobs:
           name: kit-page-0.0.1-SNAPSHOT.jar
           path: build/libs/kit-page-0.0.1-SNAPSHOT.jar
 
-  security-scan:
-    runs-on: ubuntu-latest
-    needs: build
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
-
-      - name: Security Scan
-        run: |
-          # Here you can add your custom security scan commands
-          echo "Security Scan Step"
-        continue-on-error: false
-
   upload-to-s3:
     runs-on: ubuntu-latest
     needs: build
@@ -118,8 +104,8 @@ jobs:
       - name: Deploy application # TODO
         run: |
           aws deploy create-deployment \
-            --application-name KitPage-api-prod-CodeDeploy \
-            --deployment-group-name KitPage-api-prod-CodeDeploy-Group \
+            --application-name KitPage-CodeDeploy \
+            --deployment-group-name KitPage-CodeDeploy-Group \
             --s3-location bucket=kitpage-pipe-seoul,key=kitpage-prod-${{ github.run_id }}-${{ github.sha }}.zip,bundleType=zip \
             --file-exists-behavior OVERWRITE \
             --ignore-application-stop-failures
