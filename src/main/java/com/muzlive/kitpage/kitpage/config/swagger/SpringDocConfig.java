@@ -29,6 +29,15 @@ public class SpringDocConfig {
     }
 
     @Bean
+    public GroupedOpenApi createPageApi(){
+        return GroupedOpenApi.builder()
+            .group("Page")
+            .pathsToMatch("/v1/page/**")
+            .addOpenApiCustomiser(swaggerKitCustomApi)
+            .build();
+    }
+
+    @Bean
     public GroupedOpenApi createComicBookApi(){
         return GroupedOpenApi.builder()
                 .group("ComicBook")
