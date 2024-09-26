@@ -34,7 +34,7 @@ jobs:
 
       - name: Build without Test
         run: |
-          echo "DEVELOP Pipeline Started!"
+          echo "PROD Pipeline Started!"
           ./gradlew clean
           ./gradlew build -x test --no-build-cache
         continue-on-error: false
@@ -98,7 +98,7 @@ jobs:
 
       - name: Upload to S3 # TODO
         run: |
-          aws s3 cp kit-page-0.0.1-SNAPSHOT.jar s3://kitpage-pipe-seoul/kitpage-dev-${{ github.run_id }}-${{ github.sha }}.zip
+          aws s3 cp kit-page-0.0.1-SNAPSHOT.jar s3://kitpage-pipe-seoul/kitpage-prod-${{ github.run_id }}-${{ github.sha }}.zip
 
   deploy:
     runs-on: ubuntu-latest
@@ -118,8 +118,8 @@ jobs:
       - name: Deploy application # TODO
         run: |
           aws deploy create-deployment \
-            --application-name KitPage-api-dev-CodeDeploy \
-            --deployment-group-name KitPage-api-dev-CodeDeploy-Group \
-            --s3-location bucket=kitpage-pipe-seoul,key=kitpage-dev-${{ github.run_id }}-${{ github.sha }}.zip,bundleType=zip \
+            --application-name KitPage-api-prod-CodeDeploy \
+            --deployment-group-name KitPage-api-prod-CodeDeploy-Group \
+            --s3-location bucket=kitpage-pipe-seoul,key=kitpage-prod-${{ github.run_id }}-${{ github.sha }}.zip,bundleType=zip \
             --file-exists-behavior OVERWRITE \
             --ignore-application-stop-failures

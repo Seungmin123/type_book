@@ -3,7 +3,7 @@ os: linux
 
 files:
   - source: ./
-    destination: /home/ec2-user/nonstop/build/libs
+    destination: /home/ec2-user/nonstop/jar
     overwrite: yes
 
 permissions:
