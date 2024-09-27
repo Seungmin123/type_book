@@ -29,12 +29,12 @@ nohup java -Dlog4j2.formatMsgNoLookups=true -Xms1024M -Xmx1024M -XX:+HeapDumpOnO
 #nohup java -Dlog4j2.formatMsgNoLookups=true -Dspring.profiles.active=$IDLE_PROFILE -jar $DEPLOY_JAR 1> /dev/null 2>&1 &
 
 echo "> $IDLE_PROFILE 10초 후 Health check 시작"
-echo "> curl -s http://127.0.0.1:$IDLE_PORT/v1/member/health "
+echo "> curl -s http://127.0.0.1:$IDLE_PORT/actuator/health "
 sleep 10
 
 for retry_count in {1..10}
 do
-  response=$(curl -s http://127.0.0.1:$IDLE_PORT/v1/member/health)
+  response=$(curl -s http://127.0.0.1:$IDLE_PORT/actuator/health)
   up_count=$(echo $response | grep 'UP' | wc -l)
 
   if [ $up_count -ge 1 ]
