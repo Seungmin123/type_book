@@ -38,7 +38,7 @@
     <springProfile name="prod">
         <logger name="*" level="INFO" />
         <logger name="com.muzlive" level="INFO" />
-        <logger name="org.srpginframework" level="INFO" />
+        <logger name="org.springframework" level="INFO" />
         <logger name="org.springframework.web" level="INFO"/>
         <logger name="log4j.logger.org.springframework.transaction" level="INFO" />
         <logger name="org.apache.ibatis" level="INFO"/>
