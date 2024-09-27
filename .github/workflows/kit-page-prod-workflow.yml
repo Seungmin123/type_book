@@ -39,8 +39,8 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v3
         with:
-          name: kit-page-0.0.1-SNAPSHOT.jar
-          path: build/libs/kit-page-0.0.1-SNAPSHOT.jar
+          name: kit-page-0.0.1-SNAPSHOT-boot.jar
+          path: build/libs/kit-page-0.0.1-SNAPSHOT-boot.jar
 
   upload-to-s3:
     runs-on: ubuntu-latest
@@ -53,7 +53,7 @@ jobs:
       - name: Download artifact
         uses: actions/download-artifact@v3
         with:
-          name: kit-page-0.0.1-SNAPSHOT.jar
+          name: kit-page-0.0.1-SNAPSHOT-boot.jar
           path: build/libs
 
       - name: Set VERSION_LABEL
@@ -67,7 +67,7 @@ jobs:
       - name: Zip files
         run: |
           cd build/libs
-          zip ../../kit-page-0.0.1-SNAPSHOT.jar *
+          zip ../../kit-page-0.0.1-SNAPSHOT-boot.jar *
           cd ../../
 
       - name: Configure AWS credentials
@@ -79,7 +79,7 @@ jobs:
 
       - name: Upload to S3 # TODO
         run: |
-          aws s3 cp kit-page-0.0.1-SNAPSHOT.jar s3://kitpage-pipe-seoul/kitpage-prod-${{ github.run_id }}-${{ github.sha }}.zip
+          aws s3 cp kit-page-0.0.1-SNAPSHOT-boot.jar s3://kitpage-pipe-seoul/kitpage-prod-${{ github.run_id }}-${{ github.sha }}.zip
 
   deploy:
     runs-on: ubuntu-latest
