@@ -17,9 +17,7 @@ hooks:
     - location: /source/start.sh
       timeout: 180
       runas: root
-      script: chmod +x /source/start.sh
   ApplicationStop:
     - location: /source/stop.sh
       timeout: 60
       runas: root
-      script: chmod +x /source/start.sh
