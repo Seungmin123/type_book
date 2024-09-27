@@ -99,8 +99,8 @@ jobs:
       - name: Deploy application # TODO
         run: |
           aws deploy create-deployment \
-            --application-name KitPage-CodeDeploy \
-            --deployment-group-name KitPage-CodeDeploy-Group \
+            --application-name KiTPage-CodeDeploy \
+            --deployment-group-name KiTPage-CodeDeploy-Group \
             --s3-location bucket=kitpage-pipe-seoul,key=kitpage-prod-${{ github.run_id }}-${{ github.sha }}.zip,bundleType=zip \
             --file-exists-behavior OVERWRITE \
             --ignore-application-stop-failures
