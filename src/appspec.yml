@@ -2,7 +2,7 @@ version: 0.0
 os: linux
 
 files:
-  - source: /
+  - source: ./
     destination: /home/ec2-user/nonstop/jar
     overwrite: yes
 
@@ -14,10 +14,10 @@ permissions:
 
 hooks:
   ApplicationStart:
-    - location: /source/start.sh
+    - location: start.sh
       timeout: 180
-      runas: root
+      runas: ec2-user
   ApplicationStop:
-    - location: /source/stop.sh
+    - location: stop.sh
       timeout: 60
-      runas: root
+      runas: ec2-user
