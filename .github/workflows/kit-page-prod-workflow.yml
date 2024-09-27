@@ -1,11 +1,9 @@
 name: Build and Deploy
 
 on:
-  pull_request:
+  push:
     branches:
-      - master
-    types:
-      - closed
+      - main
 
 jobs:
   build:
