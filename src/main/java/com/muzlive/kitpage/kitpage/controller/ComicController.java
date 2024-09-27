@@ -12,6 +12,7 @@ import com.muzlive.kitpage.kitpage.domain.page.dto.resp.PageResp;
 import com.muzlive.kitpage.kitpage.service.page.ComicService;
 import com.muzlive.kitpage.kitpage.service.page.PageService;
 import com.muzlive.kitpage.kitpage.utils.constants.ApplicationConstants;
+import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.ArrayList;
@@ -40,13 +41,7 @@ public class ComicController {
 	// TODO 설정 마이페이지 -> 통합로그인...
 	// TODO 책 방향 왼쪽 오른쪽 주기 알려주기
 
-
-	// TODO 알려줄 것
-	// 암호화 방식
-	// 데이터 구조 어떤 방식으로 할 건지 알려주기
-
-	// TODO download comicBook
-	// TODO 통합 다운로드 -> ZIP 파일 괜찮?
+	@Hidden
 	@GetMapping("/download")
 	public CommonResp<Void> downloadComicBook() throws Exception {
 
