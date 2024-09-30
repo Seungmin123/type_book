@@ -20,7 +20,6 @@ import org.hibernate.annotations.DynamicUpdate;
 @Getter
 @Table(name = "member_log")
 @Entity
-@Builder
 public class MemberLog extends BaseTimeEntity {
 
 	@Id
@@ -41,6 +40,7 @@ public class MemberLog extends BaseTimeEntity {
 	@Column(name = "model_name")
 	private String modelName;
 
+	@Builder
 	public MemberLog(Long memberUid, String ipAddress, Region region, String modelName) {
 		this.memberUid = memberUid;
 		this.ipAddress = ipAddress;
