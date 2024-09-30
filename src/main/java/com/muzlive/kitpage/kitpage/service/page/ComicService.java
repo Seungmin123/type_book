@@ -59,4 +59,8 @@ public class ComicService {
 
 		return comicBooks;
 	}
+
+	public ComicBookDetail findComicBookDetailByImageUid(Long imageUid) throws Exception {
+		return comicBookDetailRepository.findByImageUid(imageUid).orElseThrow(() -> new CommonException(ExceptionCode.CANNOT_FIND_MATCHED_ITEM));
+	}
 }
