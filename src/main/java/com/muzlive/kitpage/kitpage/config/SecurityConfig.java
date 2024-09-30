@@ -35,22 +35,23 @@ public class SecurityConfig {
 
 			.and()
 			.headers()
-			.contentSecurityPolicy("script-src 'self'; style-src 'self'; img-src 'self'")
+			.contentSecurityPolicy("default-src 'self'; img-src 'self' data:;")
 			.and().frameOptions().disable()
 
 			.and()
 			.authorizeRequests()
+			// TODO 권한 수정
+			.antMatchers("/**").permitAll()
 			// Health Check
 			.antMatchers("/actuator/health").permitAll()
 			// swagger v2
 			.antMatchers("/v2/api-docs", "/swagger-resources", "/swagger-resources/**", "/configuration/ui", "/configuration/security", "/swagger-ui.html", "/webjars/**").permitAll()
 			// swagger v3
-			.antMatchers("/v3/api-docs/**", "/swagger-ui/**", "/doc/api/**").permitAll()
+			.antMatchers("/v3/api-docs/**", "/swagger-ui/**", "/doc/api/**", "/swagger-url").permitAll()
 			// get token
 			.antMatchers("/v1/user/token", "/v1/user/checkTag").permitAll()
-
-			// TODO 권한 수정
-			.antMatchers("/v1/**").permitAll()
+			// 루트, 에러 경로
+			.antMatchers("/", "/error").permitAll()
 			.anyRequest().authenticated()
 			.and()
 			.anonymous().authorities(UserRole.GUEST.getKey())
