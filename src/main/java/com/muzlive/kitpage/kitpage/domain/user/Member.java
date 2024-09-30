@@ -11,17 +11,18 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import lombok.Builder;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 
-@NoArgsConstructor
 @DynamicUpdate
 @DynamicInsert
 @Getter
 @Table(name = "member")
 @Entity
+@Builder
 public class Member extends BaseTimeEntity {
 
 	@Id
@@ -29,6 +30,7 @@ public class Member extends BaseTimeEntity {
 	@Column(name = "member_uid", nullable = false)
 	private Long memberUid;
 
+	@Setter
 	@Column(name = "device_id")
 	private String deviceId;
 
@@ -41,9 +43,8 @@ public class Member extends BaseTimeEntity {
 	@Column(name = "name")
 	private String name;
 
-	@Enumerated(EnumType.STRING)
-	@Column(name = "role")
-	private UserRole role;
+	@Column(name = "region")
+	private Region region;
 
 	@Column(name = "nickname")
 	private String nickName;
@@ -51,17 +52,12 @@ public class Member extends BaseTimeEntity {
 	@Column(name = "profile_image_uid")
 	private Long profileImageUid;
 
+	@Setter
 	@Column(name = "ip_address")
 	private String ipAddress;
 
-	@Enumerated(EnumType.STRING)
-	@Column(name = "region")
-	private Region region;
-
+	@Setter
 	@Column(name = "model_name")
 	private String modelName;
 
-	public String getRoleKey(){
-		return this.role.getKey();
-	}
 }

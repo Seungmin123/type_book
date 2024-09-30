@@ -4,6 +4,7 @@ import com.muzlive.kitpage.kitpage.config.jwt.JwtTokenProvider;
 import com.muzlive.kitpage.kitpage.domain.common.dto.resp.CommonResp;
 import com.muzlive.kitpage.kitpage.domain.common.dto.resp.SimpleResult;
 import com.muzlive.kitpage.kitpage.domain.user.Kit;
+import com.muzlive.kitpage.kitpage.domain.user.Member;
 import com.muzlive.kitpage.kitpage.domain.user.TokenLog;
 import com.muzlive.kitpage.kitpage.domain.user.dto.req.AccessTokenReq;
 import com.muzlive.kitpage.kitpage.domain.user.dto.req.CheckTagReq;
@@ -29,8 +30,10 @@ import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.resp.KittorSimple
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.resp.KittorTokenResp;
 import com.muzlive.kitpage.kitpage.utils.CommonUtils;
 import com.muzlive.kitpage.kitpage.utils.enums.TokenType;
+import com.muzlive.kitpage.kitpage.utils.enums.UserRole;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -63,7 +66,9 @@ public class UserController {
 
 	@Operation(summary = "Token 발급 API", description = "앱 실행 시 호출, 그 이후 Header Authorization 추가")
 	@PostMapping("/token")
-	public CommonResp<String> createToken(@Valid @RequestBody AccessTokenReq accessTokenReq) throws Exception {
+	public CommonResp<String> createToken(@Valid @RequestBody AccessTokenReq accessTokenReq, HttpServletRequest httpServletRequest) throws Exception {
+
+		// Token 정보 저장
 		String token = jwtTokenProvider.createAccessToken(accessTokenReq.getDeviceId());
 
 		userService.insertTokenLog(
@@ -72,6 +77,45 @@ public class UserController {
 				.deviceId(accessTokenReq.getDeviceId())
 				.tokenType(TokenType.ACCESS)
 				.build());
+
+		// Member 정보 저장
+		Member member = userService.findByDeviceId(accessTokenReq.getDeviceId());
+		member.setDeviceId(accessTokenReq.getDeviceId());
+		member.setModelName(accessTokenReq.getModelName());
+		member.setIpAddress(commonUtils.getIp(httpServletRequest));
+
+		userService.upsertMember(member);
+
+		return new CommonResp<>(token);
+	}
+
+	@Operation(summary = "체크 태그 API", description = "키노 서버를 통한 체크 태그 API")
+	@PostMapping("/checkTag")
+	public CommonResp<String> connect(@Valid @RequestBody CheckTagReq checkTagReq) throws Exception {
+		String requestSerialNumber = (checkTagReq.getSerialNumber().length() > 8) ? checkTagReq.getSerialNumber().substring(0, 8) : checkTagReq.getSerialNumber();
+		String paramSerialNumber = (checkTagReq.getSerialNumber().length() < 10) ? checkTagReq.getSerialNumber() + commonUtils.makeRandomHexString() : checkTagReq.getSerialNumber();
+
+		KihnoKitCheckReq kihnoKitCheckReq = KihnoKitCheckReq.builder()
+			.deviceId(checkTagReq.getDeviceId())
+			.kitId(paramSerialNumber)
+			.countryCode(checkTagReq.getCountryCode())
+			.build();
+
+		KihnoKitCheckResp kihnoKitCheckResp = kihnoV2TransferSerivce.kihnoKitCheck(kihnoKitCheckReq);
+
+		Kit kit = kitService.checkTag(checkTagReq.getDeviceId(), requestSerialNumber, kihnoKitCheckResp.getKihnoKitUid());
+
+		// token
+		String token = jwtTokenProvider.createAccessToken(checkTagReq.getDeviceId(), checkTagReq.getSerialNumber());
+		userService.insertTokenLog(
+			TokenLog.builder()
+				.token(token)
+				.deviceId(checkTagReq.getDeviceId())
+				.serialNumber(checkTagReq.getSerialNumber())
+				.tokenType(TokenType.CHECK_TAG)
+				.build());
+
+		// TODO 추가 정보 더하여 Response 만들기 Install 이력이 있는 컨텐츠를 전부 보여줘야하는건지 코믹북만 보여줘야하는건지?
 
 		return new CommonResp<>(token);
 	}
@@ -107,37 +151,6 @@ public class UserController {
 		@Valid @RequestBody KittorChangePasswordReq kittorChangePasswordReq
 	) throws Exception {
 		return new CommonResp<>(kittorTransferSerivce.changePassword(authorizationHeader, kittorChangePasswordReq));
-	}
-
-	@Operation(summary = "체크 태그 API", description = "키노 서버를 통한 체크 태그 API")
-	@PostMapping("/checkTag")
-	public CommonResp<String> connect(@Valid @RequestBody CheckTagReq checkTagReq) throws Exception {
-		String requestSerialNumber = (checkTagReq.getSerialNumber().length() > 8) ? checkTagReq.getSerialNumber().substring(0, 8) : checkTagReq.getSerialNumber();
-		String paramSerialNumber = (checkTagReq.getSerialNumber().length() < 10) ? checkTagReq.getSerialNumber() + commonUtils.makeRandomHexString() : checkTagReq.getSerialNumber();
-		
-		KihnoKitCheckReq kihnoKitCheckReq = KihnoKitCheckReq.builder()
-			.deviceId(checkTagReq.getDeviceId())
-			.kitId(paramSerialNumber)
-			.countryCode(checkTagReq.getCountryCode())
-			.build();
-
-		KihnoKitCheckResp kihnoKitCheckResp = kihnoV2TransferSerivce.kihnoKitCheck(kihnoKitCheckReq);
-
-		Kit kit = kitService.checkTag(checkTagReq.getDeviceId(), requestSerialNumber, kihnoKitCheckResp.getKihnoKitUid());
-
-		// token
-		String token = jwtTokenProvider.createAccessToken(checkTagReq.getDeviceId(), checkTagReq.getSerialNumber());
-		userService.insertTokenLog(
-			TokenLog.builder()
-				.token(token)
-				.deviceId(checkTagReq.getDeviceId())
-				.serialNumber(checkTagReq.getSerialNumber())
-				.tokenType(TokenType.CHECK_TAG)
-				.build());
-
-		// TODO 추가 정보 더하여 Response 만들기 Install 이력이 있는 컨텐츠를 전부 보여줘야하는건지 코믹북만 보여줘야하는건지?
-
-		return new CommonResp<>(token);
 	}
 
 	@Operation(summary = "마이크 Processed 체크", description = "마이크 Processed 체크")
