@@ -3,6 +3,7 @@ package com.muzlive.kitpage.kitpage.config.jwt;
 import com.muzlive.kitpage.kitpage.config.exception.CommonException;
 import com.muzlive.kitpage.kitpage.config.exception.ExceptionCode;
 import com.muzlive.kitpage.kitpage.utils.constants.ApplicationConstants;
+import com.muzlive.kitpage.kitpage.utils.enums.UserRole;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jws;
@@ -36,10 +37,8 @@ public class JwtTokenProvider {
 
     //---------------------------------------------------------------------------------------------
 
-    public static final String ROLE_USER = "ROLE_USER";
-
     public List<String> getDefaultRoles() {
-        return Collections.singletonList(ROLE_USER);
+        return Collections.singletonList(UserRole.GUEST.getKey());
     }
 
     //---------------------------------------------------------------------------------------------
@@ -50,19 +49,28 @@ public class JwtTokenProvider {
     }
 
     // JWT 토큰 생성
+    public String createAccessToken(String deviceId) {
+        return createAccessToken(deviceId, null);
+    }
+
     public String createAccessToken(String deviceId, String serialNumber) {
-        return createAccessToken(deviceId, serialNumber, getDefaultRoles());
+        return createAccessToken(deviceId, serialNumber, null);
     }
 
-    public String createAccessToken(String deviceId, String serialNumber, List<String> roles) {
+    public String createAccessToken(String deviceId, String serialNumber, String email) {
+        return createAccessToken(deviceId, serialNumber, email, getDefaultRoles());
+    }
+
+    public String createAccessToken(String deviceId, String serialNumber, String email, List<String> roles) {
         Map<String, String> claims = new HashMap<>();
-        return createAccessToken(deviceId, serialNumber, roles, claims);
+        claims.put("serialNumber", serialNumber.substring(0, 8));
+        claims.put("email", email);
+        return createAccessToken(deviceId, serialNumber, email, roles, claims);
     }
 
-    public String createAccessToken(String deviceId, String serialNumber, List<String> roles, Map<String, String> optionalClaims) {
+    public String createAccessToken(String deviceId, String serialNumber, String email, List<String> roles, Map<String, String> optionalClaims) {
 
         Claims claims = Jwts.claims().setSubject(deviceId);
-        claims.put("serialNumber", serialNumber.substring(0, 8));
         claims.put("roles", roles);
         claims.putAll(optionalClaims);
 
@@ -78,6 +86,7 @@ public class JwtTokenProvider {
                 .setExpiration(new Date(now.getTime() + accessTokenValidTime)) // set Expire Time
                 .signWith(SignatureAlgorithm.HS256, secretKey)
                 .setHeader(header)
+                .setId(ApplicationConstants.PAGE)
                 .compact();
     }
 
@@ -91,15 +100,16 @@ public class JwtTokenProvider {
         return null;
     }
 
-    public boolean validateAccessToken(String accessToken) throws Exception {
+    public boolean validateAccessToken(String accessToken) {
         return validateAccessToken(accessToken, true);
     }
-    public boolean validateAccessToken(String accessToken, boolean validateUser) throws Exception {
+    public boolean validateAccessToken(String accessToken, boolean validateUser) {
         try {
             final Jws<Claims> claims = Jwts.parser().setSigningKey(secretKey).parseClaimsJws(accessToken);
 
             final String deviceId = String.valueOf(claims.getBody().getSubject());
             final String serialNumber = String.valueOf(claims.getBody().get("serialNumber"));
+            final String email = String.valueOf(claims.getBody().get("email"));
 
             return !claims.getBody().getExpiration().before(new Date());
 
@@ -118,15 +128,22 @@ public class JwtTokenProvider {
         }
     }
 
-    public String getDeviceIdByToken(String accessToken) throws Exception {
+    public String getDeviceIdByToken(String accessToken) {
         final Jws<Claims> claims = Jwts.parser().setSigningKey(secretKey).parseClaimsJws(accessToken);
         return String.valueOf(claims.getBody().getSubject());
     }
 
-    public String getSerialNumberByToken(String accessToken) throws Exception {
+    public String getSerialNumberByToken(String accessToken) {
         final Jws<Claims> claims = Jwts.parser().setSigningKey(secretKey).parseClaimsJws(accessToken);
         return String.valueOf(claims.getBody().get("serialNumber"));
     }
+
+    public String getEmailByToken(String accessToken) {
+        final Jws<Claims> claims = Jwts.parser().setSigningKey(secretKey).parseClaimsJws(accessToken);
+        return String.valueOf(claims.getBody().get("email"));
+    }
+
+
     //---------------------------------------------------------------------------------------------
 
 }

@@ -1,14 +1,18 @@
 package com.muzlive.kitpage.kitpage.controller;
 
+import com.muzlive.kitpage.kitpage.config.jwt.JwtTokenProvider;
 import com.muzlive.kitpage.kitpage.domain.common.dto.resp.CommonResp;
 import com.muzlive.kitpage.kitpage.domain.common.dto.resp.SimpleResult;
 import com.muzlive.kitpage.kitpage.domain.user.Kit;
+import com.muzlive.kitpage.kitpage.domain.user.TokenLog;
+import com.muzlive.kitpage.kitpage.domain.user.dto.req.AccessTokenReq;
 import com.muzlive.kitpage.kitpage.domain.user.dto.req.CheckTagReq;
 import com.muzlive.kitpage.kitpage.domain.user.dto.req.MicLocationReq;
 import com.muzlive.kitpage.kitpage.domain.user.dto.req.VersionInfoReq;
 import com.muzlive.kitpage.kitpage.domain.user.dto.resp.VersionInfoResp;
 import com.muzlive.kitpage.kitpage.service.page.KitService;
 import com.muzlive.kitpage.kitpage.service.page.PageService;
+import com.muzlive.kitpage.kitpage.service.page.UserService;
 import com.muzlive.kitpage.kitpage.service.transfer.kihno.KihnoV2TransferSerivce;
 import com.muzlive.kitpage.kitpage.service.transfer.kihno.dto.req.KihnoKitCheckReq;
 import com.muzlive.kitpage.kitpage.service.transfer.kihno.dto.req.KihnoMicLocationReq;
@@ -24,6 +28,7 @@ import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.SendVerificat
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.resp.KittorSimpleResult;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.resp.KittorTokenResp;
 import com.muzlive.kitpage.kitpage.utils.CommonUtils;
+import com.muzlive.kitpage.kitpage.utils.enums.TokenType;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import javax.validation.Valid;
@@ -42,6 +47,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class UserController {
 
+	private final JwtTokenProvider jwtTokenProvider;
+
 	private final KittorTransferSerivce kittorTransferSerivce;
 
 	private final KihnoV2TransferSerivce kihnoV2TransferSerivce;
@@ -50,7 +57,24 @@ public class UserController {
 
 	private final KitService kitService;
 
+	private final UserService userService;
+
 	private final CommonUtils commonUtils;
+
+	@Operation(summary = "Token 발급 API", description = "앱 실행 시 호출, 그 이후 Header Authorization 추가")
+	@PostMapping("/token")
+	public CommonResp<String> createToken(@Valid @RequestBody AccessTokenReq accessTokenReq) throws Exception {
+		String token = jwtTokenProvider.createAccessToken(accessTokenReq.getDeviceId());
+
+		userService.insertTokenLog(
+			TokenLog.builder()
+				.token(token)
+				.deviceId(accessTokenReq.getDeviceId())
+				.tokenType(TokenType.ACCESS)
+				.build());
+
+		return new CommonResp<>(token);
+	}
 
 	@Operation(summary = "회원가입 API")
 	@PostMapping("/join")

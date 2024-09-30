@@ -29,6 +29,9 @@ public class Member extends BaseTimeEntity {
 	@Column(name = "member_uid", nullable = false)
 	private Long memberUid;
 
+	@Column(name = "device_id")
+	private String deviceId;
+
 	@Column(name = "email")
 	private String email;
 
@@ -58,4 +61,7 @@ public class Member extends BaseTimeEntity {
 	@Column(name = "model_name")
 	private String modelName;
 
+	public String getRoleKey(){
+		return this.role.getKey();
+	}
 }
