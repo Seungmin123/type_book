@@ -111,7 +111,7 @@ public class UserController {
 
 	@Operation(summary = "체크 태그 API", description = "키노 서버를 통한 체크 태그 API")
 	@PostMapping("/checkTag")
-	public CommonResp<Void> connect(@Valid @RequestBody CheckTagReq checkTagReq) throws Exception {
+	public CommonResp<String> connect(@Valid @RequestBody CheckTagReq checkTagReq) throws Exception {
 		String requestSerialNumber = (checkTagReq.getSerialNumber().length() > 8) ? checkTagReq.getSerialNumber().substring(0, 8) : checkTagReq.getSerialNumber();
 		String paramSerialNumber = (checkTagReq.getSerialNumber().length() < 10) ? checkTagReq.getSerialNumber() + commonUtils.makeRandomHexString() : checkTagReq.getSerialNumber();
 		
@@ -125,11 +125,19 @@ public class UserController {
 
 		Kit kit = kitService.checkTag(checkTagReq.getDeviceId(), requestSerialNumber, kihnoKitCheckResp.getKihnoKitUid());
 
+		// token
+		String token = jwtTokenProvider.createAccessToken(checkTagReq.getDeviceId(), checkTagReq.getSerialNumber());
+		userService.insertTokenLog(
+			TokenLog.builder()
+				.token(token)
+				.deviceId(checkTagReq.getDeviceId())
+				.serialNumber(checkTagReq.getSerialNumber())
+				.tokenType(TokenType.CHECK_TAG)
+				.build());
+
 		// TODO 추가 정보 더하여 Response 만들기 Install 이력이 있는 컨텐츠를 전부 보여줘야하는건지 코믹북만 보여줘야하는건지?
 
-
-
-		return new CommonResp<>();
+		return new CommonResp<>(token);
 	}
 
 	@Operation(summary = "마이크 Processed 체크", description = "마이크 Processed 체크")
