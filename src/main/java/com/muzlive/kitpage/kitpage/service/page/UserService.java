@@ -2,7 +2,10 @@ package com.muzlive.kitpage.kitpage.service.page;
 
 import com.muzlive.kitpage.kitpage.config.exception.CommonException;
 import com.muzlive.kitpage.kitpage.config.exception.ExceptionCode;
+import com.muzlive.kitpage.kitpage.domain.user.Member;
+import com.muzlive.kitpage.kitpage.domain.user.MemberLog;
 import com.muzlive.kitpage.kitpage.domain.user.TokenLog;
+import com.muzlive.kitpage.kitpage.domain.user.repository.MemberLogRepository;
 import com.muzlive.kitpage.kitpage.domain.user.repository.MemberRepository;
 import com.muzlive.kitpage.kitpage.domain.user.repository.TokenLogRepository;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +21,8 @@ public class UserService implements UserDetailsService {
 
 	private final MemberRepository memberRepository;
 
+	private final MemberLogRepository memberLogRepository;
+
 	private final TokenLogRepository tokenLogRepository;
 
 	@Override
@@ -30,5 +35,17 @@ public class UserService implements UserDetailsService {
 	@Transactional
 	public void insertTokenLog(TokenLog tokenLog) throws Exception {
 		tokenLogRepository.save(tokenLog);
+	}
+
+	public Member findByDeviceId(String deviceId) throws Exception {
+		return memberRepository.findByDeviceId(deviceId).orElse(Member.builder().build());
+	}
+
+	@Transactional
+	public Member upsertMember(Member member) throws Exception {
+		member = memberRepository.save(member);
+		memberLogRepository.save(MemberLog.of(member));
+
+		return member;
 	}
 }

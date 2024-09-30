@@ -40,10 +40,14 @@ public class SecurityConfig {
 
 			.and()
 			.authorizeRequests()
-			.antMatchers("/swagger-ui*/**").permitAll()
-			.antMatchers("/v3/api-docs/**").permitAll()
-			.antMatchers("/webjars/**").permitAll()
+			// Health Check
 			.antMatchers("/actuator/health").permitAll()
+			// swagger v2
+			.antMatchers("/v2/api-docs", "/swagger-resources", "/swagger-resources/**", "/configuration/ui", "/configuration/security", "/swagger-ui.html", "/webjars/**").permitAll()
+			// swagger v3
+			.antMatchers("/v3/api-docs/**", "/swagger-ui/**", "/doc/api/**").permitAll()
+			// get token
+			.antMatchers("/v1/user/token", "/v1/user/checkTag").permitAll()
 
 			// TODO 권한 수정
 			.antMatchers("/v1/**").permitAll()

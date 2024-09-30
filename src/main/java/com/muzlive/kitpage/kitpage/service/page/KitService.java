@@ -15,8 +15,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class KitService {
 
-	private final JwtTokenProvider jwtTokenProvider;
-
 	private final KitRepository kitRepository;
 
 	private final KitLogRepository kitLogRepository;
@@ -24,11 +22,15 @@ public class KitService {
 	@Transactional
 	public Kit checkTag(String deviceId, String serialNumber, Long kihnoKitUid) throws Exception {
 		Kit kit = kitRepository.findBySerialNumber(serialNumber).orElseThrow(() -> new CommonException(ExceptionCode.CANNOT_FIND_MATCHED_ITEM));
-
 		kit.setDeviceId(deviceId);
 		kit.setKihnoKitUid(kihnoKitUid);
 
-		kitRepository.save(kit);
+		return this.upsertKit(kit);
+	}
+
+	@Transactional
+	public Kit upsertKit(Kit kit) throws Exception {
+		kit = kitRepository.save(kit);
 		kitLogRepository.save(KitLog.of(kit));
 
 		return kit;

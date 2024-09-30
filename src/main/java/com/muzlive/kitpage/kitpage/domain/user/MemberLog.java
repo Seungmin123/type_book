@@ -1,8 +1,6 @@
 package com.muzlive.kitpage.kitpage.domain.user;
 
 import com.muzlive.kitpage.kitpage.domain.common.BaseTimeEntity;
-import com.muzlive.kitpage.kitpage.utils.enums.PageContentType;
-import com.muzlive.kitpage.kitpage.utils.enums.PageGenre;
 import com.muzlive.kitpage.kitpage.utils.enums.Region;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -12,17 +10,17 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import lombok.Builder;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 
-@NoArgsConstructor
 @DynamicUpdate
 @DynamicInsert
 @Getter
 @Table(name = "member_log")
 @Entity
+@Builder
 public class MemberLog extends BaseTimeEntity {
 
 	@Id
@@ -43,4 +41,19 @@ public class MemberLog extends BaseTimeEntity {
 	@Column(name = "model_name")
 	private String modelName;
 
+	public MemberLog(Long memberUid, String ipAddress, Region region, String modelName) {
+		this.memberUid = memberUid;
+		this.ipAddress = ipAddress;
+		this.region = region;
+		this.modelName = modelName;
+	}
+
+	public static MemberLog of(Member member) {
+		return MemberLog.builder()
+			.memberUid(member.getMemberUid())
+			.ipAddress(member.getIpAddress())
+			.region(member.getRegion())
+			.modelName(member.getModelName())
+			.build();
+	}
 }

@@ -25,28 +25,12 @@ import org.springframework.web.filter.OncePerRequestFilter;
 @RequiredArgsConstructor
 public class JwtFilter extends OncePerRequestFilter {
 
-	private static final List<String> ALLOWED_PATHS
-		= Arrays.asList("/h2-console", "/actuator/health",
-		// v2
-		"/v2/api-docs", "/swagger-resources", "/swagger-resources/**", "/configuration/ui", "/configuration/security", "/swagger-ui.html", "/webjars/**",
-		// v3
-		"/v3/api-docs/**", "/swagger-ui/**", "/doc/api/**",
-
-		// TODO
-		"/v1"
-	);
-
 	private final JwtTokenProvider tokenProvider;
 
 	private final MemberRepository memberRepository;
 
 	@Override
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-		String uri = request.getRequestURI();
-		if (ALLOWED_PATHS.stream().anyMatch(uri::startsWith) || uri.endsWith("/health")) {
-			filterChain.doFilter(request, response);
-		}
-
 		String jwt = tokenProvider.resolveToken(request);
 
 		if (StringUtils.hasText(jwt) && tokenProvider.validateAccessToken(jwt)) {
@@ -58,8 +42,6 @@ public class JwtFilter extends OncePerRequestFilter {
 				role = new SimpleGrantedAuthority(UserRole.LINKER.getKey());
 			} else if(StringUtils.hasText(tokenProvider.getSerialNumberByToken(jwt))) {
 				role = new SimpleGrantedAuthority(UserRole.HALF_LINKER.getKey());
-			} else {
-				role = new SimpleGrantedAuthority(UserRole.GUEST.getKey());
 			}
 
 			UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(userDeviceId,null, Collections.singleton(role));
