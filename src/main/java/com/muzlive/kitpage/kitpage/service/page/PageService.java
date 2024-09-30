@@ -1,6 +1,9 @@
 package com.muzlive.kitpage.kitpage.service.page;
 
 import static com.muzlive.kitpage.kitpage.domain.page.QPage.page;
+import static com.muzlive.kitpage.kitpage.domain.page.comicbook.QComicBook.comicBook;
+import static com.muzlive.kitpage.kitpage.domain.page.comicbook.QComicBookDetail.comicBookDetail;
+import static com.muzlive.kitpage.kitpage.domain.user.QImage.image;
 import static com.muzlive.kitpage.kitpage.domain.user.QKit.kit;
 import static com.muzlive.kitpage.kitpage.domain.user.QVersionInfo.versionInfo;
 
@@ -32,11 +35,13 @@ import com.muzlive.kitpage.kitpage.utils.enums.PageContentType;
 import com.muzlive.kitpage.kitpage.utils.enums.VideoCode;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.io.FilenameUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
@@ -70,6 +75,16 @@ public class PageService {
 		return imageRepository.findById(imageUid).orElseThrow(() -> new CommonException(ExceptionCode.CANNOT_FIND_MATCHED_ITEM));
 	}
 
+	public List<Image> findByPageUid(Long pageUid) throws Exception {
+		return queryFactory.select(image)
+			.from(image)
+				.innerJoin(comicBook).on(comicBook.pageUid.eq(pageUid))
+				.innerJoin(comicBookDetail).on(comicBookDetail.comicBookUid.eq(comicBook.comicBookUid)
+					.and(comicBookDetail.imageUid.eq(image.imageUid)))
+			.orderBy(comicBook.volume.asc(), comicBookDetail.page.asc())
+			.fetch();
+	}
+
 	public List<Page> findByDeviceId(String deviceId) throws Exception {
 		List<Page> pages = queryFactory
 			.selectFrom(page)
@@ -91,11 +106,14 @@ public class PageService {
 		String contentId = createPageReq.getContentType() + "_" + String.format("%08d", nextPageUid);
 
 		// S3 Cover Image Upload
-		String coverImagePath = contentId + "/" + ApplicationConstants.IMAGE + "/" + UUID.randomUUID().toString().substring(0, 8) + "_" + createPageReq.getCoverImage().getOriginalFilename();
+		String saveFileName = UUID.randomUUID() + "." + FilenameUtils.getExtension(createPageReq.getCoverImage().getOriginalFilename());
+		String coverImagePath = contentId + "/" + ApplicationConstants.IMAGE + "/" + saveFileName;
 		s3Service.uploadFile(coverImagePath, createPageReq.getCoverImage());
 
 		// Image DB Insert
-		Image image = imageRepository.save(Image.of(coverImagePath, ImageCode.PAGE_IMAGE, createPageReq.getCoverImage()));
+		Image image = Image.of(coverImagePath, ImageCode.PAGE_IMAGE, createPageReq.getCoverImage());
+		image.setSaveFileName(saveFileName);
+		imageRepository.save(image);
 
 		pageRepository.save(
 			Page.builder()
@@ -116,11 +134,14 @@ public class PageService {
 		Page page = pageRepository.findById(uploadComicBookReq.getPageUid()).orElseThrow(() -> new CommonException(ExceptionCode.CANNOT_FIND_MATCHED_ITEM));
 
 		// S3 Cover Image Upload
-		String coverImagePath = page.getContentId() + "/" + ApplicationConstants.IMAGE + "/" + UUID.randomUUID().toString().substring(0, 8) + "_" + uploadComicBookReq.getCoverImage().getOriginalFilename();
+		String saveFileName = UUID.randomUUID() + "." + FilenameUtils.getExtension(uploadComicBookReq.getCoverImage().getOriginalFilename());
+		String coverImagePath = page.getContentId() + "/" + ApplicationConstants.IMAGE + "/" + saveFileName;
 		s3Service.uploadFile(coverImagePath, uploadComicBookReq.getCoverImage());
 
 		// Image DB Insert
-		Image image = imageRepository.save(Image.of(coverImagePath, ImageCode.COMIC_COVER_IMAGE, uploadComicBookReq.getCoverImage()));
+		Image image = Image.of(coverImagePath, ImageCode.COMIC_COVER_IMAGE, uploadComicBookReq.getCoverImage());
+		image.setSaveFileName(saveFileName);
+		imageRepository.save(image);
 
 		// Page, ComicBook DB Insert
 		comicBookRepository.save(
@@ -144,11 +165,14 @@ public class PageService {
 
 		for(MultipartFile multipartFile : uploadComicBookDetailReq.getImages()) {
 			// S3 Cover Image Upload
-			String imagePath = comicBook.getPage().getContentId() + "/" + ApplicationConstants.CONTENT + "/" + UUID.randomUUID().toString().substring(0, 8) + "_" + multipartFile.getOriginalFilename();
-			s3Service.uploadFile(imagePath, multipartFile);
+			String saveFileName = UUID.randomUUID() + "." + FilenameUtils.getExtension(multipartFile.getOriginalFilename());
+			String coverImagePath = comicBook.getPage().getContentId() + "/" + ApplicationConstants.IMAGE + "/" + saveFileName;
+			s3Service.uploadFile(coverImagePath, multipartFile);
 
 			// Image DB Insert
-			Image image = imageRepository.save(Image.of(imagePath, ImageCode.COMIC_COVER_IMAGE, multipartFile));
+			Image image = Image.of(coverImagePath, ImageCode.COMIC_COVER_IMAGE, multipartFile);
+			image.setSaveFileName(saveFileName);
+			imageRepository.save(image);
 
 			comicService.upsertComicBookDetail(ComicBookDetail.builder()
 				.comicBookUid(comicBook.getComicBookUid())
@@ -164,7 +188,8 @@ public class PageService {
 			.orElseThrow(() -> new CommonException(ExceptionCode.CANNOT_FIND_MATCHED_ITEM));
 
 		// S3 Music Upload
-		String filePath = uploadMusicReq.getContentId() + "/" + ApplicationConstants.MUSIC + "/" + UUID.randomUUID().toString().substring(0, 8) + "_" + uploadMusicReq.getFile().getOriginalFilename();
+		String saveMusicName = UUID.randomUUID() + "." + FilenameUtils.getExtension(uploadMusicReq.getFile().getOriginalFilename());
+		String filePath = uploadMusicReq.getContentId() + "/" + ApplicationConstants.MUSIC + "/" + saveMusicName;
 		s3Service.uploadFile(filePath, uploadMusicReq.getFile());
 
 		Music music = Music.builder()
@@ -173,17 +198,22 @@ public class PageService {
 			.artist(uploadMusicReq.getArtist())
 			.title(uploadMusicReq.getTitle())
 			.filePath(filePath)
+			.saveFileName(saveMusicName)
+			.originalFileName(uploadMusicReq.getFile().getOriginalFilename())
 			// TODO
 			.playTime("")
 			.build();
 
 		if(Objects.nonNull(uploadMusicReq.getImage())) {
 			// S3 Cover Image Upload
-			String coverImagePath = uploadMusicReq.getContentId() + "/" + ApplicationConstants.MUSIC + "/" + UUID.randomUUID().toString().substring(0, 8) + "_" + uploadMusicReq.getImage().getOriginalFilename();
+			String saveFileName = UUID.randomUUID() + "." + FilenameUtils.getExtension(uploadMusicReq.getImage().getOriginalFilename());
+			String coverImagePath = uploadMusicReq.getContentId() + "/" + ApplicationConstants.MUSIC + "/" + saveFileName;
 			s3Service.uploadFile(coverImagePath, uploadMusicReq.getImage());
 
 			// Image DB Insert
-			Image image = imageRepository.save(Image.of(coverImagePath, ImageCode.MUSIC_COVER_IMAGE, uploadMusicReq.getImage()));
+			Image image = Image.of(coverImagePath, ImageCode.MUSIC_COVER_IMAGE, uploadMusicReq.getImage());
+			image.setSaveFileName(saveFileName);
+			imageRepository.save(image);
 
 			music.setCoverImageUid(image.getImageUid());
 		}
@@ -200,8 +230,9 @@ public class PageService {
 		VideoCode videoCode = VideoCode.STREAM;
 
 		if(Objects.nonNull(uploadVideoReq.getFile())) {
-			// S3 Music Upload
-			String filePath = uploadVideoReq.getContentId() + "/" + ApplicationConstants.VIDEO + "/" + UUID.randomUUID().toString().substring(0, 8) + "_" + uploadVideoReq.getFile().getOriginalFilename();
+			// S3 Cover Image Upload
+			String saveFileName = UUID.randomUUID() + "." + FilenameUtils.getExtension(uploadVideoReq.getFile().getOriginalFilename());
+			String filePath = uploadVideoReq.getContentId() + "/" + ApplicationConstants.VIDEO + "/" + saveFileName;
 			s3Service.uploadFile(filePath, uploadVideoReq.getFile());
 
 			streamUrl = filePath;
@@ -218,11 +249,14 @@ public class PageService {
 
 		if(Objects.nonNull(uploadVideoReq.getImage())) {
 			// S3 Cover Image Upload
-			String coverImagePath = uploadVideoReq.getContentId() + "/" + ApplicationConstants.VIDEO + "/" + UUID.randomUUID().toString().substring(0, 8) + "_" + uploadVideoReq.getImage().getOriginalFilename();
+			String saveFileName = UUID.randomUUID() + "." + FilenameUtils.getExtension(uploadVideoReq.getImage().getOriginalFilename());
+			String coverImagePath = uploadVideoReq.getContentId() + "/" + ApplicationConstants.VIDEO + "/" + saveFileName;
 			s3Service.uploadFile(coverImagePath, uploadVideoReq.getImage());
 
 			// Image DB Insert
-			Image image = imageRepository.save(Image.of(coverImagePath, ImageCode.VIDEO_COVER_IMAGE, uploadVideoReq.getImage()));
+			Image image = Image.of(coverImagePath, ImageCode.VIDEO_COVER_IMAGE, uploadVideoReq.getImage());
+			image.setSaveFileName(saveFileName);
+			imageRepository.save(image);
 
 			video.setCoverImageUid(image.getImageUid());
 		}

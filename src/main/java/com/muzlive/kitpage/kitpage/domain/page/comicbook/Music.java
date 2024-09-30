@@ -45,19 +45,28 @@ public class Music extends BaseTimeEntity {
 	@Column(name = "play_time")
 	private String playTime;
 
+	@Column(name = "original_file_name", nullable = false)
+	private String originalFileName;
+
+	@Setter
+	@Column(name = "save_file_name", nullable = false)
+	private String saveFileName;
+
 	@Setter
 	@Column(name = "cover_image_uid")
 	private Long coverImageUid;
 
 	@Builder
 	public Music(String contentId, String album, String artist, String title,
-		String filePath, String playTime, Long coverImageUid) {
+		String filePath, String playTime, String originalFileName, String saveFileName, Long coverImageUid) {
 		this.contentId = contentId;
 		this.album = album;
 		this.artist = artist;
 		this.title = title;
 		this.filePath = filePath;
 		this.playTime = playTime;
+		this.originalFileName = originalFileName;
+		this.saveFileName = saveFileName;
 		this.coverImageUid = coverImageUid;
 	}
 }

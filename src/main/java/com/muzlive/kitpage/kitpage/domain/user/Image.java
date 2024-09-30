@@ -46,16 +46,25 @@ public class Image extends BaseTimeEntity {
 	@Column(name = "height")
 	private Integer height;
 
+	@Column(name = "original_file_name", nullable = false)
+	private String originalFileName;
+
+	@Setter
+	@Column(name = "save_file_name", nullable = false)
+	private String saveFileName;
+
 	@Enumerated(EnumType.STRING)
 	@Column(name = "image_code", nullable = false)
 	private ImageCode imageCode;
 
 	@Builder
-	public Image(String imagePath, Long imageSize, Integer width, Integer height, ImageCode imageCode) {
+	public Image(String imagePath, Long imageSize, Integer width, Integer height, String originalFileName, String saveFileName, ImageCode imageCode) {
 		this.imagePath = imagePath;
 		this.imageSize = imageSize;
 		this.width = width;
 		this.height = height;
+		this.originalFileName = originalFileName;
+		this.saveFileName = saveFileName;
 		this.imageCode = imageCode;
 	}
 
@@ -75,6 +84,7 @@ public class Image extends BaseTimeEntity {
 			.imageSize(multipartFile.getSize())
 			.width(width)
 			.height(height)
+			.originalFileName(multipartFile.getOriginalFilename())
 			.build();
 	}
 }
