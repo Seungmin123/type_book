@@ -23,13 +23,9 @@ public class KitService {
 
 	@Transactional
 	public Kit checkTag(String deviceId, String serialNumber, Long kihnoKitUid) throws Exception {
-
 		Kit kit = kitRepository.findBySerialNumber(serialNumber).orElseThrow(() -> new CommonException(ExceptionCode.CANNOT_FIND_MATCHED_ITEM));
 
-		String token = jwtTokenProvider.createAccessToken(deviceId, serialNumber);
-
 		kit.setDeviceId(deviceId);
-		kit.setToken(token);
 		kit.setKihnoKitUid(kihnoKitUid);
 
 		kitRepository.save(kit);
