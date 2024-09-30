@@ -1,4 +1,4 @@
-package com.muzlive.kitpage.kitpage.config.filter;
+package com.muzlive.kitpage.kitpage.config;
 
 import com.muzlive.kitpage.kitpage.config.wrapper.HttpServletRequestWrapper;
 import java.io.IOException;

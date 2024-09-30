@@ -1,4 +1,4 @@
-package com.muzlive.kitpage.kitpage.config.filter;
+package com.muzlive.kitpage.kitpage.config.swagger;
 
 import com.muzlive.kitpage.kitpage.utils.CommonUtils;
 import java.io.IOException;

@@ -1,7 +1,8 @@
 package com.muzlive.kitpage.kitpage.config;
 
-import com.muzlive.kitpage.kitpage.config.filter.HttpRequestLoggingFilter;
-import com.muzlive.kitpage.kitpage.config.filter.SwaggerFilter;
+import com.muzlive.kitpage.kitpage.config.jwt.JwtFilter;
+import com.muzlive.kitpage.kitpage.config.swagger.SwaggerFilter;
+import com.muzlive.kitpage.kitpage.utils.enums.UserRole;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
@@ -11,6 +12,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.intercept.FilterSecurityInterceptor;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.firewall.HttpFirewall;
 import org.springframework.security.web.firewall.StrictHttpFirewall;
 
@@ -18,6 +20,8 @@ import org.springframework.security.web.firewall.StrictHttpFirewall;
 @RequiredArgsConstructor
 @EnableWebSecurity
 public class SecurityConfig {
+
+	private final JwtFilter jwtFilter;
 
 	private final SwaggerFilter swaggerFilter;
 
@@ -45,6 +49,9 @@ public class SecurityConfig {
 			.antMatchers("/v1/**").permitAll()
 			.anyRequest().authenticated()
 			.and()
+			.anonymous().authorities(UserRole.GUEST.getKey())
+			.and()
+			.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
 			.addFilterBefore(swaggerFilter, FilterSecurityInterceptor.class);
 
 		return http.build();

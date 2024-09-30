@@ -2,7 +2,6 @@ package com.muzlive.kitpage.kitpage.config;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.muzlive.kitpage.kitpage.config.interceptor.TokenInterceptor;
 import java.util.Locale;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
@@ -13,22 +12,12 @@ import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.web.multipart.MultipartResolver;
 import org.springframework.web.multipart.commons.CommonsMultipartResolver;
 import org.springframework.web.servlet.LocaleResolver;
-import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.i18n.AcceptHeaderLocaleResolver;
 
 @RequiredArgsConstructor
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
-    private final TokenInterceptor tokenInterceptor;
-
-    @Override
-    public void addInterceptors(InterceptorRegistry registry){
-        // TODO 수정
-        registry.addInterceptor(tokenInterceptor)
-                .addPathPatterns("/v1/**")
-        ;
-    }
 
     @Bean("jsonTo")
     public ObjectMapper setObjectmapper(){
