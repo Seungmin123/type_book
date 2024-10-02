@@ -2,12 +2,12 @@ package com.muzlive.kitpage.kitpage.config.jwt;
 
 import com.muzlive.kitpage.kitpage.config.exception.CommonException;
 import com.muzlive.kitpage.kitpage.config.exception.ExceptionCode;
+import com.muzlive.kitpage.kitpage.domain.user.repository.KitRepository;
 import com.muzlive.kitpage.kitpage.domain.user.repository.MemberRepository;
 import com.muzlive.kitpage.kitpage.utils.enums.UserRole;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
+import java.util.Set;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -29,22 +29,34 @@ public class JwtFilter extends OncePerRequestFilter {
 
 	private final MemberRepository memberRepository;
 
+	private final KitRepository kitRepository;
+
 	@Override
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
 		String jwt = tokenProvider.resolveToken(request);
 
 		if (StringUtils.hasText(jwt) && tokenProvider.validateAccessToken(jwt)) {
-			String userDeviceId = tokenProvider.getDeviceIdByToken(jwt);
-			memberRepository.findByDeviceId(userDeviceId).orElseThrow(() -> new CommonException(ExceptionCode.USER_NOT_FOUND));
+			Set<String> roles = tokenProvider.getRolesByToken(jwt);
+			String deviceId = tokenProvider.getDeviceIdByToken(jwt);
 
 			SimpleGrantedAuthority role = null;
-			if(StringUtils.hasText(tokenProvider.getEmailByToken(jwt))) {
+			if(roles.contains(UserRole.ENGINEER.getKey())) {
 				role = new SimpleGrantedAuthority(UserRole.LINKER.getKey());
-			} else if(StringUtils.hasText(tokenProvider.getSerialNumberByToken(jwt))) {
-				role = new SimpleGrantedAuthority(UserRole.HALF_LINKER.getKey());
+			} else if(roles.contains(UserRole.LINKER.getKey())) {
+				role = memberRepository.findByDeviceIdAndEmail(deviceId, tokenProvider.getEmailByToken(jwt))
+					.map(member -> new SimpleGrantedAuthority(UserRole.LINKER.getKey()))
+					.orElse(null);
+			} else if(roles.contains(UserRole.HALF_LINKER.getKey())) {
+				role = kitRepository.findByDeviceIdAndSerialNumber(deviceId, tokenProvider.getSerialNumberByToken(jwt))
+					.map(kit -> new SimpleGrantedAuthority(UserRole.HALF_LINKER.getKey()))
+					.orElse(null);
+			} else if(roles.contains(UserRole.GUEST.getKey())){
+				role = memberRepository.findByDeviceId(deviceId)
+					.map(member -> new SimpleGrantedAuthority(UserRole.GUEST.getKey()))
+					.orElse(null);
 			}
 
-			UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(userDeviceId,null, Collections.singleton(role));
+			UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(deviceId,null, Collections.singleton(role));
 			authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 			SecurityContextHolder.getContext().setAuthentication(authentication);
 		}

@@ -15,8 +15,10 @@ import java.util.Base64;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -37,8 +39,8 @@ public class JwtTokenProvider {
 
     //---------------------------------------------------------------------------------------------
 
-    public List<String> getDefaultRoles() {
-        return Collections.singletonList(UserRole.GUEST.getKey());
+    public Set<String> getDefaultRoles() {
+        return Collections.singleton(UserRole.GUEST.getKey());
     }
 
     //---------------------------------------------------------------------------------------------
@@ -50,26 +52,25 @@ public class JwtTokenProvider {
 
     // JWT 토큰 생성
     public String createAccessToken(String deviceId) {
-        return createAccessToken(deviceId, null);
+        return createAccessToken(deviceId, getDefaultRoles());
     }
 
-    public String createAccessToken(String deviceId, String serialNumber) {
-        return createAccessToken(deviceId, serialNumber, null);
+    public String createAccessToken(String deviceId, Set<String> roles) {
+        return createAccessToken(deviceId, roles);
     }
 
-    public String createAccessToken(String deviceId, String serialNumber, String email) {
-        return createAccessToken(deviceId, serialNumber, email, getDefaultRoles());
+    public String createAccessToken(String deviceId, String serialNumber, Set<String> roles) {
+        return createAccessToken(deviceId, serialNumber, roles);
     }
 
-    public String createAccessToken(String deviceId, String serialNumber, String email, List<String> roles) {
+    public String createAccessToken(String deviceId, String serialNumber, String email, Set<String> roles) {
         Map<String, String> claims = new HashMap<>();
         claims.put("serialNumber", serialNumber.substring(0, 8));
         claims.put("email", email);
         return createAccessToken(deviceId, serialNumber, email, roles, claims);
     }
 
-    public String createAccessToken(String deviceId, String serialNumber, String email, List<String> roles, Map<String, String> optionalClaims) {
-
+    public String createAccessToken(String deviceId, String serialNumber, String email, Set<String> roles, Map<String, String> optionalClaims) {
         Claims claims = Jwts.claims().setSubject(deviceId);
         claims.put("roles", roles);
         claims.putAll(optionalClaims);
@@ -143,6 +144,10 @@ public class JwtTokenProvider {
         return String.valueOf(claims.getBody().get("email"));
     }
 
+    public Set<String> getRolesByToken(String accessToken) {
+        final Jws<Claims> claims = Jwts.parser().setSigningKey(secretKey).parseClaimsJws(accessToken);
+        return new HashSet<>((List<String>) claims.getBody().get("roles"));
+    }
 
     //---------------------------------------------------------------------------------------------
 

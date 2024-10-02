@@ -8,5 +8,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface KitRepository extends JpaRepository<Kit, Long> {
 
-	Optional<Kit> findBySerialNumber(String serialNumber) throws Exception;
+	Optional<Kit> findBySerialNumber(String serialNumber);
+
+	Optional<Kit> findByDeviceIdAndSerialNumber(String deviceId, String serialNumber);
 }
