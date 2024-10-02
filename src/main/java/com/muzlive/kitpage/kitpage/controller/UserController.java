@@ -126,14 +126,32 @@ public class UserController {
 
 	@Operation(summary = "회원가입 API")
 	@PostMapping("/join")
-	public CommonResp<KittorTokenResp> userJoin(@Valid @RequestBody KittorUserReq kittorUserReq) throws Exception {
-		return new CommonResp<>(kittorTransferSerivce.userJoin(kittorUserReq));
+	public CommonResp<KittorTokenResp> userJoin(
+		@Valid @RequestBody KittorUserReq kittorUserReq,
+		HttpServletRequest request) throws Exception {
+
+		KittorTokenResp resp = kittorTransferSerivce.userJoin(kittorUserReq);
+
+		Member member = userService.findByDeviceId(jwtTokenProvider.getDeviceIdByToken(jwtTokenProvider.resolveToken(request)));
+		member.setKittorToken(resp.getAccessToken());
+		userService.upsertMember(member);
+
+		return new CommonResp<>(resp);
 	}
 
 	@Operation(summary = "로그인 API")
 	@PostMapping("/login")
-	public CommonResp<KittorTokenResp> userLogin(@Valid @RequestBody KittorUserReq kittorUserReq) throws Exception {
-		return new CommonResp<>(kittorTransferSerivce.userLogin(kittorUserReq));
+	public CommonResp<KittorTokenResp> userLogin(
+		@Valid @RequestBody KittorUserReq kittorUserReq,
+		HttpServletRequest request) throws Exception {
+
+		KittorTokenResp resp = kittorTransferSerivce.userLogin(kittorUserReq);
+
+		Member member = userService.findByDeviceId(jwtTokenProvider.getDeviceIdByToken(jwtTokenProvider.resolveToken(request)));
+		member.setKittorToken(resp.getAccessToken());
+		userService.upsertMember(member);
+
+		return new CommonResp<>(resp);
 	}
 
 	@Operation(summary = "인증코드 발송 API", description = "비밀번호 변경용 인증코드 발송")
@@ -151,10 +169,12 @@ public class UserController {
 	@Operation(summary = "비밀번호 변경 API")
 	@PostMapping("/password/change")
 	public CommonResp<Boolean> changePassword(
-		@RequestHeader("Authorization") String authorizationHeader,
-		@Valid @RequestBody KittorChangePasswordReq kittorChangePasswordReq
+		@Valid @RequestBody KittorChangePasswordReq kittorChangePasswordReq,
+		HttpServletRequest request
 	) throws Exception {
-		return new CommonResp<>(kittorTransferSerivce.changePassword(authorizationHeader, kittorChangePasswordReq));
+
+		Member member = userService.findByDeviceId(jwtTokenProvider.getDeviceIdByToken(jwtTokenProvider.resolveToken(request)));
+		return new CommonResp<>(kittorTransferSerivce.changePassword(member.getKittorToken(), kittorChangePasswordReq));
 	}
 
 	@Operation(summary = "마이크 Processed 체크", description = "마이크 Processed 체크")

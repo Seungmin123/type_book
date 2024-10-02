@@ -14,6 +14,7 @@ import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.resp.KittorTokenR
 import java.time.Duration;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -53,7 +54,13 @@ public class KittorTransferSerivce {
                 log.error(e.getMessage());
             }).block();
 
-        if(result.getData() == null) throw new CommonException(ExceptionCode.KITTOR_EXTERNAL_SERVER_ERROR);
+        if(result.getData() == null) {
+            if(result.getMessage() != null) {
+                throw new CommonException(HttpStatus.BAD_REQUEST, result.getMessage());
+            }else {
+                throw new CommonException(ExceptionCode.KITTOR_EXTERNAL_SERVER_ERROR);
+            }
+        }
         return result.getData();
     }
 
@@ -68,7 +75,13 @@ public class KittorTransferSerivce {
                 log.error(e.getMessage());
             }).block();
 
-        if(result.getData() == null) throw new CommonException(ExceptionCode.KITTOR_EXTERNAL_SERVER_ERROR);
+        if(result.getData() == null) {
+            if(result.getMessage() != null) {
+                throw new CommonException(HttpStatus.BAD_REQUEST, result.getMessage());
+            }else {
+                throw new CommonException(ExceptionCode.KITTOR_EXTERNAL_SERVER_ERROR);
+            }
+        }
         return result.getData();
     }
 
@@ -84,8 +97,13 @@ public class KittorTransferSerivce {
             }).block();
 
         if(result.getData() == null ||
-            result.getData().getResult() == null)
-            throw new CommonException(ExceptionCode.KITTOR_EXTERNAL_SERVER_ERROR);
+            result.getData().getResult() == null) {
+            if(result.getMessage() != null) {
+                throw new CommonException(HttpStatus.BAD_REQUEST, result.getMessage());
+            }else {
+                throw new CommonException(ExceptionCode.KITTOR_EXTERNAL_SERVER_ERROR);
+            }
+        }
         return result.getData().getResult();
     }
 
