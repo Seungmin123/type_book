@@ -56,11 +56,11 @@ public class JwtTokenProvider {
     }
 
     public String createAccessToken(String deviceId, Set<String> roles) {
-        return createAccessToken(deviceId, roles);
+        return createAccessToken(deviceId, null, roles);
     }
 
     public String createAccessToken(String deviceId, String serialNumber, Set<String> roles) {
-        return createAccessToken(deviceId, serialNumber, roles);
+        return createAccessToken(deviceId, serialNumber, null, roles);
     }
 
     public String createAccessToken(String deviceId, String serialNumber, String email, Set<String> roles) {

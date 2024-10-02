@@ -94,9 +94,9 @@ public class UserController {
 	@PostMapping("/checkTag")
 	public CommonResp<String> connect(@Valid @RequestBody CheckTagReq checkTagReq, HttpServletRequest httpServletRequest) throws Exception {
 		// Token DeviceID / Request DeviceID 검사
-		String validateToken = jwtTokenProvider.resolveToken(httpServletRequest);
+		/*String validateToken = jwtTokenProvider.resolveToken(httpServletRequest);
 		if(!jwtTokenProvider.getDeviceIdByToken(validateToken).equals(checkTagReq.getDeviceId()))
-			throw new CommonException(ExceptionCode.INVALID_JWT);
+			throw new CommonException(ExceptionCode.INVALID_JWT);*/
 
 		String requestSerialNumber = (checkTagReq.getSerialNumber().length() > 8) ? checkTagReq.getSerialNumber().substring(0, 8) : checkTagReq.getSerialNumber();
 		String paramSerialNumber = (checkTagReq.getSerialNumber().length() < 10) ? checkTagReq.getSerialNumber() + commonUtils.makeRandomHexString() : checkTagReq.getSerialNumber();
@@ -107,9 +107,7 @@ public class UserController {
 			.countryCode(checkTagReq.getRegion().getCode())
 			.build();
 
-		KihnoKitCheckResp kihnoKitCheckResp = kihnoV2TransferSerivce.kihnoKitCheck(kihnoKitCheckReq);
-
-		Kit kit = kitService.checkTag(checkTagReq.getDeviceId(), requestSerialNumber, kihnoKitCheckResp.getKihnoKitUid());
+		kitService.checkTag(checkTagReq.getDeviceId(), requestSerialNumber, kihnoV2TransferSerivce.kihnoKitCheck(kihnoKitCheckReq).getKihnoKitUid());
 
 		// token
 		String token = jwtTokenProvider.createAccessToken(checkTagReq.getDeviceId(), checkTagReq.getSerialNumber(), Set.of(UserRole.GUEST.getKey(), UserRole.HALF_LINKER.getKey()));
