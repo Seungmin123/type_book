@@ -1,8 +1,9 @@
 package com.muzlive.kitpage.kitpage.controller;
 
+import com.muzlive.kitpage.kitpage.config.exception.CommonException;
+import com.muzlive.kitpage.kitpage.config.exception.ExceptionCode;
 import com.muzlive.kitpage.kitpage.config.jwt.JwtTokenProvider;
 import com.muzlive.kitpage.kitpage.domain.common.dto.resp.CommonResp;
-import com.muzlive.kitpage.kitpage.domain.common.dto.resp.SimpleResult;
 import com.muzlive.kitpage.kitpage.domain.user.Kit;
 import com.muzlive.kitpage.kitpage.domain.user.Member;
 import com.muzlive.kitpage.kitpage.domain.user.TokenLog;
@@ -26,13 +27,13 @@ import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.KittorChangeP
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.KittorResetPasswordReq;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.KittorUserReq;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.SendVerificationReq;
-import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.resp.KittorSimpleResult;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.resp.KittorTokenResp;
 import com.muzlive.kitpage.kitpage.utils.CommonUtils;
 import com.muzlive.kitpage.kitpage.utils.enums.TokenType;
 import com.muzlive.kitpage.kitpage.utils.enums.UserRole;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.util.Set;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -91,14 +92,19 @@ public class UserController {
 
 	@Operation(summary = "체크 태그 API", description = "키노 서버를 통한 체크 태그 API")
 	@PostMapping("/checkTag")
-	public CommonResp<String> connect(@Valid @RequestBody CheckTagReq checkTagReq) throws Exception {
+	public CommonResp<String> connect(@Valid @RequestBody CheckTagReq checkTagReq, HttpServletRequest httpServletRequest) throws Exception {
+		// Token DeviceID / Request DeviceID 검사
+		String validateToken = jwtTokenProvider.resolveToken(httpServletRequest);
+		if(!jwtTokenProvider.getDeviceIdByToken(validateToken).equals(checkTagReq.getDeviceId()))
+			throw new CommonException(ExceptionCode.INVALID_JWT);
+
 		String requestSerialNumber = (checkTagReq.getSerialNumber().length() > 8) ? checkTagReq.getSerialNumber().substring(0, 8) : checkTagReq.getSerialNumber();
 		String paramSerialNumber = (checkTagReq.getSerialNumber().length() < 10) ? checkTagReq.getSerialNumber() + commonUtils.makeRandomHexString() : checkTagReq.getSerialNumber();
 
 		KihnoKitCheckReq kihnoKitCheckReq = KihnoKitCheckReq.builder()
 			.deviceId(checkTagReq.getDeviceId())
 			.kitId(paramSerialNumber)
-			.countryCode(checkTagReq.getCountryCode())
+			.countryCode(checkTagReq.getRegion().getCode())
 			.build();
 
 		KihnoKitCheckResp kihnoKitCheckResp = kihnoV2TransferSerivce.kihnoKitCheck(kihnoKitCheckReq);
@@ -106,7 +112,7 @@ public class UserController {
 		Kit kit = kitService.checkTag(checkTagReq.getDeviceId(), requestSerialNumber, kihnoKitCheckResp.getKihnoKitUid());
 
 		// token
-		String token = jwtTokenProvider.createAccessToken(checkTagReq.getDeviceId(), checkTagReq.getSerialNumber());
+		String token = jwtTokenProvider.createAccessToken(checkTagReq.getDeviceId(), checkTagReq.getSerialNumber(), Set.of(UserRole.GUEST.getKey(), UserRole.HALF_LINKER.getKey()));
 		userService.insertTokenLog(
 			TokenLog.builder()
 				.token(token)

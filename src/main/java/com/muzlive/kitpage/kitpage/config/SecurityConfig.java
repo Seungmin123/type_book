@@ -41,20 +41,28 @@ public class SecurityConfig {
 			.and()
 			.authorizeRequests()
 			// TODO 권한 수정
-			.antMatchers("/**").permitAll()
-			// Health Check
-			.antMatchers("/actuator/health").permitAll()
+			//.antMatchers("/**").permitAll()
+			// 루트, 에러 경로, Health Check
+			.antMatchers("/", "/error", "/actuator/health")
+			.permitAll()
 			// swagger v2
-			.antMatchers("/v2/api-docs", "/swagger-resources", "/swagger-resources/**", "/configuration/ui", "/configuration/security", "/swagger-ui.html", "/webjars/**").permitAll()
+			.antMatchers("/v2/api-docs", "/swagger-resources", "/swagger-resources/**", "/configuration/ui", "/configuration/security", "/swagger-ui.html", "/webjars/**")
+			.permitAll()
 			// swagger v3
-			.antMatchers("/v3/api-docs/**", "/swagger-ui/**", "/doc/api/**", "/swagger-url").permitAll()
+			.antMatchers("/v3/api-docs/**", "/swagger-ui/**", "/doc/api/**", "/swagger-url")
+			.permitAll()
 			// get token
-			.antMatchers("/v1/user/token", "/v1/user/checkTag").permitAll()
-			// 루트, 에러 경로
-			.antMatchers("/", "/error").permitAll()
+			.antMatchers("/v1/user/token")
+			.permitAll()
+			// check tag 이전 필요한 API
+			.antMatchers("/v1/user/checkTag", "/v1/user/login", "/v1/user/join", // Token 발급
+				"/v1/user/send/verification-code", "/v1/user/password/reset", "/v1/user/password/change", // User 비밀번호 관련
+				"/v1/user/mic/processed", "/v1/user/mic", "/v1/user/version", "/v1/page/list/**", "/v1/page/image/**") // 체크 태그, 버전 정보, 초기 리스트 관련
+			.hasAnyRole("GUEST", "HALF_LINKER", "LINKER")
+			// API
+			.antMatchers("/v1/**")
+			.hasAnyRole("HALF_LINKER", "LINKER")
 			.anyRequest().authenticated()
-			.and()
-			.anonymous().authorities(UserRole.GUEST.getKey())
 			.and()
 			.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
 			.addFilterBefore(swaggerFilter, FilterSecurityInterceptor.class);

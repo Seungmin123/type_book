@@ -1,6 +1,7 @@
 package com.muzlive.kitpage.kitpage.domain.user.dto.req;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.muzlive.kitpage.kitpage.utils.enums.Region;
 import javax.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
@@ -18,6 +19,6 @@ public class CheckTagReq {
 	private String serialNumber;
 
 	@NotNull
-	@JsonProperty("countryCode")
-	private String countryCode;
+	@JsonProperty("region")
+	private Region region;
 }

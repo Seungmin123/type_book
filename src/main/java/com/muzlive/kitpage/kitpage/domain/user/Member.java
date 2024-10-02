@@ -2,27 +2,25 @@ package com.muzlive.kitpage.kitpage.domain.user;
 
 import com.muzlive.kitpage.kitpage.domain.common.BaseTimeEntity;
 import com.muzlive.kitpage.kitpage.utils.enums.Region;
-import com.muzlive.kitpage.kitpage.utils.enums.UserRole;
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 
+@NoArgsConstructor
 @DynamicUpdate
 @DynamicInsert
 @Getter
 @Table(name = "member")
 @Entity
-@Builder
 public class Member extends BaseTimeEntity {
 
 	@Id
@@ -59,5 +57,19 @@ public class Member extends BaseTimeEntity {
 	@Setter
 	@Column(name = "model_name")
 	private String modelName;
+
+	@Builder
+	public Member(String deviceId, String email, String password, String name, Region region,
+		String nickName, Long profileImageUid, String ipAddress, String modelName) {
+		this.deviceId = deviceId;
+		this.email = email;
+		this.password = password;
+		this.name = name;
+		this.region = region;
+		this.nickName = nickName;
+		this.profileImageUid = profileImageUid;
+		this.ipAddress = ipAddress;
+		this.modelName = modelName;
+	}
 
 }

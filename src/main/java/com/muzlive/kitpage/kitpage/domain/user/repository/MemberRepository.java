@@ -9,4 +9,6 @@ import org.springframework.stereotype.Repository;
 public interface MemberRepository extends JpaRepository<Member, Long> {
 
 	Optional<Member> findByDeviceId(String deviceId);
+
+	Optional<Member> findByDeviceIdAndEmail(String deviceId, String email);
 }
