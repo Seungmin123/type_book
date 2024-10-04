@@ -1,53 +1,41 @@
 package com.muzlive.kitpage.kitpage.domain.page.comicbook.dto.resp;
 
-import com.muzlive.kitpage.kitpage.domain.page.comicbook.ComicBook;
+import com.muzlive.kitpage.kitpage.domain.page.Page;
+import com.muzlive.kitpage.kitpage.domain.page.comicbook.Video;
 import com.muzlive.kitpage.kitpage.utils.enums.PageGenre;
-import java.util.ArrayList;
 import java.util.List;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
-@AllArgsConstructor
-@Builder
 @Getter
 @Setter
 public class ComicBookResp {
 
-	private Long comicBookUid;
+	private Long pageUid;
 
 	private String contentId;
 
-	private Long coverImageUid;
+	private String title;
 
 	private String writer;
 
 	private String illustrator;
 
-	private String title;
+	private PageGenre genre;
 
-	private String subTitle;
+	private List<ComicBookEpisodeResp> details;
 
-	public static ComicBookResp of(ComicBook comicBook) {
-		return ComicBookResp.builder()
-			.comicBookUid(comicBook.getComicBookUid())
-			.contentId(comicBook.getPage().getContentId())
-			.coverImageUid(comicBook.getPage().getCoverImageUid())
-			.writer(comicBook.getWriter())
-			.illustrator(comicBook.getIllustrator())
-			.title(comicBook.getPage().getTitle())
-			.subTitle(comicBook.getPage().getSubTitle())
-			.build();
-	}
+	private List<Video> videos;
 
-	public static List<ComicBookResp> of(List<ComicBook> comicBooks) {
-		List<ComicBookResp> list = new ArrayList<>();
+	private String infoText;
 
-		for(ComicBook comicBook : comicBooks) {
-			list.add(ComicBookResp.of(comicBook));
-		}
-
-		return list;
+	public ComicBookResp(Page page) {
+		this.pageUid = page.getPageUid();
+		this.contentId = page.getContentId();
+		this.title = page.getTitle();
+		this.genre = page.getGenre();
+		this.infoText = page.getInfoText();
+		this.writer = "";
+		this.illustrator = "";
 	}
 }

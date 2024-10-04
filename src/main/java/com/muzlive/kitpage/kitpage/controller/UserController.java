@@ -1,10 +1,7 @@
 package com.muzlive.kitpage.kitpage.controller;
 
-import com.muzlive.kitpage.kitpage.config.exception.CommonException;
-import com.muzlive.kitpage.kitpage.config.exception.ExceptionCode;
 import com.muzlive.kitpage.kitpage.config.jwt.JwtTokenProvider;
 import com.muzlive.kitpage.kitpage.domain.common.dto.resp.CommonResp;
-import com.muzlive.kitpage.kitpage.domain.user.Kit;
 import com.muzlive.kitpage.kitpage.domain.user.Member;
 import com.muzlive.kitpage.kitpage.domain.user.TokenLog;
 import com.muzlive.kitpage.kitpage.domain.user.dto.req.AccessTokenReq;
@@ -19,7 +16,6 @@ import com.muzlive.kitpage.kitpage.service.transfer.kihno.KihnoV2TransferSerivce
 import com.muzlive.kitpage.kitpage.service.transfer.kihno.dto.req.KihnoKitCheckReq;
 import com.muzlive.kitpage.kitpage.service.transfer.kihno.dto.req.KihnoMicLocationReq;
 import com.muzlive.kitpage.kitpage.service.transfer.kihno.dto.req.KihnoMicProcessedReq;
-import com.muzlive.kitpage.kitpage.service.transfer.kihno.dto.resp.KihnoKitCheckResp;
 import com.muzlive.kitpage.kitpage.service.transfer.kihno.dto.resp.KihnoMicLocationResp;
 import com.muzlive.kitpage.kitpage.service.transfer.kihno.dto.resp.KihnoMicProcessedResp;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.KittorTransferSerivce;
@@ -41,7 +37,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
