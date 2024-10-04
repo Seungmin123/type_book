@@ -60,40 +60,40 @@ public class ComicController {
 	// TODO 설정 마이페이지 -> 통합로그인...
 	// TODO 책 방향 왼쪽 오른쪽 주기 알려주기
 
-	@Operation(summary = "컨텐츠 다운로드 API", description = "pageUid 를 통해 ZIP 파일 다운로드")
-	@GetMapping("/download/{pageUid}")
-	public ResponseEntity<InputStreamResource> downloadComicBook(@PathVariable Long pageUid) throws Exception {
-		List<Image> images = pageService.findByPageUid(pageUid);
-
-		if(CollectionUtils.isEmpty(images)) {
-			return ResponseEntity.status(400)
-				.body(null);
-		}
-
-		ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-		ZipOutputStream zipOutputStream = new ZipOutputStream(byteArrayOutputStream);
-
-		for(Image image : images) {
-			InputStream resource = s3Service.downloadFile(image.getImagePath());
-
-			zipOutputStream.putNextEntry(new ZipEntry(image.getSaveFileName()));
-			byte[] buffer = new byte[1024];
-			int length;
-			while ((length = resource.read(buffer)) > 0) {
-				zipOutputStream.write(buffer, 0, length);
-			}
-			zipOutputStream.closeEntry();
-		}
-
-		zipOutputStream.finish();
-		zipOutputStream.close();
-
-		InputStreamResource resource = new InputStreamResource(new ByteArrayInputStream(byteArrayOutputStream.toByteArray()));
-
-		return ResponseEntity.ok()
-			.header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + pageUid + ".zip\"")
-			.body(resource);
-	}
+//	@Operation(summary = "컨텐츠 다운로드 API", description = "pageUid 를 통해 ZIP 파일 다운로드")
+//	@GetMapping("/download/{pageUid}")
+//	public ResponseEntity<InputStreamResource> downloadComicBook(@PathVariable Long pageUid) throws Exception {
+//		List<Image> images = pageService.findByPageUid(pageUid);
+//
+//		if(CollectionUtils.isEmpty(images)) {
+//			return ResponseEntity.status(400)
+//				.body(null);
+//		}
+//
+//		ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+//		ZipOutputStream zipOutputStream = new ZipOutputStream(byteArrayOutputStream);
+//
+//		for(Image image : images) {
+//			InputStream resource = s3Service.downloadFile(image.getImagePath());
+//
+//			zipOutputStream.putNextEntry(new ZipEntry(image.getSaveFileName()));
+//			byte[] buffer = new byte[1024];
+//			int length;
+//			while ((length = resource.read(buffer)) > 0) {
+//				zipOutputStream.write(buffer, 0, length);
+//			}
+//			zipOutputStream.closeEntry();
+//		}
+//
+//		zipOutputStream.finish();
+//		zipOutputStream.close();
+//
+//		InputStreamResource resource = new InputStreamResource(new ByteArrayInputStream(byteArrayOutputStream.toByteArray()));
+//
+//		return ResponseEntity.ok()
+//			.header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + pageUid + ".zip\"")
+//			.body(resource);
+//	}
 
 	@Operation(summary = "이미지 다운로드 API", description = "imageUid 를 통해 Image 파일 다운로드")
 	@GetMapping("/download/image/{imageUid}")
@@ -108,26 +108,25 @@ public class ComicController {
 	}
 
 	@Operation(summary = "ComicBook 정보 조회 API")
-	@GetMapping("/detail/{pageUid}")
-	public CommonResp<ComicBookDetailResp> getComicBookInfo(@PathVariable Long pageUid) throws Exception {
+	@GetMapping("/{pageUid}")
+	public CommonResp<ComicBookResp> getComicBookInfo(@PathVariable Long pageUid) throws Exception {
 		Page page = pageService.findPageById(pageUid);
 		if(CollectionUtils.isEmpty(page.getComicBooks()))
 			throw new CommonException(ExceptionCode.CANNOT_FIND_ITEM_THAT_MATCH_THE_PARAM);
 
-		ComicBookDetailResp comicBookDetailResp = new ComicBookDetailResp(page);
-		comicBookDetailResp.setWriter(page.getComicBooks().get(0).getWriter());
-		comicBookDetailResp.setIllustrator(page.getComicBooks().get(0).getIllustrator());
+		ComicBookResp comicBookResp = new ComicBookResp(page);
+		comicBookResp.setWriter(page.getComicBooks().get(0).getWriter());
+		comicBookResp.setIllustrator(page.getComicBooks().get(0).getIllustrator());
 
 		List<ComicBookEpisodeResp> comicBookEpisodeResps = new ArrayList<>();
 		for(ComicBook comicBook : page.getComicBooks()) {
 			comicBookEpisodeResps.add(new ComicBookEpisodeResp(comicBook, ApplicationConstants.COMIC_BOOK_UNIT_1));
 		}
-		comicBookDetailResp.setDetails(comicBookEpisodeResps);
+		comicBookResp.setDetails(comicBookEpisodeResps);
 
 		// TODO add video
 
-
-		return new CommonResp<>(comicBookDetailResp);
+		return new CommonResp<>(comicBookResp);
 	}
 
 	// TODO get Music Info

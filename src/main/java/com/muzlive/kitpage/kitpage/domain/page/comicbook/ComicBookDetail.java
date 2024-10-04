@@ -1,6 +1,7 @@
 package com.muzlive.kitpage.kitpage.domain.page.comicbook;
 
 import com.muzlive.kitpage.kitpage.domain.common.BaseTimeEntity;
+import com.muzlive.kitpage.kitpage.domain.user.Image;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -8,6 +9,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import lombok.Builder;
 import lombok.Getter;
@@ -44,6 +46,10 @@ public class ComicBookDetail extends BaseTimeEntity {
 
 	@Column(name = "image_uid")
 	private Long imageUid;
+
+	@OneToOne
+	@JoinColumn(name = "image_uid", insertable = false, updatable = false)
+	private Image image;
 
 	@ManyToOne
 	@JoinColumn(name = "comic_book_uid", insertable = false, updatable = false)
