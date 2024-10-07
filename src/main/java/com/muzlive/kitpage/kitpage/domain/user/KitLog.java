@@ -35,6 +35,9 @@ public class KitLog extends BaseTimeEntity {
 	@Column(name = "serial_number", nullable = false)
 	private String serialNumber;
 
+	@Column(name = "page_uid", nullable = false)
+	private Long pageUid;
+
 	@Column(name = "kit_uid", nullable = false)
 	private Long kitUid;
 
@@ -42,8 +45,9 @@ public class KitLog extends BaseTimeEntity {
 	private String deviceId;
 
 	@Builder
-	public KitLog(String serialNumber, Long kitUid, String deviceId) {
+	public KitLog(String serialNumber, Long pageUid, Long kitUid, String deviceId) {
 		this.serialNumber = serialNumber;
+		this.pageUid = pageUid;
 		this.kitUid = kitUid;
 		this.deviceId = deviceId;
 	}
@@ -51,6 +55,7 @@ public class KitLog extends BaseTimeEntity {
 	public static KitLog of(Kit kit) {
 		return KitLog.builder()
 			.serialNumber(kit.getSerialNumber())
+			.pageUid(kit.getPageUid())
 			.kitUid(kit.getKitUid())
 			.deviceId(kit.getDeviceId())
 			.build();

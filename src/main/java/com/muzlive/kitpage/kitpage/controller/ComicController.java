@@ -6,22 +6,30 @@ import com.muzlive.kitpage.kitpage.config.exception.ExceptionCode;
 import com.muzlive.kitpage.kitpage.domain.common.dto.resp.CommonResp;
 import com.muzlive.kitpage.kitpage.domain.page.Page;
 import com.muzlive.kitpage.kitpage.domain.page.comicbook.ComicBook;
+import com.muzlive.kitpage.kitpage.domain.page.comicbook.dto.req.ComicBookContentReq;
 import com.muzlive.kitpage.kitpage.domain.page.comicbook.dto.resp.ComicBookEpisodeResp;
 import com.muzlive.kitpage.kitpage.domain.page.comicbook.dto.resp.ComicBookResp;
 import com.muzlive.kitpage.kitpage.domain.user.Image;
+import com.muzlive.kitpage.kitpage.domain.user.KitLog;
 import com.muzlive.kitpage.kitpage.service.aws.S3Service;
 import com.muzlive.kitpage.kitpage.service.page.ComicService;
+import com.muzlive.kitpage.kitpage.service.page.KitService;
 import com.muzlive.kitpage.kitpage.service.page.PageService;
 import com.muzlive.kitpage.kitpage.utils.CommonUtils;
 import com.muzlive.kitpage.kitpage.utils.constants.ApplicationConstants;
+import com.muzlive.kitpage.kitpage.utils.enums.KitStatus;
+import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
@@ -29,8 +37,10 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RequiredArgsConstructor
@@ -42,6 +52,8 @@ public class ComicController {
 	private final PageService pageService;
 
 	private final ComicService comicService;
+
+	private final KitService kitService;
 
 	private final S3Service s3Service;
 
@@ -105,26 +117,25 @@ public class ComicController {
 			.body(new InputStreamResource(new ByteArrayInputStream(decryptedImage)));
 	}
 
-	@Operation(summary = "ComicBook 정보 조회 API")
-	@GetMapping("/{pageUid}")
-	public CommonResp<ComicBookResp> getComicBookInfo(@PathVariable Long pageUid) throws Exception {
-		Page page = pageService.findPageById(pageUid);
-		if(CollectionUtils.isEmpty(page.getComicBooks()))
-			throw new CommonException(ExceptionCode.CANNOT_FIND_ITEM_THAT_MATCH_THE_PARAM);
+	@Operation(summary = "ComicBook 컨텐츠 정보 조회 API")
+	@GetMapping
+	public CommonResp<List<ComicBookResp>> getComicBookContents(@Valid @ModelAttribute ComicBookContentReq comicBookContentReq) throws Exception {
+		List<ComicBookResp> comicBookResps = new ArrayList<>();
 
-		ComicBookResp comicBookResp = new ComicBookResp(page);
-		comicBookResp.setWriter(page.getComicBooks().get(0).getWriter());
-		comicBookResp.setIllustrator(page.getComicBooks().get(0).getIllustrator());
+		List<Page> pages = pageService.findByContentId(comicBookContentReq.getContentId());
+		List<KitLog> kitLogs = kitService.getInstalledStatus(comicBookContentReq.getContentId(), comicBookContentReq.getDeviceId());
 
-		List<ComicBookEpisodeResp> comicBookEpisodeResps = new ArrayList<>();
-		for(ComicBook comicBook : page.getComicBooks()) {
-			comicBookEpisodeResps.add(new ComicBookEpisodeResp(comicBook, ApplicationConstants.COMIC_BOOK_UNIT_1));
+		for(Page page: pages) {
+			ComicBookResp comicBookResp = new ComicBookResp(page);
+			// Episode Detail 추가
+			comicBookResp.setDetails(comicService.getEpisodeResps(page));
+			// Kit Log 를 통한 상태 표시
+			comicBookResp.setKitStatus(comicService.getInstallStatus(page.getPageUid(), kitLogs));
+
+			comicBookResps.add(comicBookResp);
 		}
-		comicBookResp.setDetails(comicBookEpisodeResps);
 
-		// TODO add video
-
-		return new CommonResp<>(comicBookResp);
+		return new CommonResp<>(comicBookResps);
 	}
 
 	// TODO get Music Info

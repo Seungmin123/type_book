@@ -5,6 +5,7 @@ import static com.muzlive.kitpage.kitpage.domain.page.comicbook.QComicBook.comic
 import static com.muzlive.kitpage.kitpage.domain.page.comicbook.QComicBookDetail.comicBookDetail;
 import static com.muzlive.kitpage.kitpage.domain.user.QImage.image;
 import static com.muzlive.kitpage.kitpage.domain.user.QKit.kit;
+import static com.muzlive.kitpage.kitpage.domain.user.QKitLog.kitLog;
 import static com.muzlive.kitpage.kitpage.domain.user.QVersionInfo.versionInfo;
 
 import com.muzlive.kitpage.kitpage.config.exception.CommonException;
@@ -33,7 +34,9 @@ import com.muzlive.kitpage.kitpage.utils.constants.ApplicationConstants;
 import com.muzlive.kitpage.kitpage.utils.enums.ImageCode;
 import com.muzlive.kitpage.kitpage.utils.enums.PageContentType;
 import com.muzlive.kitpage.kitpage.utils.enums.VideoCode;
+import com.querydsl.core.Tuple;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import io.micrometer.core.instrument.util.StringUtils;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -67,6 +70,11 @@ public class PageService {
 
 	private final VideoRepository videoRepository;
 
+	public List<Page> findByContentId(String contentId) throws Exception {
+		return pageRepository.findByContentId(contentId)
+			.orElseThrow(() -> new CommonException(ExceptionCode.CANNOT_FIND_MATCHED_ITEM));
+	}
+
 	public Page findPageById(Long pageUid) throws Exception {
 		return pageRepository.findById(pageUid).orElseThrow(() -> new CommonException(ExceptionCode.CANNOT_FIND_MATCHED_ITEM));
 	}
@@ -99,11 +107,15 @@ public class PageService {
 
 	@Transactional
 	public void createPage(CreatePageReq createPageReq) throws Exception {
-		Long nextPageUid = pageRepository.findFirstByOrderByPageUidDesc()
-			.map(page -> page.getPageUid() != null ? page.getPageUid() + 1L : 1L)
-			.orElse(1L);
+		String contentId = createPageReq.getContentId();
 
-		String contentId = createPageReq.getContentType() + "_" + String.format("%08d", nextPageUid);
+		if(StringUtils.isEmpty(contentId)) {
+			Long nextPageUid = pageRepository.findFirstByOrderByPageUidDesc()
+				.map(page -> page.getPageUid() != null ? page.getPageUid() + 1L : 1L)
+				.orElse(1L);
+
+			contentId = createPageReq.getContentType() + "_" + String.format("%08d", nextPageUid);
+		}
 
 		// S3 Cover Image Upload
 		String saveFileName = UUID.randomUUID() + "." + FilenameUtils.getExtension(createPageReq.getCoverImage().getOriginalFilename());
@@ -170,7 +182,7 @@ public class PageService {
 			s3Service.uploadFile(coverImagePath, multipartFile);
 
 			// Image DB Insert
-			Image image = Image.of(coverImagePath, ImageCode.COMIC_COVER_IMAGE, multipartFile);
+			Image image = Image.of(coverImagePath, ImageCode.COMIC_IMAGE, multipartFile);
 			image.setSaveFileName(saveFileName);
 			imageRepository.save(image);
 

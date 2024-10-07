@@ -12,8 +12,13 @@ import com.muzlive.kitpage.kitpage.domain.page.comicbook.dto.resp.ComicBookDetai
 import com.muzlive.kitpage.kitpage.domain.page.comicbook.dto.resp.ComicBookEpisodeResp;
 import com.muzlive.kitpage.kitpage.domain.page.comicbook.repository.ComicBookDetailRepository;
 import com.muzlive.kitpage.kitpage.domain.page.comicbook.repository.ComicBookRepository;
+import com.muzlive.kitpage.kitpage.domain.user.KitLog;
+import com.muzlive.kitpage.kitpage.utils.constants.ApplicationConstants;
+import com.muzlive.kitpage.kitpage.utils.enums.KitStatus;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -62,5 +67,28 @@ public class ComicService {
 
 	public ComicBookDetail findComicBookDetailByImageUid(Long imageUid) throws Exception {
 		return comicBookDetailRepository.findByImageUid(imageUid).orElseThrow(() -> new CommonException(ExceptionCode.CANNOT_FIND_MATCHED_ITEM));
+	}
+
+	public List<ComicBookEpisodeResp> getEpisodeResps(Page page) throws Exception {
+		List<ComicBookEpisodeResp> comicBookEpisodeResps = new ArrayList<>();
+		for(ComicBook comicBook : page.getComicBooks()) {
+			comicBookEpisodeResps.add(new ComicBookEpisodeResp(comicBook, ApplicationConstants.COMIC_BOOK_UNIT_1));
+		}
+		comicBookEpisodeResps.sort(Comparator.comparing(ComicBookEpisodeResp::getVolume));
+		return comicBookEpisodeResps;
+	}
+
+	public KitStatus getInstallStatus(Long pageUid, List<KitLog> kitLogs) throws Exception {
+		return kitLogs.stream()
+			.filter(v -> v.getPageUid().equals(pageUid))
+			.findFirst()
+			.map(v -> {
+				if (v.getCreatedAt().plusDays(1).isBefore(LocalDateTime.now())) {
+					return KitStatus.EXPIRED;
+				} else {
+					return KitStatus.AVAILABLE;
+				}
+			})
+			.orElse(KitStatus.NEVER_USE);
 	}
 }
