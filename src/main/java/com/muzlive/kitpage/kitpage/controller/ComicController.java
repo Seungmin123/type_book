@@ -1,42 +1,34 @@
 package com.muzlive.kitpage.kitpage.controller;
 
+import com.muzlive.kitpage.kitpage.config.encryptor.AesSecurityProvider;
 import com.muzlive.kitpage.kitpage.config.exception.CommonException;
 import com.muzlive.kitpage.kitpage.config.exception.ExceptionCode;
 import com.muzlive.kitpage.kitpage.domain.common.dto.resp.CommonResp;
 import com.muzlive.kitpage.kitpage.domain.page.Page;
 import com.muzlive.kitpage.kitpage.domain.page.comicbook.ComicBook;
-import com.muzlive.kitpage.kitpage.domain.page.comicbook.ComicBookDetail;
-import com.muzlive.kitpage.kitpage.domain.page.comicbook.dto.req.ComicBookDownloadReq;
-import com.muzlive.kitpage.kitpage.domain.page.comicbook.dto.resp.ComicBookDetailResp;
 import com.muzlive.kitpage.kitpage.domain.page.comicbook.dto.resp.ComicBookEpisodeResp;
 import com.muzlive.kitpage.kitpage.domain.page.comicbook.dto.resp.ComicBookResp;
-import com.muzlive.kitpage.kitpage.domain.page.dto.resp.PageResp;
 import com.muzlive.kitpage.kitpage.domain.user.Image;
 import com.muzlive.kitpage.kitpage.service.aws.S3Service;
 import com.muzlive.kitpage.kitpage.service.page.ComicService;
 import com.muzlive.kitpage.kitpage.service.page.PageService;
+import com.muzlive.kitpage.kitpage.utils.CommonUtils;
 import com.muzlive.kitpage.kitpage.utils.constants.ApplicationConstants;
-import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Objects;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.InputStreamResource;
-import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -52,6 +44,10 @@ public class ComicController {
 	private final ComicService comicService;
 
 	private final S3Service s3Service;
+
+	private final CommonUtils commonUtils;
+
+	private final AesSecurityProvider aesSecurityProvider;
 
 	// TODO !!! 북마크 로컬, 이어보기 로
 	// TODO 비디오 비트무빈 유튜브
@@ -100,11 +96,13 @@ public class ComicController {
 	public ResponseEntity<InputStreamResource> downloadImage(@PathVariable Long imageUid) throws Exception {
 		Image image = pageService.findImageById(imageUid);
 		InputStream resource = s3Service.downloadFile(image.getImagePath());
+		byte[] decryptedImage = aesSecurityProvider.decrypt(commonUtils.inputStreamToByteArray(resource));
+		String encodedFileName = URLEncoder.encode(image.getSaveFileName(), StandardCharsets.UTF_8);
 
 		return ResponseEntity.ok()
 			.contentType(MediaType.APPLICATION_OCTET_STREAM)
-			.header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + image.getSaveFileName() + "\"")
-			.body(new InputStreamResource(resource));
+			.header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + encodedFileName + "\"")
+			.body(new InputStreamResource(new ByteArrayInputStream(decryptedImage)));
 	}
 
 	@Operation(summary = "ComicBook 정보 조회 API")
