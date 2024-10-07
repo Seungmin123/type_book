@@ -44,4 +44,7 @@ public class CreatePageReq {
 	@JsonProperty("region")
 	private Region region;
 
+	@JsonProperty("content_id")
+	private String contentId;
+
 }
