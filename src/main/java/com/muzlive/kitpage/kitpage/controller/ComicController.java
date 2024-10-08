@@ -48,26 +48,7 @@ public class ComicController {
 	@Operation(summary = "연관된 Comic Kit 리스트 조회")
 	@GetMapping
 	public CommonResp<ComicBookRelatedResp> getRelatedComicBookList(@Valid @ModelAttribute ComicBookContentReq comicBookContentReq) throws Exception {
-		ComicBookRelatedResp comicBookRelatedResp = new ComicBookRelatedResp();
-
-		Page page = pageService.findPageById(comicBookContentReq.getPageUid());
-		List<Page> pages = pageService.findByContentId(page.getContentId());
-		List<KitLog> kitLogs = kitService.getInstalledStatus(page.getContentId(), comicBookContentReq.getDeviceId());
-
-		List<ComicBookResp> comicBookResps = new ArrayList<>();
-		for (Page pageItem : pages) {
-			ComicBookResp comicBookResp = new ComicBookResp(pageItem);
-			comicBookResp.setKitStatus(comicService.getInstallStatus(pageItem.getPageUid(), kitLogs));
-
-			if(pageItem.getPageUid().equals(comicBookContentReq.getPageUid()))
-				comicBookRelatedResp.setTaggedComicBook(comicBookResp);
-
-			comicBookResps.add(comicBookResp);
-		}
-
-		comicBookRelatedResp.setComicBookResps(comicBookResps);
-
-		return new CommonResp<>(comicBookRelatedResp);
+		return new CommonResp<>(comicService.getRelatedComicBookList(comicBookContentReq.getPageUid(), comicBookContentReq.getDeviceId()));
 	}
 
 
