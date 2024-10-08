@@ -1,41 +1,24 @@
 package com.muzlive.kitpage.kitpage.controller;
 
-import com.muzlive.kitpage.kitpage.config.encryptor.AesSecurityProvider;
-import com.muzlive.kitpage.kitpage.config.exception.CommonException;
-import com.muzlive.kitpage.kitpage.config.exception.ExceptionCode;
 import com.muzlive.kitpage.kitpage.domain.common.dto.resp.CommonResp;
 import com.muzlive.kitpage.kitpage.domain.page.Page;
-import com.muzlive.kitpage.kitpage.domain.page.comicbook.ComicBook;
 import com.muzlive.kitpage.kitpage.domain.page.comicbook.dto.req.ComicBookContentReq;
-import com.muzlive.kitpage.kitpage.domain.page.comicbook.dto.resp.ComicBookEpisodeResp;
+import com.muzlive.kitpage.kitpage.domain.page.comicbook.dto.resp.ComicBookDetailResp;
+import com.muzlive.kitpage.kitpage.domain.page.comicbook.dto.resp.ComicBookRelatedResp;
 import com.muzlive.kitpage.kitpage.domain.page.comicbook.dto.resp.ComicBookResp;
-import com.muzlive.kitpage.kitpage.domain.user.Image;
 import com.muzlive.kitpage.kitpage.domain.user.KitLog;
-import com.muzlive.kitpage.kitpage.service.aws.S3Service;
 import com.muzlive.kitpage.kitpage.service.page.ComicService;
 import com.muzlive.kitpage.kitpage.service.page.KitService;
 import com.muzlive.kitpage.kitpage.service.page.PageService;
-import com.muzlive.kitpage.kitpage.utils.CommonUtils;
-import com.muzlive.kitpage.kitpage.utils.constants.ApplicationConstants;
-import com.muzlive.kitpage.kitpage.utils.enums.KitStatus;
-import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.stream.Collectors;
 import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.core.io.InputStreamResource;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.util.CollectionUtils;
+import org.checkerframework.checker.units.qual.C;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -55,12 +38,6 @@ public class ComicController {
 
 	private final KitService kitService;
 
-	private final S3Service s3Service;
-
-	private final CommonUtils commonUtils;
-
-	private final AesSecurityProvider aesSecurityProvider;
-
 	// TODO !!! 북마크 로컬, 이어보기 로
 	// TODO 비디오 비트무빈 유튜브
 	// m368
@@ -68,74 +45,42 @@ public class ComicController {
 	// TODO 설정 마이페이지 -> 통합로그인...
 	// TODO 책 방향 왼쪽 오른쪽 주기 알려주기
 
-//	@Operation(summary = "컨텐츠 다운로드 API", description = "pageUid 를 통해 ZIP 파일 다운로드")
-//	@GetMapping("/download/{pageUid}")
-//	public ResponseEntity<InputStreamResource> downloadComicBook(@PathVariable Long pageUid) throws Exception {
-//		List<Image> images = pageService.findByPageUid(pageUid);
-//
-//		if(CollectionUtils.isEmpty(images)) {
-//			return ResponseEntity.status(400)
-//				.body(null);
-//		}
-//
-//		ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-//		ZipOutputStream zipOutputStream = new ZipOutputStream(byteArrayOutputStream);
-//
-//		for(Image image : images) {
-//			InputStream resource = s3Service.downloadFile(image.getImagePath());
-//
-//			zipOutputStream.putNextEntry(new ZipEntry(image.getSaveFileName()));
-//			byte[] buffer = new byte[1024];
-//			int length;
-//			while ((length = resource.read(buffer)) > 0) {
-//				zipOutputStream.write(buffer, 0, length);
-//			}
-//			zipOutputStream.closeEntry();
-//		}
-//
-//		zipOutputStream.finish();
-//		zipOutputStream.close();
-//
-//		InputStreamResource resource = new InputStreamResource(new ByteArrayInputStream(byteArrayOutputStream.toByteArray()));
-//
-//		return ResponseEntity.ok()
-//			.header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + pageUid + ".zip\"")
-//			.body(resource);
-//	}
-
-	@Operation(summary = "이미지 다운로드 API", description = "imageUid 를 통해 Image 파일 다운로드")
-	@GetMapping("/download/image/{imageUid}")
-	public ResponseEntity<InputStreamResource> downloadImage(@PathVariable Long imageUid) throws Exception {
-		Image image = pageService.findImageById(imageUid);
-		InputStream resource = s3Service.downloadFile(image.getImagePath());
-		byte[] decryptedImage = aesSecurityProvider.decrypt(commonUtils.inputStreamToByteArray(resource));
-		String encodedFileName = URLEncoder.encode(image.getSaveFileName(), StandardCharsets.UTF_8);
-
-		return ResponseEntity.ok()
-			.contentType(MediaType.APPLICATION_OCTET_STREAM)
-			.header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + encodedFileName + "\"")
-			.body(new InputStreamResource(new ByteArrayInputStream(decryptedImage)));
-	}
-
-	@Operation(summary = "ComicBook 컨텐츠 정보 조회 API")
+	@Operation(summary = "연관된 Comic Kit 리스트 조회")
 	@GetMapping
-	public CommonResp<List<ComicBookResp>> getComicBookContents(@Valid @ModelAttribute ComicBookContentReq comicBookContentReq) throws Exception {
+	public CommonResp<ComicBookRelatedResp> getRelatedComicBookList(@Valid @ModelAttribute ComicBookContentReq comicBookContentReq) throws Exception {
+		ComicBookRelatedResp comicBookRelatedResp = new ComicBookRelatedResp();
+
+		Page page = pageService.findPageById(comicBookContentReq.getPageUid());
+		List<Page> pages = pageService.findByContentId(page.getContentId());
+		List<KitLog> kitLogs = kitService.getInstalledStatus(page.getContentId(), comicBookContentReq.getDeviceId());
+
 		List<ComicBookResp> comicBookResps = new ArrayList<>();
+		for (Page pageItem : pages) {
+			ComicBookResp comicBookResp = new ComicBookResp(pageItem);
+			comicBookResp.setKitStatus(comicService.getInstallStatus(pageItem.getPageUid(), kitLogs));
 
-		List<Page> pages = pageService.findByContentId(comicBookContentReq.getContentId());
-		List<KitLog> kitLogs = kitService.getInstalledStatus(comicBookContentReq.getContentId(), comicBookContentReq.getDeviceId());
-
-		for(Page page: pages) {
-			ComicBookResp comicBookResp = new ComicBookResp(page);
-			// Episode Detail 추가
-			comicBookResp.setDetails(comicService.getEpisodeResps(page));
-			// Kit Log 를 통한 상태 표시
-			comicBookResp.setKitStatus(comicService.getInstallStatus(page.getPageUid(), kitLogs));
+			if(pageItem.getPageUid().equals(comicBookContentReq.getPageUid()))
+				comicBookRelatedResp.setTaggedComicBook(comicBookResp);
 
 			comicBookResps.add(comicBookResp);
 		}
 
-		return new CommonResp<>(comicBookResps);
+		comicBookRelatedResp.setComicBookResps(comicBookResps);
+
+		return new CommonResp<>(comicBookRelatedResp);
+	}
+
+
+	@Operation(summary = "ComicBook 컨텐츠 상세 정보 조회 - 비디오 추가 안됨")
+	@GetMapping("/detail/{pageUid}")
+	public CommonResp<ComicBookDetailResp> getComicBookContents(@Valid @PathVariable Long pageUid) throws Exception {
+		Page page = pageService.findPageById(pageUid);
+		ComicBookDetailResp comicBookDetailResp = new ComicBookDetailResp(page);
+		comicBookDetailResp.setDetails(comicService.getEpisodeResps(page));
+
+		// TODO 비디오 추가
+
+		return new CommonResp<>(comicBookDetailResp);
 	}
 
 	// TODO get Music Info

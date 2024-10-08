@@ -29,25 +29,10 @@ public class CloudFrontService {
 
 	private final CloudFrontDomain cloudFrontDomain;
 
-	public ResponseEntity<byte[]> getCFImageByKey(String key) throws Exception {
+	public byte[] getCFImageByKey(String key) throws Exception {
 		CannedSignerRequest request = createRequestForCannedPolicy(key);
 		String signedUrl = cloudFrontDomain.getCloudFrontUtilities().getSignedUrlWithCannedPolicy(request).url();
-
-		byte[] image = this.downloadFile(signedUrl);
-
-		ResponseEntity<byte[]> response = null;
-
-		try {
-			response = ResponseEntity.ok()
-				.contentType(MediaType.parseMediaType(URLConnection.guessContentTypeFromName(key)))
-				.body(aesSecurityProvider.decrypt(image));
-		} catch (InvalidMediaTypeException e) {
-			log.error(e.getMessage());
-			response = ResponseEntity.badRequest()
-				.body(null);
-		}
-
-		return response;
+		return this.downloadFile(signedUrl);
 	}
 
 	private byte[] downloadFile(String fileUrl) throws Exception {

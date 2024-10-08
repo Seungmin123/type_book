@@ -10,8 +10,8 @@ import lombok.Setter;
 public class ComicBookContentReq {
 
 	@NotNull
-	@JsonProperty("contentId")
-	private String contentId;
+	@JsonProperty("pageUid")
+	private Long pageUid;
 
 	@NotNull
 	@JsonProperty("deviceId")
