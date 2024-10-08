@@ -56,8 +56,6 @@ public class PageService {
 
 	private final JPAQueryFactory queryFactory;
 
-	private final ComicService comicService;
-
 	private final S3Service s3Service;
 
 	private final PageRepository pageRepository;
@@ -139,60 +137,6 @@ public class PageService {
 			.genre(createPageReq.getGenre())
 			.region(createPageReq.getRegion())
 			.build());
-	}
-
-	@Transactional
-	public void insertComicBook(UploadComicBookReq uploadComicBookReq) throws Exception {
-		Page page = pageRepository.findById(uploadComicBookReq.getPageUid()).orElseThrow(() -> new CommonException(ExceptionCode.CANNOT_FIND_MATCHED_ITEM));
-
-		// S3 Cover Image Upload
-		String saveFileName = UUID.randomUUID() + "." + FilenameUtils.getExtension(uploadComicBookReq.getCoverImage().getOriginalFilename());
-		String coverImagePath = page.getContentId() + "/" + ApplicationConstants.IMAGE + "/" + saveFileName;
-		s3Service.uploadFile(coverImagePath, uploadComicBookReq.getCoverImage());
-
-		// Image DB Insert
-		Image image = Image.of(coverImagePath, ImageCode.COMIC_COVER_IMAGE, uploadComicBookReq.getCoverImage());
-		image.setSaveFileName(saveFileName);
-		imageRepository.save(image);
-
-		// Page, ComicBook DB Insert
-		comicBookRepository.save(
-			ComicBook.builder()
-				.pageUid(uploadComicBookReq.getPageUid())
-				.coverImageUid(image.getImageUid())
-				.writer(uploadComicBookReq.getWriter())
-				.illustrator(uploadComicBookReq.getIllustrator())
-				.volume(uploadComicBookReq.getVolume())
-				.build()
-		);
-	}
-
-	@Transactional
-	public void insertComicBookDetail(UploadComicBookDetailReq uploadComicBookDetailReq) throws Exception {
-		ComicBook comicBook = comicBookRepository.findById(uploadComicBookDetailReq.getComicBookUid())
-			.orElseThrow(() -> new CommonException(ExceptionCode.CANNOT_FIND_MATCHED_ITEM));
-
-		String episode = Objects.nonNull(uploadComicBookDetailReq.getEpisode()) ? uploadComicBookDetailReq.getEpisode() : "";
-		int page = comicService.findComicBookMaxPage(comicBook.getComicBookUid());
-
-		for(MultipartFile multipartFile : uploadComicBookDetailReq.getImages()) {
-			// S3 Cover Image Upload
-			String saveFileName = UUID.randomUUID() + "." + FilenameUtils.getExtension(multipartFile.getOriginalFilename());
-			String coverImagePath = comicBook.getPage().getContentId() + "/" + ApplicationConstants.IMAGE + "/" + saveFileName;
-			s3Service.uploadFile(coverImagePath, multipartFile);
-
-			// Image DB Insert
-			Image image = Image.of(coverImagePath, ImageCode.COMIC_IMAGE, multipartFile);
-			image.setSaveFileName(saveFileName);
-			imageRepository.save(image);
-
-			comicService.upsertComicBookDetail(ComicBookDetail.builder()
-				.comicBookUid(comicBook.getComicBookUid())
-				.episode(episode)
-				.page(page++)
-				.imageUid(image.getImageUid())
-				.build());
-		}
 	}
 
 	public void insertMusic(UploadMusicReq uploadMusicReq) throws Exception {

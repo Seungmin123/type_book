@@ -6,6 +6,7 @@ import com.muzlive.kitpage.kitpage.domain.page.dto.req.UploadComicBookDetailReq;
 import com.muzlive.kitpage.kitpage.domain.page.dto.req.UploadComicBookReq;
 import com.muzlive.kitpage.kitpage.domain.page.dto.req.UploadMusicReq;
 import com.muzlive.kitpage.kitpage.domain.page.dto.req.UploadVideoReq;
+import com.muzlive.kitpage.kitpage.service.page.ComicService;
 import com.muzlive.kitpage.kitpage.service.page.PageService;
 import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +22,8 @@ public class AdminController {
 
 	private final PageService pageService;
 
+	private final ComicService comicService;
+
 	@PostMapping("/page")
 	CommonResp<Void> createPage(@Valid @ModelAttribute CreatePageReq createPageReq) throws Exception {
 		pageService.createPage(createPageReq);
@@ -29,13 +32,13 @@ public class AdminController {
 
 	@PostMapping("/comic")
 	CommonResp<Void> uploadComicBook(@Valid @ModelAttribute UploadComicBookReq uploadComicBookReq) throws Exception {
-		pageService.insertComicBook(uploadComicBookReq);
+		comicService.insertComicBook(pageService.findPageById(uploadComicBookReq.getPageUid()).getContentId(), uploadComicBookReq);
 		return new CommonResp<>();
 	}
 
 	@PostMapping("/comic/detail")
 	CommonResp<Void> uploadComicDetail(@Valid @ModelAttribute UploadComicBookDetailReq uploadComicBookDetailReq) throws Exception {
-		pageService.insertComicBookDetail(uploadComicBookDetailReq);
+		comicService.insertComicBookDetail(uploadComicBookDetailReq);
 		return new CommonResp<>();
 	}
 

@@ -2,13 +2,18 @@ package com.muzlive.kitpage.kitpage.controller;
 
 import com.muzlive.kitpage.kitpage.config.jwt.JwtTokenProvider;
 import com.muzlive.kitpage.kitpage.domain.common.dto.resp.CommonResp;
+import com.muzlive.kitpage.kitpage.domain.page.Page;
+import com.muzlive.kitpage.kitpage.domain.page.comicbook.dto.resp.ComicBookRelatedResp;
+import com.muzlive.kitpage.kitpage.domain.user.Kit;
 import com.muzlive.kitpage.kitpage.domain.user.Member;
 import com.muzlive.kitpage.kitpage.domain.user.TokenLog;
 import com.muzlive.kitpage.kitpage.domain.user.dto.req.AccessTokenReq;
 import com.muzlive.kitpage.kitpage.domain.user.dto.req.CheckTagReq;
 import com.muzlive.kitpage.kitpage.domain.user.dto.req.MicLocationReq;
 import com.muzlive.kitpage.kitpage.domain.user.dto.req.VersionInfoReq;
+import com.muzlive.kitpage.kitpage.domain.user.dto.resp.CheckTagResp;
 import com.muzlive.kitpage.kitpage.domain.user.dto.resp.VersionInfoResp;
+import com.muzlive.kitpage.kitpage.service.page.ComicService;
 import com.muzlive.kitpage.kitpage.service.page.KitService;
 import com.muzlive.kitpage.kitpage.service.page.PageService;
 import com.muzlive.kitpage.kitpage.service.page.UserService;
@@ -25,6 +30,7 @@ import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.KittorUserReq
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.SendVerificationReq;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.resp.KittorTokenResp;
 import com.muzlive.kitpage.kitpage.utils.CommonUtils;
+import com.muzlive.kitpage.kitpage.utils.enums.PageContentType;
 import com.muzlive.kitpage.kitpage.utils.enums.TokenType;
 import com.muzlive.kitpage.kitpage.utils.enums.UserRole;
 import io.swagger.v3.oas.annotations.Operation;
@@ -55,6 +61,8 @@ public class UserController {
 	private final PageService pageService;
 
 	private final KitService kitService;
+
+	private final ComicService comicService;
 
 	private final UserService userService;
 
@@ -87,11 +95,13 @@ public class UserController {
 
 	@Operation(summary = "체크 태그 API", description = "키노 서버를 통한 체크 태그 API")
 	@PostMapping("/checkTag")
-	public CommonResp<String> connect(@Valid @RequestBody CheckTagReq checkTagReq, HttpServletRequest httpServletRequest) throws Exception {
+	public CommonResp<CheckTagResp> connect(@Valid @RequestBody CheckTagReq checkTagReq, HttpServletRequest httpServletRequest) throws Exception {
 		// Token DeviceID / Request DeviceID 검사
 		/*String validateToken = jwtTokenProvider.resolveToken(httpServletRequest);
 		if(!jwtTokenProvider.getDeviceIdByToken(validateToken).equals(checkTagReq.getDeviceId()))
 			throw new CommonException(ExceptionCode.INVALID_JWT);*/
+
+		CheckTagResp checkTagResp = new CheckTagResp();
 
 		String requestSerialNumber = (checkTagReq.getSerialNumber().length() > 8) ? checkTagReq.getSerialNumber().substring(0, 8) : checkTagReq.getSerialNumber();
 		String paramSerialNumber = (checkTagReq.getSerialNumber().length() < 10) ? checkTagReq.getSerialNumber() + commonUtils.makeRandomHexString() : checkTagReq.getSerialNumber();
@@ -102,7 +112,7 @@ public class UserController {
 			.countryCode(checkTagReq.getRegion().getCode())
 			.build();
 
-		kitService.checkTag(checkTagReq.getDeviceId(), requestSerialNumber, kihnoV2TransferSerivce.kihnoKitCheck(kihnoKitCheckReq).getKihnoKitUid());
+		Kit kit = kitService.checkTag(checkTagReq.getDeviceId(), requestSerialNumber, kihnoV2TransferSerivce.kihnoKitCheck(kihnoKitCheckReq).getKihnoKitUid());
 
 		// token
 		String token = jwtTokenProvider.createAccessToken(checkTagReq.getDeviceId(), checkTagReq.getSerialNumber(), Set.of(UserRole.GUEST.getKey(), UserRole.HALF_LINKER.getKey()));
@@ -114,9 +124,19 @@ public class UserController {
 				.tokenType(TokenType.CHECK_TAG)
 				.build());
 
+		Page page = pageService.findPageById(kit.getPageUid());
+		if(page.getContentType().equals(PageContentType.COMICBOOK)) {
+			ComicBookRelatedResp comicBookRelatedResp = comicService.getRelatedComicBookList(page.getPageUid(), checkTagReq.getDeviceId());
+			checkTagResp.setList(comicBookRelatedResp.getComicBookResps());
+			checkTagResp.setTagged(comicBookRelatedResp.getTaggedComicBook());
+		}
+
+		checkTagResp.setToken(token);
+
+
 		// TODO 추가 정보 더하여 Response 만들기 Install 이력이 있는 컨텐츠를 전부 보여줘야하는건지 코믹북만 보여줘야하는건지?
 
-		return new CommonResp<>(token);
+		return new CommonResp<>(checkTagResp);
 	}
 
 	@Operation(summary = "회원가입 API")
