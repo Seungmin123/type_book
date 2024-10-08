@@ -15,14 +15,6 @@ public class ComicBookDetailResp {
 
 	private String contentId;
 
-	private String title;
-
-	private String writer;
-
-	private String illustrator;
-
-	private PageGenre genre;
-
 	private List<ComicBookEpisodeResp> details;
 
 	private List<Video> videos;
@@ -32,11 +24,7 @@ public class ComicBookDetailResp {
 	public ComicBookDetailResp(Page page) {
 		this.pageUid = page.getPageUid();
 		this.contentId = page.getContentId();
-		this.title = page.getTitle();
-		this.genre = page.getGenre();
 		this.infoText = page.getInfoText();
-		this.writer = "";
-		this.illustrator = "";
 	}
 
 }

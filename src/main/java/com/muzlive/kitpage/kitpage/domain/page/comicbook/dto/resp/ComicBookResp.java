@@ -1,10 +1,8 @@
 package com.muzlive.kitpage.kitpage.domain.page.comicbook.dto.resp;
 
 import com.muzlive.kitpage.kitpage.domain.page.Page;
-import com.muzlive.kitpage.kitpage.domain.page.comicbook.Video;
 import com.muzlive.kitpage.kitpage.utils.enums.KitStatus;
 import com.muzlive.kitpage.kitpage.utils.enums.PageGenre;
-import java.util.List;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.util.CollectionUtils;
@@ -13,9 +11,11 @@ import org.springframework.util.CollectionUtils;
 @Setter
 public class ComicBookResp {
 
+	private String contentId;
+
 	private Long pageUid;
 
-	private String contentId;
+	private Long coverImageUid;
 
 	private String title;
 
@@ -27,21 +27,15 @@ public class ComicBookResp {
 
 	private PageGenre genre;
 
-	private List<ComicBookEpisodeResp> details;
-
-	private List<Video> videos;
-
-	private String infoText;
-
 	private KitStatus kitStatus;
 
 	public ComicBookResp(Page page) {
-		this.pageUid = page.getPageUid();
 		this.contentId = page.getContentId();
+		this.pageUid = page.getPageUid();
+		this.coverImageUid = page.getCoverImageUid();
 		this.title = page.getTitle();
 		this.subtitle = page.getSubTitle();
 		this.genre = page.getGenre();
-		this.infoText = page.getInfoText();
 		if(CollectionUtils.isEmpty(page.getComicBooks())) {
 			this.writer = "";
 			this.illustrator = "";
