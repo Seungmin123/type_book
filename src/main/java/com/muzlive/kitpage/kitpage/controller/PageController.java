@@ -62,7 +62,7 @@ public class PageController {
 		return new CommonResp<>(pageResps);
 	}
 
-	@Operation(summary = "이미지 다운로드 API", description = "imageUid 를 통해 Image 파일 다운로드")
+	@Operation(summary = "이미지 다운로드 API - Decrypted", description = "imageUid 를 통해 Image 파일 다운로드")
 	@GetMapping("/download/image/{imageUid}")
 	public ResponseEntity<InputStreamResource> downloadImage(@PathVariable Long imageUid) throws Exception {
 		Image image = pageService.findImageById(imageUid);
@@ -71,5 +71,16 @@ public class PageController {
 			.contentType(MediaType.APPLICATION_OCTET_STREAM)
 			.header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + image.getSaveFileName() + "\"")
 			.body(new InputStreamResource(new ByteArrayInputStream(decryptedImage)));
+	}
+
+	@Operation(summary = "이미지 다운로드 API - Encrypted", description = "imageUid 를 통해 Image 파일 다운로드")
+	@GetMapping("/download/image/encrypt/{imageUid}")
+	public ResponseEntity<InputStreamResource> downloadImageEncrypted(@PathVariable Long imageUid) throws Exception {
+		Image image = pageService.findImageById(imageUid);
+		byte[] encryptedImage = cloudFrontService.getCFImageByKey(image.getImagePath());
+		return ResponseEntity.ok()
+			.contentType(MediaType.APPLICATION_OCTET_STREAM)
+			.header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + image.getSaveFileName() + "\"")
+			.body(new InputStreamResource(new ByteArrayInputStream(encryptedImage)));
 	}
 }
