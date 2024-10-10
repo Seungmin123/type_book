@@ -139,8 +139,10 @@ public class ComicService {
 			ComicBookResp comicBookResp = new ComicBookResp(pageItem);
 			comicBookResp.setKitStatus(this.getInstallStatus(pageItem.getPageUid(), installLogs));
 
-			if(pageItem.getPageUid().equals(pageUid))
+			if(pageItem.getPageUid().equals(pageUid)) {
+				comicBookResp.setKitStatus(KitStatus.AVAILABLE);
 				comicBookRelatedResp.setTaggedComicBook(comicBookResp);
+			}
 
 			comicBookResps.add(comicBookResp);
 		}
