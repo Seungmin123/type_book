@@ -40,8 +40,6 @@ public class SecurityConfig {
 
 			.and()
 			.authorizeRequests()
-			// TODO 권한 수정
-			//.antMatchers("/**").permitAll()
 			// 루트, 에러 경로, Health Check
 			.antMatchers("/", "/error", "/actuator/health")
 			.permitAll()
@@ -52,7 +50,7 @@ public class SecurityConfig {
 			.antMatchers("/v3/api-docs/**", "/swagger-ui/**", "/doc/api/**", "/swagger-url")
 			.permitAll()
 			// get token
-			.antMatchers("/v1/user/token")
+			.antMatchers("/v1/user/token", "/v1/page/view/**")
 			.permitAll()
 			// check tag 이전 필요한 API
 			.antMatchers("/v1/user/checkTag", "/v1/user/login", "/v1/user/join", // Token 발급

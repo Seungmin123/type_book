@@ -1,6 +1,9 @@
 package com.muzlive.kitpage.kitpage.domain.page.comicbook.dto.resp;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.muzlive.kitpage.kitpage.config.serializer.LocalDateTimeSerializer;
 import com.muzlive.kitpage.kitpage.domain.page.comicbook.ComicBook;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.Getter;
@@ -22,18 +25,14 @@ public class ComicBookEpisodeResp {
 
 	private List<ComicBookImageResp> detailPages;
 
+	@JsonSerialize(using = LocalDateTimeSerializer.class)
+	private LocalDateTime lastModifiedAt;
+
 	public ComicBookEpisodeResp(ComicBook comicBook, String unit) {
 		this.comicBookUid = comicBook.getComicBookUid();
 		this.coverImageUid = comicBook.getCoverImageUid();
 		this.volume = comicBook.getVolume();
 		this.unit = unit;
-		if(comicBook.getComicBookDetails().isEmpty()){
-			this.pageSize = 0;
-			this.detailPages = new ArrayList<>();
-		} else {
-			this.pageSize = comicBook.getComicBookDetails().size();
-			this.detailPages = ComicBookImageResp.of(comicBook.getComicBookDetails());
-		}
 	}
 
 }
