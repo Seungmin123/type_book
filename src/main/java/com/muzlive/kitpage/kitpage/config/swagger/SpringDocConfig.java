@@ -23,7 +23,7 @@ public class SpringDocConfig {
         return new OpenAPI()
                 .components(new Components())
 //                .externalDocs(new ExternalDocumentation().description("Other Document").url("http://wldv2.kihnoframe.com/swagger-ui/index.html"))
-                .servers(List.of(new Server().url("https://kit-page-dev.kitbetter.com").description("General Server")))
+                .servers(List.of(new Server().url("https://page-api-dev.kitbetter.com").description("KiTPage Dev Server")))
                 //.servers(List.of(new Server().url("http://localhost:8080").description("General Server")))
                 .info(apiInfo());
     }
