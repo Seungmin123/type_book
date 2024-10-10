@@ -3,6 +3,7 @@ package com.muzlive.kitpage.kitpage.domain.user;
 import com.muzlive.kitpage.kitpage.domain.common.BaseTimeEntity;
 import com.muzlive.kitpage.kitpage.utils.enums.ImageCode;
 import java.awt.image.BufferedImage;
+import java.io.IOException;
 import javax.imageio.ImageIO;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -16,6 +17,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 import org.springframework.web.multipart.MultipartFile;
@@ -57,8 +59,11 @@ public class Image extends BaseTimeEntity {
 	@Column(name = "image_code", nullable = false)
 	private ImageCode imageCode;
 
+	@Column(name = "md5", nullable = false)
+	private String md5;
+
 	@Builder
-	public Image(String imagePath, Long imageSize, Integer width, Integer height, String originalFileName, String saveFileName, ImageCode imageCode) {
+	public Image(String imagePath, Long imageSize, Integer width, Integer height, String originalFileName, String saveFileName, ImageCode imageCode, String md5) {
 		this.imagePath = imagePath;
 		this.imageSize = imageSize;
 		this.width = width;
@@ -66,9 +71,10 @@ public class Image extends BaseTimeEntity {
 		this.originalFileName = originalFileName;
 		this.saveFileName = saveFileName;
 		this.imageCode = imageCode;
+		this.md5 = md5;
 	}
 
-	public static Image of(String imagePath, ImageCode imageCode, MultipartFile multipartFile) {
+	public static Image of(String imagePath, ImageCode imageCode, MultipartFile multipartFile) throws IOException {
 		int width = 0;
 		int height = 0;
 
@@ -85,6 +91,7 @@ public class Image extends BaseTimeEntity {
 			.width(width)
 			.height(height)
 			.originalFileName(multipartFile.getOriginalFilename())
+			.md5(DigestUtils.md5Hex(multipartFile.getBytes()))
 			.build();
 	}
 }
