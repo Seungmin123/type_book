@@ -14,21 +14,26 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.net.URLConnection;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.InvalidMediaTypeException;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+@Slf4j
 @RequiredArgsConstructor
 @Tag(name = "Page API")
 @RequestMapping("/v1/page")
@@ -82,5 +87,21 @@ public class PageController {
 			.contentType(MediaType.APPLICATION_OCTET_STREAM)
 			.header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + image.getSaveFileName() + "\"")
 			.body(new InputStreamResource(new ByteArrayInputStream(encryptedImage)));
+	}
+
+	@Operation(summary = "이미지 View API")
+	@GetMapping("/view/{imageUid}")
+	public ResponseEntity<byte[]> viewImage(@PathVariable Long imageUid) throws Exception {
+		Image image = pageService.findImageById(imageUid);
+		byte[] decryptedImage = aesSecurityProvider.decrypt(cloudFrontService.getCFImageByKey(image.getImagePath()));
+		try {
+			return ResponseEntity.ok()
+				.contentType(MediaType.parseMediaType(URLConnection.guessContentTypeFromName(image.getSaveFileName())))
+				.body(decryptedImage);
+		} catch (InvalidMediaTypeException e) {
+			log.error(e.getMessage());
+			return ResponseEntity.badRequest()
+				.body(null);
+		}
 	}
 }
