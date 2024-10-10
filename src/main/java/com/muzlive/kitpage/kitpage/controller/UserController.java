@@ -4,17 +4,19 @@ import com.muzlive.kitpage.kitpage.config.jwt.JwtTokenProvider;
 import com.muzlive.kitpage.kitpage.domain.common.dto.resp.CommonResp;
 import com.muzlive.kitpage.kitpage.domain.page.Page;
 import com.muzlive.kitpage.kitpage.domain.page.comicbook.dto.resp.ComicBookRelatedResp;
+import com.muzlive.kitpage.kitpage.domain.user.InstallLog;
 import com.muzlive.kitpage.kitpage.domain.user.Kit;
+import com.muzlive.kitpage.kitpage.domain.user.KitLog;
 import com.muzlive.kitpage.kitpage.domain.user.Member;
 import com.muzlive.kitpage.kitpage.domain.user.TokenLog;
 import com.muzlive.kitpage.kitpage.domain.user.dto.req.AccessTokenReq;
 import com.muzlive.kitpage.kitpage.domain.user.dto.req.CheckTagReq;
+import com.muzlive.kitpage.kitpage.domain.user.dto.req.InstallNoticeReq;
 import com.muzlive.kitpage.kitpage.domain.user.dto.req.MicLocationReq;
 import com.muzlive.kitpage.kitpage.domain.user.dto.req.VersionInfoReq;
 import com.muzlive.kitpage.kitpage.domain.user.dto.resp.CheckTagResp;
 import com.muzlive.kitpage.kitpage.domain.user.dto.resp.VersionInfoResp;
 import com.muzlive.kitpage.kitpage.service.page.ComicService;
-import com.muzlive.kitpage.kitpage.service.page.KitService;
 import com.muzlive.kitpage.kitpage.service.page.PageService;
 import com.muzlive.kitpage.kitpage.service.page.UserService;
 import com.muzlive.kitpage.kitpage.service.transfer.kihno.KihnoV2TransferSerivce;
@@ -59,8 +61,6 @@ public class UserController {
 	private final KihnoV2TransferSerivce kihnoV2TransferSerivce;
 
 	private final PageService pageService;
-
-	private final KitService kitService;
 
 	private final ComicService comicService;
 
@@ -112,7 +112,7 @@ public class UserController {
 			.countryCode(checkTagReq.getRegion().getCode())
 			.build();
 
-		Kit kit = kitService.checkTag(checkTagReq.getDeviceId(), requestSerialNumber, kihnoV2TransferSerivce.kihnoKitCheck(kihnoKitCheckReq).getKihnoKitUid());
+		Kit kit = userService.checkTag(checkTagReq.getDeviceId(), requestSerialNumber, kihnoV2TransferSerivce.kihnoKitCheck(kihnoKitCheckReq).getKihnoKitUid());
 
 		// token
 		String token = jwtTokenProvider.createAccessToken(checkTagReq.getDeviceId(), checkTagReq.getSerialNumber(), Set.of(UserRole.GUEST.getKey(), UserRole.HALF_LINKER.getKey()));
@@ -132,9 +132,6 @@ public class UserController {
 		}
 
 		checkTagResp.setToken(token);
-
-
-		// TODO 추가 정보 더하여 Response 만들기 Install 이력이 있는 컨텐츠를 전부 보여줘야하는건지 코믹북만 보여줘야하는건지?
 
 		return new CommonResp<>(checkTagResp);
 	}
@@ -211,6 +208,14 @@ public class UserController {
 	@GetMapping("/version")
 	public CommonResp<VersionInfoResp> getVersion(@ModelAttribute @Valid VersionInfoReq versionInfoReq) throws Exception {
 		return new CommonResp<>(pageService.getVersionInfo(versionInfoReq));
+	}
+
+	@Operation(summary = "인스톨 완료 API")
+	@PostMapping("/install/complete")
+	public CommonResp<Void> installComplete(@Valid @RequestBody InstallNoticeReq installNoticeReq) throws Exception {
+		KitLog kitLog = userService.findLatestKitLog(installNoticeReq.getDeviceId(), installNoticeReq.getSerialNumber());
+		userService.insertInstallLog(new InstallLog(kitLog));
+		return new CommonResp<>();
 	}
 
 }

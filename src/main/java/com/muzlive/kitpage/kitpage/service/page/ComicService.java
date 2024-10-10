@@ -10,6 +10,7 @@ import com.muzlive.kitpage.kitpage.domain.page.comicbook.ComicBook;
 import com.muzlive.kitpage.kitpage.domain.page.comicbook.ComicBookDetail;
 import com.muzlive.kitpage.kitpage.domain.page.comicbook.dto.resp.ComicBookDetailResp;
 import com.muzlive.kitpage.kitpage.domain.page.comicbook.dto.resp.ComicBookEpisodeResp;
+import com.muzlive.kitpage.kitpage.domain.page.comicbook.dto.resp.ComicBookImageResp;
 import com.muzlive.kitpage.kitpage.domain.page.comicbook.dto.resp.ComicBookRelatedResp;
 import com.muzlive.kitpage.kitpage.domain.page.comicbook.dto.resp.ComicBookResp;
 import com.muzlive.kitpage.kitpage.domain.page.comicbook.repository.ComicBookDetailRepository;
@@ -17,6 +18,7 @@ import com.muzlive.kitpage.kitpage.domain.page.comicbook.repository.ComicBookRep
 import com.muzlive.kitpage.kitpage.domain.page.dto.req.UploadComicBookDetailReq;
 import com.muzlive.kitpage.kitpage.domain.page.dto.req.UploadComicBookReq;
 import com.muzlive.kitpage.kitpage.domain.user.Image;
+import com.muzlive.kitpage.kitpage.domain.user.InstallLog;
 import com.muzlive.kitpage.kitpage.domain.user.KitLog;
 import com.muzlive.kitpage.kitpage.domain.user.repository.ImageRepository;
 import com.muzlive.kitpage.kitpage.service.aws.S3Service;
@@ -45,7 +47,7 @@ public class ComicService {
 
 	private final PageService pageService;
 
-	private final KitService kitService;
+	private final UserService userService;
 
 	private final S3Service s3Service;
 
@@ -130,12 +132,12 @@ public class ComicService {
 
 		Page page = pageService.findPageById(pageUid);
 		List<Page> pages = pageService.findByContentId(page.getContentId());
-		List<KitLog> kitLogs = kitService.getInstalledStatus(page.getContentId(), deviceId);
+		List<InstallLog> installLogs = userService.getInstalledStatus(page.getContentId(), deviceId);
 
 		List<ComicBookResp> comicBookResps = new ArrayList<>();
 		for (Page pageItem : pages) {
 			ComicBookResp comicBookResp = new ComicBookResp(pageItem);
-			comicBookResp.setKitStatus(this.getInstallStatus(pageItem.getPageUid(), kitLogs));
+			comicBookResp.setKitStatus(this.getInstallStatus(pageItem.getPageUid(), installLogs));
 
 			if(pageItem.getPageUid().equals(pageUid))
 				comicBookRelatedResp.setTaggedComicBook(comicBookResp);
@@ -150,14 +152,37 @@ public class ComicService {
 	public List<ComicBookEpisodeResp> getEpisodeResps(Page page) throws Exception {
 		List<ComicBookEpisodeResp> comicBookEpisodeResps = new ArrayList<>();
 		for(ComicBook comicBook : page.getComicBooks()) {
-			comicBookEpisodeResps.add(new ComicBookEpisodeResp(comicBook, ApplicationConstants.COMIC_BOOK_UNIT_1));
+			ComicBookEpisodeResp comicBookEpisodeResp = new ComicBookEpisodeResp(comicBook, ApplicationConstants.COMIC_BOOK_UNIT_1);
+
+			// 최근 업데이트 날짜 확인을 위해 for 루프 여기서 실행
+			if(CollectionUtils.isEmpty(comicBook.getComicBookDetails())){
+				comicBookEpisodeResp.setPageSize(0);
+				comicBookEpisodeResp.setDetailPages(new ArrayList<>());
+			} else {
+				LocalDateTime lastModifiedAt = null;
+
+				comicBookEpisodeResp.setPageSize(comicBook.getComicBookDetails().size());
+
+				List<ComicBookImageResp> comicBookImageResps = new ArrayList<>();
+				for(ComicBookDetail comicBookDetail : comicBook.getComicBookDetails()) {
+					comicBookImageResps.add(ComicBookImageResp.of(comicBookDetail));
+
+					// 최근 이미지 업데이트 날짜. - 클라이언트에서 변경된 파일 확인용
+					if(lastModifiedAt == null || lastModifiedAt.isBefore(comicBookDetail.getModifiedAt()))
+						lastModifiedAt = comicBookDetail.getModifiedAt();
+				}
+				comicBookEpisodeResp.setDetailPages(comicBookImageResps);
+				comicBookEpisodeResp.setLastModifiedAt(lastModifiedAt);
+			}
+
+			comicBookEpisodeResps.add(comicBookEpisodeResp);
 		}
 		comicBookEpisodeResps.sort(Comparator.comparing(ComicBookEpisodeResp::getVolume));
 		return comicBookEpisodeResps;
 	}
 
-	public KitStatus getInstallStatus(Long pageUid, List<KitLog> kitLogs) throws Exception {
-		return kitLogs.stream()
+	public KitStatus getInstallStatus(Long pageUid, List<InstallLog> installLogs) throws Exception {
+		return installLogs.stream()
 			.filter(v -> v.getPageUid().equals(pageUid))
 			.findFirst()
 			.map(v -> {

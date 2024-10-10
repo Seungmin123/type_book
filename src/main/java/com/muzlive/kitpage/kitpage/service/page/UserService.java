@@ -1,29 +1,55 @@
 package com.muzlive.kitpage.kitpage.service.page;
 
+import static com.muzlive.kitpage.kitpage.domain.page.QPage.page;
+import static com.muzlive.kitpage.kitpage.domain.user.QInstallLog.installLog;
+import static com.muzlive.kitpage.kitpage.domain.user.QKitLog.kitLog;
+
 import com.muzlive.kitpage.kitpage.config.exception.CommonException;
 import com.muzlive.kitpage.kitpage.config.exception.ExceptionCode;
+import com.muzlive.kitpage.kitpage.domain.user.InstallLog;
+import com.muzlive.kitpage.kitpage.domain.user.Kit;
+import com.muzlive.kitpage.kitpage.domain.user.KitLog;
 import com.muzlive.kitpage.kitpage.domain.user.Member;
 import com.muzlive.kitpage.kitpage.domain.user.MemberLog;
+import com.muzlive.kitpage.kitpage.domain.user.QInstallLog;
+import com.muzlive.kitpage.kitpage.domain.user.QKitLog;
 import com.muzlive.kitpage.kitpage.domain.user.TokenLog;
+import com.muzlive.kitpage.kitpage.domain.user.repository.InstallLogRepository;
+import com.muzlive.kitpage.kitpage.domain.user.repository.KitLogRepository;
+import com.muzlive.kitpage.kitpage.domain.user.repository.KitRepository;
 import com.muzlive.kitpage.kitpage.domain.user.repository.MemberLogRepository;
 import com.muzlive.kitpage.kitpage.domain.user.repository.MemberRepository;
 import com.muzlive.kitpage.kitpage.domain.user.repository.TokenLogRepository;
+import com.querydsl.jpa.JPAExpressions;
+import com.querydsl.jpa.impl.JPAQueryFactory;
+import java.sql.Array;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 
 @RequiredArgsConstructor
 @Service
 public class UserService implements UserDetailsService {
+
+	private final JPAQueryFactory queryFactory;
+
+	private final KitRepository kitRepository;
+
+	private final KitLogRepository kitLogRepository;
 
 	private final MemberRepository memberRepository;
 
 	private final MemberLogRepository memberLogRepository;
 
 	private final TokenLogRepository tokenLogRepository;
+
+	private final InstallLogRepository installLogRepository;
 
 	@Override
 	public UserDetails loadUserByUsername(String deviceId) throws UsernameNotFoundException {
@@ -37,6 +63,11 @@ public class UserService implements UserDetailsService {
 		tokenLogRepository.save(tokenLog);
 	}
 
+	@Transactional
+	public void insertInstallLog(InstallLog installLog) throws Exception {
+		installLogRepository.save(installLog);
+	}
+
 	public Member findByDeviceId(String deviceId) throws Exception {
 		return memberRepository.findByDeviceId(deviceId).orElse(Member.builder().build());
 	}
@@ -48,4 +79,45 @@ public class UserService implements UserDetailsService {
 
 		return member;
 	}
+
+	public KitLog findLatestKitLog(String deviceId, String serialNumber) throws Exception {
+		return kitLogRepository.findFirstByDeviceIdAndSerialNumberOrderByKitLogUidDesc(deviceId, serialNumber).orElseThrow(() -> new CommonException(ExceptionCode.CANNOT_FIND_MATCHED_ITEM));
+	}
+
+	@Transactional
+	public Kit checkTag(String deviceId, String serialNumber, Long kihnoKitUid) throws Exception {
+		Kit kit = kitRepository.findBySerialNumber(serialNumber).orElseThrow(() -> new CommonException(ExceptionCode.CANNOT_FIND_MATCHED_ITEM));
+		kit.setDeviceId(deviceId);
+		kit.setKihnoKitUid(kihnoKitUid);
+
+		return this.upsertKit(kit);
+	}
+
+	@Transactional
+	public Kit upsertKit(Kit kit) throws Exception {
+		kit = kitRepository.save(kit);
+		kitLogRepository.save(KitLog.of(kit));
+
+		return kit;
+	}
+
+	public List<InstallLog> getInstalledStatus(String contentId, String deviceId) throws Exception {
+		QInstallLog installLogSub = new QInstallLog("installLogSub");
+
+		List<InstallLog> installLogs = queryFactory
+			.selectFrom(installLog)
+			.where(installLog.installLogUid.in(
+				JPAExpressions
+					.select(installLogSub.installLogUid.max())
+					.from(installLogSub)
+					.innerJoin(page).on(page.pageUid.eq(installLogSub.pageUid))
+					.where(installLogSub.deviceId.eq(deviceId)
+						.and(page.contentId.eq(contentId)))))
+			.fetch();
+
+		if(CollectionUtils.isEmpty(installLogs)) installLogs = new ArrayList<>();
+
+		return installLogs;
+	}
+
 }

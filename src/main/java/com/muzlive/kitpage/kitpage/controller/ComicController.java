@@ -8,7 +8,6 @@ import com.muzlive.kitpage.kitpage.domain.page.comicbook.dto.resp.ComicBookRelat
 import com.muzlive.kitpage.kitpage.domain.page.comicbook.dto.resp.ComicBookResp;
 import com.muzlive.kitpage.kitpage.domain.user.KitLog;
 import com.muzlive.kitpage.kitpage.service.page.ComicService;
-import com.muzlive.kitpage.kitpage.service.page.KitService;
 import com.muzlive.kitpage.kitpage.service.page.PageService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -35,8 +34,6 @@ public class ComicController {
 	private final PageService pageService;
 
 	private final ComicService comicService;
-
-	private final KitService kitService;
 
 	// TODO !!! 북마크 로컬, 이어보기 로
 	// TODO 비디오 비트무빈 유튜브
