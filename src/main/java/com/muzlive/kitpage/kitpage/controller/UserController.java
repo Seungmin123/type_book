@@ -36,6 +36,10 @@ import com.muzlive.kitpage.kitpage.utils.enums.PageContentType;
 import com.muzlive.kitpage.kitpage.utils.enums.TokenType;
 import com.muzlive.kitpage.kitpage.utils.enums.UserRole;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.Set;
 import javax.servlet.http.HttpServletRequest;
@@ -93,6 +97,13 @@ public class UserController {
 		return new CommonResp<>(token);
 	}
 
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "200", description = "성공", content = {
+			@Content(mediaType = "application/json", schema = @Schema(oneOf = {
+				ComicBookRelatedResp.class
+			}))
+		})
+	})
 	@Operation(summary = "체크 태그 API", description = "키노 서버를 통한 체크 태그 API")
 	@PostMapping("/checkTag")
 	public CommonResp<CheckTagResp> connect(@Valid @RequestBody CheckTagReq checkTagReq, HttpServletRequest httpServletRequest) throws Exception {
