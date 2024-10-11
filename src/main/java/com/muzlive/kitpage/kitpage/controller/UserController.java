@@ -97,13 +97,6 @@ public class UserController {
 		return new CommonResp<>(token);
 	}
 
-	@ApiResponses(value = {
-		@ApiResponse(responseCode = "200", description = "성공", content = {
-			@Content(mediaType = "application/json", schema = @Schema(oneOf = {
-				ComicBookRelatedResp.class
-			}))
-		})
-	})
 	@Operation(summary = "체크 태그 API", description = "키노 서버를 통한 체크 태그 API")
 	@PostMapping("/checkTag")
 	public CommonResp<CheckTagResp> connect(@Valid @RequestBody CheckTagReq checkTagReq, HttpServletRequest httpServletRequest) throws Exception {
@@ -111,8 +104,6 @@ public class UserController {
 		/*String validateToken = jwtTokenProvider.resolveToken(httpServletRequest);
 		if(!jwtTokenProvider.getDeviceIdByToken(validateToken).equals(checkTagReq.getDeviceId()))
 			throw new CommonException(ExceptionCode.INVALID_JWT);*/
-
-		CheckTagResp checkTagResp = new CheckTagResp();
 
 		String requestSerialNumber = (checkTagReq.getSerialNumber().length() > 8) ? checkTagReq.getSerialNumber().substring(0, 8) : checkTagReq.getSerialNumber();
 		String paramSerialNumber = (checkTagReq.getSerialNumber().length() < 10) ? checkTagReq.getSerialNumber() + commonUtils.makeRandomHexString() : checkTagReq.getSerialNumber();
@@ -136,14 +127,8 @@ public class UserController {
 				.build());
 
 		Page page = pageService.findPageById(kit.getPageUid());
-		if(page.getContentType().equals(PageContentType.COMICBOOK)) {
-			ComicBookRelatedResp comicBookRelatedResp = comicService.getRelatedComicBookList(page.getPageUid(), checkTagReq.getDeviceId());
-			checkTagResp.setList(comicBookRelatedResp.getComicBookResps());
-			checkTagResp.setTagged(comicBookRelatedResp.getTaggedComicBook());
-		}
 
-		checkTagResp.setToken(token);
-
+		CheckTagResp checkTagResp = new CheckTagResp(page, token);
 		return new CommonResp<>(checkTagResp);
 	}
 
