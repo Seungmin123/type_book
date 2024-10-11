@@ -1,6 +1,7 @@
 package com.muzlive.kitpage.kitpage.service.page;
 
 import static com.muzlive.kitpage.kitpage.domain.page.comicbook.QComicBook.comicBook;
+import static com.muzlive.kitpage.kitpage.domain.user.QInstallLog.installLog;
 import static com.muzlive.kitpage.kitpage.domain.user.QKit.kit;
 
 import com.muzlive.kitpage.kitpage.config.exception.CommonException;
@@ -25,6 +26,7 @@ import com.muzlive.kitpage.kitpage.service.aws.S3Service;
 import com.muzlive.kitpage.kitpage.utils.constants.ApplicationConstants;
 import com.muzlive.kitpage.kitpage.utils.enums.ImageCode;
 import com.muzlive.kitpage.kitpage.utils.enums.KitStatus;
+import com.querydsl.core.Tuple;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -132,12 +134,12 @@ public class ComicService {
 
 		Page page = pageService.findPageById(pageUid);
 		List<Page> pages = pageService.findByContentId(page.getContentId());
-		List<InstallLog> installLogs = userService.getInstalledStatus(page.getContentId(), deviceId);
+		List<Tuple> tuples = userService.getInstalledStatus(page.getContentId(), deviceId);
 
 		List<ComicBookResp> comicBookResps = new ArrayList<>();
 		for (Page pageItem : pages) {
 			ComicBookResp comicBookResp = new ComicBookResp(pageItem);
-			comicBookResp.setKitStatus(this.getInstallStatus(pageItem.getPageUid(), installLogs));
+			comicBookResp.setKitStatus(this.getInstallStatus(pageItem.getPageUid(), tuples));
 
 			if(pageItem.getPageUid().equals(pageUid)) {
 				comicBookRelatedResp.setTaggedComicBook(comicBookResp);
@@ -155,12 +157,12 @@ public class ComicService {
 
 		Page page = pageService.findPageById(pageUid);
 		List<Page> pages = pageService.findByContentId(page.getContentId());
-		List<InstallLog> installLogs = userService.getInstalledStatus(page.getContentId(), deviceId);
+		List<Tuple> tuples = userService.getInstalledStatus(page.getContentId(), deviceId);
 
 		for (Page pageItem : pages) {
 			ComicBookDetailResp comicBookDetailResp = new ComicBookDetailResp(pageItem);
 
-			if (this.getInstallStatus(pageItem.getPageUid(), installLogs).equals(KitStatus.AVAILABLE)) {
+			if (this.getInstallStatus(pageItem.getPageUid(), tuples).equals(KitStatus.AVAILABLE)) {
 				// TODO Video 추가
 				comicBookDetailResp.setVideos(new ArrayList<>());
 				comicBookDetailResp.setDetails(this.getEpisodeResps(pageItem));
@@ -204,18 +206,19 @@ public class ComicService {
 		return comicBookEpisodeResps;
 	}
 
-	public KitStatus getInstallStatus(Long pageUid, List<InstallLog> installLogs) throws Exception {
-		return installLogs.stream()
-			.filter(v -> v.getPageUid().equals(pageUid))
-			.findFirst()
-			.map(v -> {
-				if (v.getCreatedAt().plusDays(1).isBefore(LocalDateTime.now())) {
+	public KitStatus getInstallStatus(Long pageUid, List<Tuple> tuples) throws Exception {
+		for(Tuple tuple : tuples) {
+			if(tuple.get(installLog).getPageUid().equals(pageUid)) {
+				if(tuple.get(kit) == null // Install 이력은 있지만 현재 다른 키트에 태그된 상태
+					|| tuple.get(installLog).getCreatedAt().plusDays(1).isBefore(LocalDateTime.now())) {
 					return KitStatus.EXPIRED;
 				} else {
 					return KitStatus.AVAILABLE;
 				}
-			})
-			.orElse(KitStatus.NEVER_USE);
+			}
+		}
+
+		return KitStatus.NEVER_USE;
 	}
 
 

@@ -2,6 +2,7 @@ package com.muzlive.kitpage.kitpage.service.page;
 
 import static com.muzlive.kitpage.kitpage.domain.page.QPage.page;
 import static com.muzlive.kitpage.kitpage.domain.user.QInstallLog.installLog;
+import static com.muzlive.kitpage.kitpage.domain.user.QKit.kit;
 import static com.muzlive.kitpage.kitpage.domain.user.QKitLog.kitLog;
 
 import com.muzlive.kitpage.kitpage.config.exception.CommonException;
@@ -20,6 +21,7 @@ import com.muzlive.kitpage.kitpage.domain.user.repository.KitRepository;
 import com.muzlive.kitpage.kitpage.domain.user.repository.MemberLogRepository;
 import com.muzlive.kitpage.kitpage.domain.user.repository.MemberRepository;
 import com.muzlive.kitpage.kitpage.domain.user.repository.TokenLogRepository;
+import com.querydsl.core.Tuple;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import java.sql.Array;
@@ -101,23 +103,26 @@ public class UserService implements UserDetailsService {
 		return kit;
 	}
 
-	public List<InstallLog> getInstalledStatus(String contentId, String deviceId) throws Exception {
+	public List<Tuple> getInstalledStatus(String contentId, String deviceId) throws Exception {
 		QInstallLog installLogSub = new QInstallLog("installLogSub");
 
-		List<InstallLog> installLogs = queryFactory
-			.selectFrom(installLog)
-			.where(installLog.installLogUid.in(
-				JPAExpressions
-					.select(installLogSub.installLogUid.max())
-					.from(installLogSub)
-					.innerJoin(page).on(page.pageUid.eq(installLogSub.pageUid))
-					.where(installLogSub.deviceId.eq(deviceId)
-						.and(page.contentId.eq(contentId)))))
+		List<Tuple> tuples = queryFactory
+			.select(installLog, kit)
+			.from(installLog)
+			.leftJoin(kit).on(kit.deviceId.eq(installLog.deviceId))
+			.where(installLog.deviceId.eq(deviceId)
+				.and(installLog.installLogUid.in(
+						JPAExpressions
+						.select(installLogSub.installLogUid.max())
+						.from(installLogSub)
+						.innerJoin(page).on(page.pageUid.eq(installLogSub.pageUid))
+						.where(installLogSub.deviceId.eq(deviceId)
+							.and(page.contentId.eq(contentId))))))
 			.fetch();
 
-		if(CollectionUtils.isEmpty(installLogs)) installLogs = new ArrayList<>();
+		if(CollectionUtils.isEmpty(tuples)) tuples = new ArrayList<>();
 
-		return installLogs;
+		return tuples;
 	}
 
 }
