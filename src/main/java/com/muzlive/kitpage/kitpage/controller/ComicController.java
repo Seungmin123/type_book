@@ -51,7 +51,7 @@ public class ComicController {
 
 	@Operation(summary = "ComicBook 컨텐츠 상세 정보 조회 - 비디오 추가 안됨")
 	@GetMapping("/detail/{pageUid}")
-	public CommonResp<ComicBookDetailResp> getComicBookContents(@Valid @PathVariable Long pageUid) throws Exception {
+	public CommonResp<ComicBookDetailResp> getComicBookContent(@Valid @PathVariable Long pageUid) throws Exception {
 		Page page = pageService.findPageById(pageUid);
 		ComicBookDetailResp comicBookDetailResp = new ComicBookDetailResp(page);
 		comicBookDetailResp.setDetails(comicService.getEpisodeResps(page));
@@ -59,6 +59,13 @@ public class ComicController {
 		// TODO 비디오 추가
 
 		return new CommonResp<>(comicBookDetailResp);
+	}
+
+	@Operation(summary = "ComicBook 컨텐츠 상세 정보 리스트 조회 - 비디오 추가 안됨")
+	@GetMapping("/detail/list")
+	public CommonResp<List<ComicBookDetailResp>> getComicBookContents(@Valid @ModelAttribute ComicBookContentReq comicBookContentReq) throws Exception {
+		// TODO 비디오 추가
+		return new CommonResp<>(comicService.getRelatedComicDetailBookList(comicBookContentReq.getPageUid(), comicBookContentReq.getDeviceId()));
 	}
 
 	// TODO get Music Info

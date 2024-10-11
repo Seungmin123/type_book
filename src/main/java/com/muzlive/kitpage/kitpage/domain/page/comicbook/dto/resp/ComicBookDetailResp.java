@@ -2,7 +2,6 @@ package com.muzlive.kitpage.kitpage.domain.page.comicbook.dto.resp;
 
 import com.muzlive.kitpage.kitpage.domain.page.Page;
 import com.muzlive.kitpage.kitpage.domain.page.comicbook.Video;
-import com.muzlive.kitpage.kitpage.utils.enums.PageGenre;
 import java.util.List;
 import lombok.Getter;
 import lombok.Setter;
