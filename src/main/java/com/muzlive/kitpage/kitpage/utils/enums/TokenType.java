@@ -9,6 +9,7 @@ public enum TokenType {
 
 	ACCESS("ACCESS"),
 	CHECK_TAG("CHECK_TAG"),
+	JOIN("JOIN"),
 	LOGIN("LOGIN");
 
 	private final String code;

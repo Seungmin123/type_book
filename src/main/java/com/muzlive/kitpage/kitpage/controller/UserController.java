@@ -116,8 +116,10 @@ public class UserController {
 
 		Kit kit = userService.checkTag(checkTagReq.getDeviceId(), requestSerialNumber, kihnoV2TransferSerivce.kihnoKitCheck(kihnoKitCheckReq).getKihnoKitUid());
 
+		Set<String> roles = jwtTokenProvider.getRolesByToken(jwtTokenProvider.resolveToken(httpServletRequest));
+		roles.add(UserRole.HALF_LINKER.getKey());
 		// token
-		String token = jwtTokenProvider.createAccessToken(checkTagReq.getDeviceId(), checkTagReq.getSerialNumber(), Set.of(UserRole.GUEST.getKey(), UserRole.HALF_LINKER.getKey()));
+		String token = jwtTokenProvider.createAccessToken(checkTagReq.getDeviceId(), checkTagReq.getSerialNumber(), roles);
 		userService.insertTokenLog(
 			TokenLog.builder()
 				.token(token)
@@ -134,32 +136,58 @@ public class UserController {
 
 	@Operation(summary = "회원가입 API")
 	@PostMapping("/join")
-	public CommonResp<KittorTokenResp> userJoin(
+	public CommonResp<String> userJoin(
 		@Valid @RequestBody KittorUserReq kittorUserReq,
 		HttpServletRequest request) throws Exception {
 
 		KittorTokenResp resp = kittorTransferSerivce.userJoin(kittorUserReq);
 
-		Member member = userService.findByDeviceId(jwtTokenProvider.getDeviceIdByToken(jwtTokenProvider.resolveToken(request)));
+		String jwt = jwtTokenProvider.resolveToken(request);
+
+		Member member = userService.findByDeviceId(jwtTokenProvider.getDeviceIdByToken(jwt));
 		member.setKittorToken(resp.getAccessToken());
 		userService.upsertMember(member);
 
-		return new CommonResp<>(resp);
+		Set<String> roles = jwtTokenProvider.getRolesByToken(jwt);
+		roles.add(UserRole.LINKER.getKey());
+		String token = jwtTokenProvider.createAccessToken(member.getDeviceId(), kittorUserReq.getEmail(), roles);
+		userService.insertTokenLog(
+			TokenLog.builder()
+				.token(token)
+				.deviceId(member.getDeviceId())
+				.email(kittorUserReq.getEmail())
+				.tokenType(TokenType.JOIN)
+				.build());
+
+		return new CommonResp<>(token);
 	}
 
 	@Operation(summary = "로그인 API")
 	@PostMapping("/login")
-	public CommonResp<KittorTokenResp> userLogin(
+	public CommonResp<String> userLogin(
 		@Valid @RequestBody KittorUserReq kittorUserReq,
 		HttpServletRequest request) throws Exception {
 
 		KittorTokenResp resp = kittorTransferSerivce.userLogin(kittorUserReq);
 
-		Member member = userService.findByDeviceId(jwtTokenProvider.getDeviceIdByToken(jwtTokenProvider.resolveToken(request)));
+		String jwt = jwtTokenProvider.resolveToken(request);
+
+		Member member = userService.findByDeviceId(jwtTokenProvider.getDeviceIdByToken(jwt));
 		member.setKittorToken(resp.getAccessToken());
 		userService.upsertMember(member);
 
-		return new CommonResp<>(resp);
+		Set<String> roles = jwtTokenProvider.getRolesByToken(jwt);
+		roles.add(UserRole.LINKER.getKey());
+		String token = jwtTokenProvider.createAccessToken(member.getDeviceId(), kittorUserReq.getEmail(), roles);
+		userService.insertTokenLog(
+			TokenLog.builder()
+				.token(token)
+				.deviceId(member.getDeviceId())
+				.email(kittorUserReq.getEmail())
+				.tokenType(TokenType.LOGIN)
+				.build());
+
+		return new CommonResp<>(token);
 	}
 
 	@Operation(summary = "인증코드 발송 API", description = "비밀번호 변경용 인증코드 발송")
