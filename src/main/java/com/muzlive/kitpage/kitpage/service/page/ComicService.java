@@ -150,6 +150,28 @@ public class ComicService {
 		return comicBookRelatedResp;
 	}
 
+	public List<ComicBookDetailResp> getRelatedComicDetailBookList(Long pageUid, String deviceId) throws Exception {
+		List<ComicBookDetailResp> comicBookDetailResps = new ArrayList<>();
+
+		Page page = pageService.findPageById(pageUid);
+		List<Page> pages = pageService.findByContentId(page.getContentId());
+		List<InstallLog> installLogs = userService.getInstalledStatus(page.getContentId(), deviceId);
+
+		for (Page pageItem : pages) {
+			ComicBookDetailResp comicBookDetailResp = new ComicBookDetailResp(pageItem);
+
+			if (this.getInstallStatus(pageItem.getPageUid(), installLogs).equals(KitStatus.AVAILABLE)) {
+				// TODO Video 추가
+				comicBookDetailResp.setVideos(new ArrayList<>());
+				comicBookDetailResp.setDetails(this.getEpisodeResps(pageItem));
+			}
+
+			comicBookDetailResps.add(comicBookDetailResp);
+		}
+
+		return comicBookDetailResps;
+	}
+
 	public List<ComicBookEpisodeResp> getEpisodeResps(Page page) throws Exception {
 		List<ComicBookEpisodeResp> comicBookEpisodeResps = new ArrayList<>();
 		for(ComicBook comicBook : page.getComicBooks()) {
