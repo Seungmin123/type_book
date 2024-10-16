@@ -25,6 +25,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
 @Slf4j
@@ -63,9 +64,13 @@ public class JwtTokenProvider {
         return createAccessToken(deviceId, serialNumber, null, roles);
     }
 
+    /*
+        Todo : 10/16 일 SerialNumber 가 null로 들어왔을 경우, substring 파싱 Exception 제외
+            null 일 경우 serialnumber null로 주게 변경 -> 실제 serialnumber 사용이 없음
+     */
     public String createAccessToken(String deviceId, String serialNumber, String email, Set<String> roles) {
         Map<String, String> claims = new HashMap<>();
-        claims.put("serialNumber", serialNumber.substring(0, 8));
+        claims.put("serialNumber", !ObjectUtils.isEmpty(serialNumber) ? serialNumber.substring(0, 8) : null);
         claims.put("email", email);
         return createAccessToken(deviceId, serialNumber, email, roles, claims);
     }
