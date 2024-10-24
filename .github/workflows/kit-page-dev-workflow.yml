@@ -58,6 +58,7 @@ jobs:
         run: |
           echo "${{ secrets.DEV_SSH_KEY }}" > key.pem
           chmod 600 key.pem
+          echo "COMPLETE"
           scp -i key.pem -o StrictHostKeyChecking=no build/libs/kit-page-0.0.1-SNAPSHOT-boot.jar ${{ secrets.DEV_EC2_USER }}@${{ secrets.DEV_EC2_HOST }}:/home/ec2-user/nonstop/jar/
 
       - name: Start New Application
