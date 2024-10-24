@@ -45,14 +45,14 @@ jobs:
           echo "To Insert steps' ip : ${{ steps.ip.outputs.ipv4 }}"
           aws ec2 authorize-security-group-ingress --group-id ${{ secrets.DEV_EC2_SG_ID }} --ip-permissions IpProtocol=tcp,FromPort=22,ToPort=22,IpRanges="[{CidrIp=${{ steps.ip.outputs.ipv4 }}/32,Description='GitHub action ip address To delete'}]"
 
-      - name: Create .ssh directory
-        run: |
-          mkdir -p ~/.ssh
-          chmod 700 ~/.ssh
+      # - name: Create .ssh directory
+      #   run: |
+      #     mkdir -p ~/.ssh
+      #     chmod 700 ~/.ssh
 
-      - name: Add EC2 host to known_hosts
-        run: |
-          ssh-keyscan -H ${{ secrets.DEV_EC2_HOST }} >> ~/.ssh/known_hosts
+      # - name: Add EC2 host to known_hosts
+      #   run: |
+      #     ssh-keyscan -H ${{ secrets.DEV_EC2_HOST }} >> ~/.ssh/known_hosts
 
       - name: Upload jar to EC2
         run: |
