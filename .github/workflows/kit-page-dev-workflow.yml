@@ -44,6 +44,8 @@ jobs:
         run: |
           echo "To Insert steps' ip : ${{ steps.ip.outputs.ipv4 }}"
           aws ec2 authorize-security-group-ingress --group-id ${{ secrets.DEV_EC2_SG_ID }} --ip-permissions IpProtocol=tcp,FromPort=22,ToPort=22,IpRanges="[{CidrIp=${{ steps.ip.outputs.ipv4 }}/32,Description='GitHub action ip address To delete'}]"
+          echo "sleep 10 minute"
+          sleep 10
 
       # - name: Create .ssh directory
       #   run: |
