@@ -237,7 +237,7 @@ public class UserController {
 	@Operation(summary = "인스톨 완료 API")
 	@PostMapping("/install/complete")
 	public CommonResp<Void> installComplete(@Valid @RequestBody InstallNoticeReq installNoticeReq) throws Exception {
-		KitLog kitLog = userService.findLatestKitLog(installNoticeReq.getDeviceId(), installNoticeReq.getSerialNumber());
+		KitLog kitLog = userService.findLatestKitLog(installNoticeReq.getDeviceId(), installNoticeReq.getSerialNumber().substring(0, 8));
 		userService.insertInstallLog(new InstallLog(kitLog));
 		return new CommonResp<>();
 	}
