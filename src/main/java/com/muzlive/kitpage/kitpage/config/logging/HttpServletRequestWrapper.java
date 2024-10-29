@@ -1,4 +1,4 @@
-package com.muzlive.kitpage.kitpage.config.wrapper;
+package com.muzlive.kitpage.kitpage.config.logging;
 
 import io.micrometer.core.instrument.util.StringUtils;
 import java.io.ByteArrayInputStream;

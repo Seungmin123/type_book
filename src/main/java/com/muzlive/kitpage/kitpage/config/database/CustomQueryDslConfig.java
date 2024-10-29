@@ -1,4 +1,4 @@
-package com.muzlive.kitpage.kitpage.config;
+package com.muzlive.kitpage.kitpage.config.database;
 
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.querydsl.sql.MySQLTemplates;

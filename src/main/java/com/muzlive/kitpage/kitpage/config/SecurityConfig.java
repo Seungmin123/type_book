@@ -1,8 +1,8 @@
 package com.muzlive.kitpage.kitpage.config;
 
 import com.muzlive.kitpage.kitpage.config.jwt.JwtFilter;
+import com.muzlive.kitpage.kitpage.config.logging.HttpRequestLoggingFilter;
 import com.muzlive.kitpage.kitpage.config.swagger.SwaggerFilter;
-import com.muzlive.kitpage.kitpage.utils.enums.UserRole;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
