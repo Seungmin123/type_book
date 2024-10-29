@@ -1,5 +1,6 @@
 package com.muzlive.kitpage.kitpage.controller;
 
+import com.muzlive.kitpage.kitpage.config.encryptor.AesSecurityProvider;
 import com.muzlive.kitpage.kitpage.config.jwt.JwtTokenProvider;
 import com.muzlive.kitpage.kitpage.domain.common.dto.resp.CommonResp;
 import com.muzlive.kitpage.kitpage.domain.page.Page;
@@ -12,9 +13,11 @@ import com.muzlive.kitpage.kitpage.domain.user.TokenLog;
 import com.muzlive.kitpage.kitpage.domain.user.dto.req.AccessTokenReq;
 import com.muzlive.kitpage.kitpage.domain.user.dto.req.CheckTagReq;
 import com.muzlive.kitpage.kitpage.domain.user.dto.req.InstallNoticeReq;
+import com.muzlive.kitpage.kitpage.domain.user.dto.req.KitStatusReq;
 import com.muzlive.kitpage.kitpage.domain.user.dto.req.MicLocationReq;
 import com.muzlive.kitpage.kitpage.domain.user.dto.req.VersionInfoReq;
 import com.muzlive.kitpage.kitpage.domain.user.dto.resp.CheckTagResp;
+import com.muzlive.kitpage.kitpage.domain.user.dto.resp.KitStatusResp;
 import com.muzlive.kitpage.kitpage.domain.user.dto.resp.VersionInfoResp;
 import com.muzlive.kitpage.kitpage.service.page.ComicService;
 import com.muzlive.kitpage.kitpage.service.page.PageService;
@@ -32,6 +35,7 @@ import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.KittorUserReq
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.SendVerificationReq;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.resp.KittorTokenResp;
 import com.muzlive.kitpage.kitpage.utils.CommonUtils;
+import com.muzlive.kitpage.kitpage.utils.enums.KitStatus;
 import com.muzlive.kitpage.kitpage.utils.enums.PageContentType;
 import com.muzlive.kitpage.kitpage.utils.enums.TokenType;
 import com.muzlive.kitpage.kitpage.utils.enums.UserRole;
@@ -71,6 +75,8 @@ public class UserController {
 	private final UserService userService;
 
 	private final CommonUtils commonUtils;
+
+	private final AesSecurityProvider aesSecurityProvider;
 
 	@Operation(summary = "Token 발급 API", description = "앱 실행 시 호출, 그 이후 Header Authorization 추가")
 	@PostMapping("/token")
@@ -240,6 +246,30 @@ public class UserController {
 		KitLog kitLog = userService.findLatestKitLog(installNoticeReq.getDeviceId(), installNoticeReq.getSerialNumber().substring(0, 8));
 		userService.insertInstallLog(new InstallLog(kitLog));
 		return new CommonResp<>();
+	}
+
+	@Operation(summary = "키트 점검 API")
+	@GetMapping("/checkStatus")
+	public CommonResp<KitStatusResp> checkKitStatus(@ModelAttribute @Valid KitStatusReq kitStatusReq) throws Exception {
+		KitStatusResp kitStatusResp = new KitStatusResp();
+		String serialNumber = kitStatusReq.getSerialNumber().length() > 8 ? kitStatusReq.getSerialNumber().substring(0, 8) : kitStatusReq.getSerialNumber();
+
+		// CS ID
+		kitStatusResp.setCsId(aesSecurityProvider.encrypt(serialNumber));
+
+		Page page = userService.getPageBySerialNumber(serialNumber);
+		kitStatusResp.setTitle(page.getTitle());
+		kitStatusResp.setSubTitle(page.getSubTitle());
+		kitStatusResp.setCoverImageUid(page.getCoverImageUid());
+		kitStatusResp.setCreatedAt(page.getCreatedAt());
+
+		kitStatusResp.setIsInstalled(
+				comicService.getInstallStatus(
+					page.getPageUid(),
+					userService.getInstallLogs(page.getContentId(), kitStatusReq.getDeviceId()))
+				.equals(KitStatus.AVAILABLE));
+
+		return new CommonResp<>(kitStatusResp);
 	}
 
 }

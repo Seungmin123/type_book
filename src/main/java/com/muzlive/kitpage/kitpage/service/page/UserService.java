@@ -7,6 +7,7 @@ import static com.muzlive.kitpage.kitpage.domain.user.QKitLog.kitLog;
 
 import com.muzlive.kitpage.kitpage.config.exception.CommonException;
 import com.muzlive.kitpage.kitpage.config.exception.ExceptionCode;
+import com.muzlive.kitpage.kitpage.domain.page.Page;
 import com.muzlive.kitpage.kitpage.domain.user.InstallLog;
 import com.muzlive.kitpage.kitpage.domain.user.Kit;
 import com.muzlive.kitpage.kitpage.domain.user.KitLog;
@@ -103,7 +104,7 @@ public class UserService implements UserDetailsService {
 		return kit;
 	}
 
-	public List<Tuple> getInstalledStatus(String contentId, String deviceId) throws Exception {
+	public List<Tuple> getInstallLogs(String contentId, String deviceId) throws Exception {
 		QInstallLog installLogSub = new QInstallLog("installLogSub");
 
 		List<Tuple> tuples = queryFactory
@@ -123,6 +124,14 @@ public class UserService implements UserDetailsService {
 		if(CollectionUtils.isEmpty(tuples)) tuples = new ArrayList<>();
 
 		return tuples;
+	}
+
+	public Page getPageBySerialNumber(String serialNumber) throws Exception {
+		return queryFactory
+			.selectFrom(page)
+			.innerJoin(kit).on(kit.pageUid.eq(page.pageUid))
+			.where(kit.serialNumber.eq(serialNumber))
+			.fetchFirst();
 	}
 
 }

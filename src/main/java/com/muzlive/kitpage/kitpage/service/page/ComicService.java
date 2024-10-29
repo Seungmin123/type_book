@@ -134,7 +134,7 @@ public class ComicService {
 
 		Page page = pageService.findPageById(pageUid);
 		List<Page> pages = pageService.findByContentId(page.getContentId());
-		List<Tuple> tuples = userService.getInstalledStatus(page.getContentId(), deviceId);
+		List<Tuple> tuples = userService.getInstallLogs(page.getContentId(), deviceId);
 
 		List<ComicBookResp> comicBookResps = new ArrayList<>();
 		for (Page pageItem : pages) {
@@ -157,7 +157,7 @@ public class ComicService {
 
 		Page page = pageService.findPageById(pageUid);
 		List<Page> pages = pageService.findByContentId(page.getContentId());
-		List<Tuple> tuples = userService.getInstalledStatus(page.getContentId(), deviceId);
+		List<Tuple> tuples = userService.getInstallLogs(page.getContentId(), deviceId);
 
 		for (Page pageItem : pages) {
 			ComicBookDetailResp comicBookDetailResp = new ComicBookDetailResp(pageItem);
