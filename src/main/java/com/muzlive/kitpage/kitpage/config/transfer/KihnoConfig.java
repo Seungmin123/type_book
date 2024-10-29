@@ -2,6 +2,7 @@ package com.muzlive.kitpage.kitpage.config.transfer;
 
 import com.muzlive.kitpage.kitpage.config.transfer.domain.KihnoV1Domain;
 import com.muzlive.kitpage.kitpage.config.transfer.domain.KihnoV2Domain;
+import com.muzlive.kitpage.kitpage.config.transfer.domain.MuzDomain;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -16,6 +17,8 @@ public class KihnoConfig {
 
     private String v2Domain;
 
+    private String muzDomain;
+
     @Bean(name = "kihnoV1Domain")
     public KihnoV1Domain getKihnoV1Domain() {
         return new KihnoV1Domain(this.v1Domain);
@@ -24,5 +27,10 @@ public class KihnoConfig {
     @Bean(name = "kihnoV2Domain")
     public KihnoV2Domain getKihnoV2Domain() {
         return new KihnoV2Domain(this.v2Domain);
+    }
+
+    @Bean(name = "muzDomain")
+    public MuzDomain getMuzDomain() {
+        return new MuzDomain(this.muzDomain);
     }
 }
