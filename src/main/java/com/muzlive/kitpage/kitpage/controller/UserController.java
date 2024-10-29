@@ -124,7 +124,7 @@ public class UserController {
 			TokenLog.builder()
 				.token(token)
 				.deviceId(checkTagReq.getDeviceId())
-				.serialNumber(checkTagReq.getSerialNumber())
+				.serialNumber(requestSerialNumber)
 				.tokenType(TokenType.CHECK_TAG)
 				.build());
 
