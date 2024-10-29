@@ -110,7 +110,7 @@ public class UserService implements UserDetailsService {
 		List<Tuple> tuples = queryFactory
 			.select(installLog, kit)
 			.from(installLog)
-			.leftJoin(kit).on(kit.deviceId.eq(installLog.deviceId))
+				.leftJoin(kit).on(kit.deviceId.eq(installLog.deviceId).and(kit.kitUid.eq(installLog.kitUid)))
 			.where(installLog.deviceId.eq(deviceId)
 				.and(installLog.installLogUid.in(
 						JPAExpressions
@@ -118,7 +118,8 @@ public class UserService implements UserDetailsService {
 						.from(installLogSub)
 						.innerJoin(page).on(page.pageUid.eq(installLogSub.pageUid))
 						.where(installLogSub.deviceId.eq(deviceId)
-							.and(page.contentId.eq(contentId))))))
+							.and(page.contentId.eq(contentId)))
+						.groupBy(page.pageUid))))
 			.fetch();
 
 		if(CollectionUtils.isEmpty(tuples)) tuples = new ArrayList<>();
