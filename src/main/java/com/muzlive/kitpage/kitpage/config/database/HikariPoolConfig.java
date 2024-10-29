@@ -1,4 +1,4 @@
-package com.muzlive.kitpage.kitpage.config;
+package com.muzlive.kitpage.kitpage.config.database;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
