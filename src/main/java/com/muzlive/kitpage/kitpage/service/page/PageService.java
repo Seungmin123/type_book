@@ -104,6 +104,11 @@ public class PageService {
 	}
 
 	@Transactional
+	public Video upsertVideo(Video video) throws Exception {
+		return videoRepository.save(video);
+	}
+
+	@Transactional
 	public void createPage(CreatePageReq createPageReq) throws Exception {
 		String contentId = createPageReq.getContentId();
 
@@ -140,7 +145,7 @@ public class PageService {
 	}
 
 	public void insertMusic(UploadMusicReq uploadMusicReq) throws Exception {
-		ComicBook comicBook = comicBookRepository.findByPageContentId(uploadMusicReq.getContentId())
+		comicBookRepository.findByPageContentId(uploadMusicReq.getContentId())
 			.orElseThrow(() -> new CommonException(ExceptionCode.CANNOT_FIND_MATCHED_ITEM));
 
 		// S3 Music Upload
@@ -177,9 +182,11 @@ public class PageService {
 		musicRepository.save(music);
 	}
 
-	public void insertVideo(UploadVideoReq uploadVideoReq) throws Exception {
+	public Video insertVideo(UploadVideoReq uploadVideoReq) throws Exception {
 
-		ComicBook comicBook = comicBookRepository.findByPageContentId(uploadVideoReq.getContentId())
+		String filePath = null;
+
+		comicBookRepository.findByPageContentId(uploadVideoReq.getContentId())
 			.orElseThrow(() -> new CommonException(ExceptionCode.CANNOT_FIND_MATCHED_ITEM));
 
 		String streamUrl = uploadVideoReq.getStreamUrl();
@@ -188,8 +195,8 @@ public class PageService {
 		if(Objects.nonNull(uploadVideoReq.getFile())) {
 			// S3 Cover Image Upload
 			String saveFileName = UUID.randomUUID() + "." + FilenameUtils.getExtension(uploadVideoReq.getFile().getOriginalFilename());
-			String filePath = uploadVideoReq.getContentId() + "/" + ApplicationConstants.VIDEO + "/" + saveFileName;
-			s3Service.uploadFile(filePath, uploadVideoReq.getFile());
+			filePath = uploadVideoReq.getContentId() + "/" + ApplicationConstants.VIDEO + "/" + saveFileName;
+			s3Service.uploadDecryptFile(filePath, uploadVideoReq.getFile());
 
 			streamUrl = filePath;
 			videoCode = VideoCode.S3;
@@ -200,7 +207,7 @@ public class PageService {
 			.artist(uploadVideoReq.getArtist())
 			.title(uploadVideoReq.getTitle())
 			.streamUrl(streamUrl)
-			.videCode(videoCode)
+			.videoCode(videoCode)
 			.build();
 
 		if(Objects.nonNull(uploadVideoReq.getImage())) {
@@ -218,6 +225,8 @@ public class PageService {
 		}
 
 		videoRepository.save(video);
+
+		return video;
 	}
 
 	public VersionInfoResp getVersionInfo(VersionInfoReq versionInfoReq) throws Exception {
