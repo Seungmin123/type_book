@@ -30,6 +30,10 @@ public class S3Service {
 		this.uploadFile(BUCKET, key, multipartFile.getBytes());
 	}
 
+	public void uploadDecryptFile(String key, MultipartFile multipartFile) throws Exception {
+		this.uploadDecryptFile(BUCKET, key, multipartFile.getBytes());
+	}
+
 	public void uploadFile(String key, byte[] bytes) throws Exception {
 		this.uploadFile(BUCKET, key, bytes);
 	}
@@ -41,6 +45,13 @@ public class S3Service {
 
 		s3Client.putObject(PutObjectRequest.builder().bucket(bucket).key(key).build(),
 			RequestBody.fromInputStream(encryptInputStream, encryptContent.length));
+	}
+
+	private void uploadDecryptFile(String bucket, String key, byte[] bytes) throws Exception {
+		InputStream encryptInputStream = new ByteArrayInputStream(bytes);
+
+		s3Client.putObject(PutObjectRequest.builder().bucket(bucket).key(key).build(),
+			RequestBody.fromInputStream(encryptInputStream, bytes.length));
 	}
 
 	public InputStream downloadFile(String key) throws Exception {

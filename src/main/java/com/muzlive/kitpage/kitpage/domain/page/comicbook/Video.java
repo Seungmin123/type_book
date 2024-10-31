@@ -48,16 +48,20 @@ public class Video extends BaseTimeEntity {
 
 	@Enumerated(EnumType.STRING)
 	@Column(name = "video_code")
-	private VideoCode videCode;
+	private VideoCode videoCode;
+
+	@Setter
+	@Column(name = "video_id")
+	private String videoId;
 
 	@Builder
 	public Video(String contentId, String artist, String title, String streamUrl,
-		Long coverImageUid, VideoCode videCode) {
+		Long coverImageUid, VideoCode videoCode) {
 		this.contentId = contentId;
 		this.artist = artist;
 		this.title = title;
 		this.streamUrl = streamUrl;
 		this.coverImageUid = coverImageUid;
-		this.videCode = videCode;
+		this.videoCode = videoCode;
 	}
 }
