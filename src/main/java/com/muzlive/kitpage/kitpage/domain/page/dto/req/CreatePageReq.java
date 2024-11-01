@@ -37,10 +37,6 @@ public class CreatePageReq {
 	private String company;
 
 	@NotNull
-	@JsonProperty("genre")
-	private PageGenre genre;
-
-	@NotNull
 	@JsonProperty("region")
 	private Region region;
 

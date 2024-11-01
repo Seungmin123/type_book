@@ -3,6 +3,7 @@ package com.muzlive.kitpage.kitpage.domain.page.comicbook;
 import com.muzlive.kitpage.kitpage.domain.common.BaseTimeEntity;
 import com.muzlive.kitpage.kitpage.domain.page.Page;
 import com.muzlive.kitpage.kitpage.utils.enums.Region;
+import java.util.Arrays;
 import java.util.List;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -16,7 +17,11 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
+import javax.persistence.PostLoad;
+import javax.persistence.PrePersist;
+import javax.persistence.PreUpdate;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -51,12 +56,31 @@ public class ComicBook extends BaseTimeEntity {
 	@Column(name = "volume")
 	private Integer volume;
 
+	@Column(name = "genre")
+	private String genre;
+
+	@Transient
+	private List<String> genreList;
+
 	@ManyToOne
 	@JoinColumn(name = "page_uid", insertable = false, updatable = false)
 	private Page page;
 
 	@OneToMany(mappedBy = "comicBook")
 	private List<ComicBookDetail> comicBookDetails;
+
+	@PrePersist
+	@PreUpdate
+	public void convertListToString() {
+		if(genreList != null)
+			this.genre = String.join(",", genreList);
+	}
+
+	@PostLoad
+	public void convertStringToList() {
+		if(genre != null && !genre.isEmpty())
+			this.genreList = Arrays.asList(genre.split(","));
+	}
 
 	@Builder
 	public ComicBook(Long pageUid, Long coverImageUid, String writer, String illustrator, Integer volume) {
