@@ -42,27 +42,13 @@ public class ComicController {
 
 	private final ComicService comicService;
 
-	// TODO !!! 북마크 로컬, 이어보기 로
-	// TODO 비디오 비트무빈 유튜브
-	// m368
-	// TODO Kihno API 확인
-	// TODO 설정 마이페이지 -> 통합로그인...
-	// TODO 책 방향 왼쪽 오른쪽 주기 알려주기
-
-	@Operation(summary = "연관된 Comic Kit 리스트 조회")
-	@Deprecated
-	@GetMapping
-	public CommonResp<ComicBookRelatedResp> getRelatedComicBookList(@Valid @ModelAttribute ComicBookContentReq comicBookContentReq) throws Exception {
-		return new CommonResp<>(comicService.getRelatedComicBookList(comicBookContentReq.getPageUid(), comicBookContentReq.getDeviceId()));
-	}
-
 	@Operation(summary = "ComicBook 리스트 조회")
 	@GetMapping("/list")
 	public CommonResp<ComicBookContentResp> getComicBookListByContentId(@Valid @ModelAttribute ComicBookContentReq comicBookContentReq, HttpServletRequest request) throws Exception {
 		return new CommonResp<>(comicService.getComicBookContent(comicBookContentReq.getContentId(), comicBookContentReq.getPageUid(), comicBookContentReq.getDeviceId()));
 	}
 
-	@Operation(summary = "ComicBook 컨텐츠 상세 정보 조회 - 비디오 추가 안됨")
+	@Operation(summary = "ComicBook 컨텐츠 상세 정보 조회")
 	@GetMapping("/detail/{pageUid}")
 	public CommonResp<ComicBookDetailResp> getComicBookContent(@Valid @PathVariable Long pageUid) throws Exception {
 		Page page = pageService.findPageById(pageUid);
@@ -73,7 +59,7 @@ public class ComicController {
 		return new CommonResp<>(comicBookDetailResp);
 	}
 
-	@Operation(summary = "ComicBook 컨텐츠 상세 정보 리스트 조회 - 비디오 추가 안됨")
+	@Operation(summary = "ComicBook 컨텐츠 상세 정보 리스트 조회")
 	@GetMapping("/detail/list")
 	public CommonResp<List<ComicBookDetailResp>> getComicBookContents(@Valid @ModelAttribute ComicBookContentReq comicBookContentReq) throws Exception {
 		return new CommonResp<>(comicService.getRelatedComicDetailBookList(comicBookContentReq.getContentId(), comicBookContentReq.getPageUid(), comicBookContentReq.getDeviceId()));
