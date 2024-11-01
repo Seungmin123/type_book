@@ -15,6 +15,8 @@ public class ComicBookContentResp {
 
 	private String contentInfoText;
 
+	private String contentTitle;
+
 	private String category;
 
 	private Long totalSize;
@@ -28,6 +30,7 @@ public class ComicBookContentResp {
 	public ComicBookContentResp(Content content) {
 		this.contentId = content.getContentId();
 		this.contentImageUid = content.getCoverImageUid();
+		this.contentTitle = content.getTitle();
 		this.contentInfoText = content.getInfoText();
 		this.category = content.getContentType().getName();
 		this.totalSize = 0L;
