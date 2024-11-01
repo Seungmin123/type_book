@@ -179,30 +179,6 @@ public class ComicService {
 		return comicBookContentResp;
 	}
 
-	// TODO 삭제
-	public ComicBookRelatedResp getRelatedComicBookList(Long pageUid, String deviceId) throws Exception {
-		ComicBookRelatedResp comicBookRelatedResp = new ComicBookRelatedResp();
-
-		Page page = pageService.findPageById(pageUid);
-		List<Page> pages = pageService.findByContentId(page.getContentId());
-		List<Tuple> tuples = userService.getInstallLogs(page.getContentId(), deviceId);
-
-		List<ComicBookResp> comicBookResps = new ArrayList<>();
-		for (Page pageItem : pages) {
-			ComicBookResp comicBookResp = new ComicBookResp(pageItem);
-			comicBookResp.setKitStatus(this.getInstallStatus(pageItem.getPageUid(), tuples));
-
-			if(pageItem.getPageUid().equals(pageUid)) {
-				comicBookRelatedResp.setTaggedComicBook(comicBookResp);
-			}
-
-			comicBookResps.add(comicBookResp);
-		}
-		comicBookRelatedResp.setComicBookResps(comicBookResps);
-
-		return comicBookRelatedResp;
-	}
-
 	public List<ComicBookDetailResp> getRelatedComicDetailBookList(String contentId, Long pageUid, String deviceId) throws Exception {
 		List<ComicBookDetailResp> comicBookDetailResps = new ArrayList<>();
 
