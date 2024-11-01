@@ -2,6 +2,8 @@ package com.muzlive.kitpage.kitpage.domain.page;
 
 import com.muzlive.kitpage.kitpage.domain.common.BaseTimeEntity;
 import com.muzlive.kitpage.kitpage.utils.enums.PageContentType;
+import java.io.Serializable;
+import java.util.List;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -9,6 +11,7 @@ import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -21,7 +24,9 @@ import org.hibernate.annotations.DynamicUpdate;
 @Getter
 @Table(name = "content")
 @Entity
-public class Content extends BaseTimeEntity {
+public class Content extends BaseTimeEntity implements Serializable {
+
+	private static final long serialVersionUID = 1L;
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -43,5 +48,9 @@ public class Content extends BaseTimeEntity {
 
 	@Column(name = "cover_image_uid")
 	private Long coverImageUid;
+
+	@OneToMany(mappedBy = "content")
+	private List<Page> pages;
+
 
 }

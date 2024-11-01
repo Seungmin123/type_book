@@ -1,7 +1,6 @@
 package com.muzlive.kitpage.kitpage.domain.page.comicbook.dto.resp;
 
 import com.muzlive.kitpage.kitpage.domain.page.Page;
-import com.muzlive.kitpage.kitpage.domain.page.comicbook.Video;
 import java.util.List;
 import lombok.Getter;
 import lombok.Setter;
@@ -16,7 +15,7 @@ public class ComicBookDetailResp {
 
 	private List<ComicBookEpisodeResp> details;
 
-	private List<Video> videos;
+	private List<VideoResp> videos;
 
 	private String infoText;
 
