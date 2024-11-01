@@ -65,7 +65,7 @@ public class ExceptionAdvisor {
             ex.printStackTrace();
             //commonService.insertServerError(req, ex);
 
-            //webhookTransfer.sendSlackMessage(makeSlackMessage(req, ex));
+            webhookTransfer.sendSlackMessage(makeSlackMessage(req, ex));
 
         } catch (Exception e) {
             log.error(e.getMessage());
