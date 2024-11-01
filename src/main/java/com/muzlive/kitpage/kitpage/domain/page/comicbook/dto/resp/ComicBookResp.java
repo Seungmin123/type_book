@@ -13,8 +13,6 @@ import org.springframework.util.CollectionUtils;
 @Setter
 public class ComicBookResp {
 
-	private String contentId;
-
 	private Long pageUid;
 
 	private Long coverImageUid;
@@ -32,7 +30,6 @@ public class ComicBookResp {
 	private KitStatus kitStatus;
 
 	public ComicBookResp(Page page) {
-		this.contentId = page.getContentId();
 		this.pageUid = page.getPageUid();
 		this.coverImageUid = page.getCoverImageUid();
 		this.title = page.getTitle();

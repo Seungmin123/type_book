@@ -7,8 +7,10 @@ import lombok.Getter;
 @Getter
 public enum PageContentType {
 
-	COMICBOOK("COMICBOOK");
+	COMICBOOK("COMICBOOK", "만화");
 
 	private final String code;
+
+	private final String name;
 
 }

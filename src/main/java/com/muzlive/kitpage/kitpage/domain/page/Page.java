@@ -10,9 +10,12 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import lombok.Builder;
@@ -34,7 +37,7 @@ public class Page extends BaseTimeEntity {
 	@Column(name = "page_uid", nullable = false)
 	private Long pageUid;
 
-	@Column(name = "content_id", nullable = false)
+	@Column(name = "content_id", nullable = false, length = 100)
 	private String contentId;
 
 	@Enumerated(EnumType.STRING)
@@ -65,6 +68,10 @@ public class Page extends BaseTimeEntity {
 
 	@OneToMany(mappedBy = "page")
 	private List<ComicBook> comicBooks;
+
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "content_id", referencedColumnName = "content_id", insertable = false, updatable = false)
+	private Content content;
 
 	@Builder
 	public Page(String contentId, PageContentType contentType,

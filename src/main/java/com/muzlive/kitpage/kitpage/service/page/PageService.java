@@ -5,24 +5,21 @@ import static com.muzlive.kitpage.kitpage.domain.page.comicbook.QComicBook.comic
 import static com.muzlive.kitpage.kitpage.domain.page.comicbook.QComicBookDetail.comicBookDetail;
 import static com.muzlive.kitpage.kitpage.domain.user.QImage.image;
 import static com.muzlive.kitpage.kitpage.domain.user.QKit.kit;
-import static com.muzlive.kitpage.kitpage.domain.user.QKitLog.kitLog;
 import static com.muzlive.kitpage.kitpage.domain.user.QVersionInfo.versionInfo;
 
 import com.muzlive.kitpage.kitpage.config.exception.CommonException;
 import com.muzlive.kitpage.kitpage.config.exception.ExceptionCode;
+import com.muzlive.kitpage.kitpage.domain.page.Content;
 import com.muzlive.kitpage.kitpage.domain.page.Page;
-import com.muzlive.kitpage.kitpage.domain.page.comicbook.ComicBook;
-import com.muzlive.kitpage.kitpage.domain.page.comicbook.ComicBookDetail;
 import com.muzlive.kitpage.kitpage.domain.page.comicbook.Music;
 import com.muzlive.kitpage.kitpage.domain.page.comicbook.Video;
 import com.muzlive.kitpage.kitpage.domain.page.comicbook.repository.ComicBookRepository;
 import com.muzlive.kitpage.kitpage.domain.page.comicbook.repository.MusicRepository;
 import com.muzlive.kitpage.kitpage.domain.page.comicbook.repository.VideoRepository;
 import com.muzlive.kitpage.kitpage.domain.page.dto.req.CreatePageReq;
-import com.muzlive.kitpage.kitpage.domain.page.dto.req.UploadComicBookDetailReq;
-import com.muzlive.kitpage.kitpage.domain.page.dto.req.UploadComicBookReq;
 import com.muzlive.kitpage.kitpage.domain.page.dto.req.UploadMusicReq;
 import com.muzlive.kitpage.kitpage.domain.page.dto.req.UploadVideoReq;
+import com.muzlive.kitpage.kitpage.domain.page.repository.ContentRepository;
 import com.muzlive.kitpage.kitpage.domain.page.repository.PageRepository;
 import com.muzlive.kitpage.kitpage.domain.user.Image;
 import com.muzlive.kitpage.kitpage.domain.user.VersionInfo;
@@ -32,13 +29,10 @@ import com.muzlive.kitpage.kitpage.domain.user.repository.ImageRepository;
 import com.muzlive.kitpage.kitpage.service.aws.S3Service;
 import com.muzlive.kitpage.kitpage.utils.constants.ApplicationConstants;
 import com.muzlive.kitpage.kitpage.utils.enums.ImageCode;
-import com.muzlive.kitpage.kitpage.utils.enums.PageContentType;
 import com.muzlive.kitpage.kitpage.utils.enums.VideoCode;
-import com.querydsl.core.Tuple;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import io.micrometer.core.instrument.util.StringUtils;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -48,7 +42,6 @@ import org.apache.commons.io.FilenameUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
-import org.springframework.web.multipart.MultipartFile;
 
 @RequiredArgsConstructor
 @Service
@@ -57,6 +50,8 @@ public class PageService {
 	private final JPAQueryFactory queryFactory;
 
 	private final S3Service s3Service;
+
+	private final ContentRepository contentRepository;
 
 	private final PageRepository pageRepository;
 
@@ -68,8 +63,13 @@ public class PageService {
 
 	private final VideoRepository videoRepository;
 
+	public Content findContentByContentId(String contentId) throws Exception {
+		return contentRepository.findByContentId(contentId)
+			.orElseThrow(() -> new CommonException(ExceptionCode.CANNOT_FIND_MATCHED_ITEM));
+	}
+
 	public List<Page> findByContentId(String contentId) throws Exception {
-		return pageRepository.findByContentId(contentId)
+		return pageRepository.findAllByContentId(contentId)
 			.orElseThrow(() -> new CommonException(ExceptionCode.CANNOT_FIND_MATCHED_ITEM));
 	}
 

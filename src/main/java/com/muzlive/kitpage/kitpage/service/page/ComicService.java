@@ -1,26 +1,28 @@
 package com.muzlive.kitpage.kitpage.service.page;
 
-import static com.muzlive.kitpage.kitpage.domain.page.comicbook.QComicBook.comicBook;
 import static com.muzlive.kitpage.kitpage.domain.user.QInstallLog.installLog;
 import static com.muzlive.kitpage.kitpage.domain.user.QKit.kit;
 
 import com.muzlive.kitpage.kitpage.config.exception.CommonException;
 import com.muzlive.kitpage.kitpage.config.exception.ExceptionCode;
+import com.muzlive.kitpage.kitpage.domain.page.Content;
 import com.muzlive.kitpage.kitpage.domain.page.Page;
 import com.muzlive.kitpage.kitpage.domain.page.comicbook.ComicBook;
 import com.muzlive.kitpage.kitpage.domain.page.comicbook.ComicBookDetail;
+import com.muzlive.kitpage.kitpage.domain.page.comicbook.Video;
+import com.muzlive.kitpage.kitpage.domain.page.comicbook.dto.resp.ComicBookContentResp;
 import com.muzlive.kitpage.kitpage.domain.page.comicbook.dto.resp.ComicBookDetailResp;
 import com.muzlive.kitpage.kitpage.domain.page.comicbook.dto.resp.ComicBookEpisodeResp;
 import com.muzlive.kitpage.kitpage.domain.page.comicbook.dto.resp.ComicBookImageResp;
 import com.muzlive.kitpage.kitpage.domain.page.comicbook.dto.resp.ComicBookRelatedResp;
 import com.muzlive.kitpage.kitpage.domain.page.comicbook.dto.resp.ComicBookResp;
+import com.muzlive.kitpage.kitpage.domain.page.comicbook.dto.resp.VideoResp;
 import com.muzlive.kitpage.kitpage.domain.page.comicbook.repository.ComicBookDetailRepository;
 import com.muzlive.kitpage.kitpage.domain.page.comicbook.repository.ComicBookRepository;
+import com.muzlive.kitpage.kitpage.domain.page.comicbook.repository.VideoRepository;
 import com.muzlive.kitpage.kitpage.domain.page.dto.req.UploadComicBookDetailReq;
 import com.muzlive.kitpage.kitpage.domain.page.dto.req.UploadComicBookReq;
 import com.muzlive.kitpage.kitpage.domain.user.Image;
-import com.muzlive.kitpage.kitpage.domain.user.InstallLog;
-import com.muzlive.kitpage.kitpage.domain.user.KitLog;
 import com.muzlive.kitpage.kitpage.domain.user.repository.ImageRepository;
 import com.muzlive.kitpage.kitpage.service.aws.S3Service;
 import com.muzlive.kitpage.kitpage.utils.constants.ApplicationConstants;
@@ -34,6 +36,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.io.FilenameUtils;
 import org.springframework.stereotype.Service;
@@ -59,6 +62,8 @@ public class ComicService {
 
 	private final ComicBookDetailRepository comicBookDetailRepository;
 
+	private final VideoRepository videoRepository;
+
 	public ComicBook getComicBook(Long comicBookUid) throws Exception {
 		return comicBookRepository.findById(comicBookUid)
 			.orElseThrow(() -> new CommonException(ExceptionCode.CANNOT_FIND_ITEM_THAT_MATCH_THE_PARAM));
@@ -75,6 +80,11 @@ public class ComicService {
 	public int findComicBookMaxPage(Long comicBookUid) throws Exception {
 		Integer page = comicBookDetailRepository.findMaxPage(comicBookUid);
 		return page == null ? 0 : page;
+	}
+
+	public List<Video> findVideoByPageUid(Long pageUid) throws Exception {
+		List<Video> videos = videoRepository.findByPageUid(pageUid);
+		return CollectionUtils.isEmpty(videos) ? new ArrayList<>() : videos;
 	}
 
 	@Transactional
@@ -129,6 +139,47 @@ public class ComicService {
 		}
 	}
 
+	public ComicBookContentResp getComicBookContent(String contentId, Long pageUid, String deviceId) throws Exception {
+		Content content = pageService.findContentByContentId(contentId);
+
+		ComicBookContentResp comicBookContentResp = new ComicBookContentResp(content);
+
+		List<Page> pages = content.getPages();
+
+		// Kit Status, 태그한 키트|
+		List<Tuple> tuples = userService.getInstallLogs(contentId, deviceId);
+		List<ComicBookResp> comicBookResps = new ArrayList<>();
+		for (Page pageItem : pages) {
+			ComicBookResp comicBookResp = new ComicBookResp(pageItem);
+			comicBookResp.setKitStatus(this.getInstallStatus(pageItem.getPageUid(), tuples));
+
+			if(pageItem.getPageUid().equals(pageUid)) {
+				comicBookContentResp.setTaggedComicBook(comicBookResp);
+			}
+
+			comicBookResps.add(comicBookResp);
+
+			// 총 용량, Volume 수정하면 좋을 것 같음
+			List<ComicBook> comicBooks = pageItem.getComicBooks();
+			if(!CollectionUtils.isEmpty(comicBooks)) {
+				comicBookContentResp.setTotalVolume(comicBookContentResp.getTotalVolume() + comicBooks.size());
+
+				for(ComicBook comicBook : comicBooks) {
+					List<ComicBookDetail> comicBookDetails = comicBook.getComicBookDetails();
+					if(!CollectionUtils.isEmpty(comicBookDetails)) {
+						Long imageSize = comicBookDetails.stream().mapToLong(v -> v.getImage().getImageSize()).sum();
+						comicBookContentResp.setTotalSize(comicBookContentResp.getTotalSize() + imageSize);
+					}
+				}
+			}
+
+		}
+		comicBookContentResp.setComicBookResps(comicBookResps);
+
+		return comicBookContentResp;
+	}
+
+	// TODO 삭제
 	public ComicBookRelatedResp getRelatedComicBookList(Long pageUid, String deviceId) throws Exception {
 		ComicBookRelatedResp comicBookRelatedResp = new ComicBookRelatedResp();
 
@@ -152,21 +203,32 @@ public class ComicService {
 		return comicBookRelatedResp;
 	}
 
-	public List<ComicBookDetailResp> getRelatedComicDetailBookList(Long pageUid, String deviceId) throws Exception {
+	public List<ComicBookDetailResp> getRelatedComicDetailBookList(String contentId, Long pageUid, String deviceId) throws Exception {
 		List<ComicBookDetailResp> comicBookDetailResps = new ArrayList<>();
 
 		Page page = pageService.findPageById(pageUid);
 		List<Page> pages = pageService.findByContentId(page.getContentId());
 		List<Tuple> tuples = userService.getInstallLogs(page.getContentId(), deviceId);
 
+		/*
+		* Content content = pageService.findContentByContentId(contentId);
+		List<Page> pages = content.getPages();
+		List<Tuple> tuples = userService.getInstallLogs(contentId, deviceId);
+		* */
+
 		for (Page pageItem : pages) {
 			ComicBookDetailResp comicBookDetailResp = new ComicBookDetailResp(pageItem);
 
+			List<VideoResp> videoResps = new ArrayList<>();
+			List<ComicBookEpisodeResp> comicBookEpisodeResps = new ArrayList<>();
+
 			if (this.getInstallStatus(pageItem.getPageUid(), tuples).equals(KitStatus.AVAILABLE)) {
-				// TODO Video 추가
-				comicBookDetailResp.setVideos(new ArrayList<>());
-				comicBookDetailResp.setDetails(this.getEpisodeResps(pageItem));
+				videoResps = this.findVideoByPageUid(pageUid).stream().map(VideoResp::new).collect(Collectors.toList());
+				comicBookEpisodeResps = this.getEpisodeResps(pageItem);
 			}
+
+			comicBookDetailResp.setVideos(videoResps);
+			comicBookDetailResp.setDetails(comicBookEpisodeResps);
 
 			comicBookDetailResps.add(comicBookDetailResp);
 		}

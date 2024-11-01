@@ -30,6 +30,9 @@ public class Video extends BaseTimeEntity {
 	@Column(name = "video_uid", nullable = false)
 	private Long videoUid;
 
+	@Column(name = "page_uid")
+	private Long pageUid;
+
 	@Column(name = "content_id", nullable = false)
 	private String contentId;
 
@@ -56,12 +59,13 @@ public class Video extends BaseTimeEntity {
 
 	@Builder
 	public Video(String contentId, String artist, String title, String streamUrl,
-		Long coverImageUid, VideoCode videoCode) {
+		Long coverImageUid, VideoCode videoCode, Long pageUid) {
 		this.contentId = contentId;
 		this.artist = artist;
 		this.title = title;
 		this.streamUrl = streamUrl;
 		this.coverImageUid = coverImageUid;
 		this.videoCode = videoCode;
+		this.pageUid = pageUid;
 	}
 }
