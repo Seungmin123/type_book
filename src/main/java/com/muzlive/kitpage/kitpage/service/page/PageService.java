@@ -139,7 +139,6 @@ public class PageService {
 			.subTitle(createPageReq.getSubtitle())
 			.infoText(createPageReq.getInfoText())
 			.company(createPageReq.getCompany())
-			.genre(createPageReq.getGenre())
 			.region(createPageReq.getRegion())
 			.build());
 	}

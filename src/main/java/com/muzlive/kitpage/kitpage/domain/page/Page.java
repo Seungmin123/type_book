@@ -56,10 +56,6 @@ public class Page extends BaseTimeEntity {
 	@Column(name = "company")
 	private String company;
 
-	@Enumerated(EnumType.STRING)
-	@Column(name = "genre")
-	private PageGenre genre;
-
 	@Column(name = "rate")
 	private Double rate;
 
@@ -73,7 +69,7 @@ public class Page extends BaseTimeEntity {
 	@Builder
 	public Page(String contentId, PageContentType contentType,
 		Long coverImageUid, String title, String subTitle, String infoText, String company,
-		PageGenre genre, Double rate, Region region) {
+		Double rate, Region region) {
 		this.contentId = contentId;
 		this.contentType = contentType;
 		this.coverImageUid = coverImageUid;
@@ -81,7 +77,6 @@ public class Page extends BaseTimeEntity {
 		this.subTitle = subTitle;
 		this.infoText = infoText;
 		this.company = company;
-		this.genre = genre;
 		this.rate = rate;
 		this.region = region;
 	}

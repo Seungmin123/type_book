@@ -43,11 +43,18 @@ public class ComicController {
 	// TODO 책 방향 왼쪽 오른쪽 주기 알려주기
 
 	@Operation(summary = "연관된 Comic Kit 리스트 조회")
+	@Deprecated
 	@GetMapping
 	public CommonResp<ComicBookRelatedResp> getRelatedComicBookList(@Valid @ModelAttribute ComicBookContentReq comicBookContentReq) throws Exception {
 		return new CommonResp<>(comicService.getRelatedComicBookList(comicBookContentReq.getPageUid(), comicBookContentReq.getDeviceId()));
 	}
 
+	@Operation(summary = "ComicBook 리스트 조회", description = "ContentId 기준")
+	@GetMapping("/{contentId}")
+	public CommonResp<Void> getComicBookListByContentId(@PathVariable String contentId) throws Exception {
+
+		return new CommonResp<>();
+	}
 
 	@Operation(summary = "ComicBook 컨텐츠 상세 정보 조회 - 비디오 추가 안됨")
 	@GetMapping("/detail/{pageUid}")
