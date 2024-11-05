@@ -140,15 +140,15 @@ public class ComicService {
 		}
 	}
 
-	public ComicBookContentResp getComicBookContent(String deviceId, String contentId, Region region, Long pageUid) throws Exception {
-		Content content = pageService.findContentByContentId(contentId, region);
-
+	public ComicBookContentResp getComicBookContent(String deviceId, String contentId, Long pageUid) throws Exception {
+		Page page = pageService.findPageById(pageUid);
+		Content content = page.getContent();
 		ComicBookContentResp comicBookContentResp = new ComicBookContentResp(content);
 
 		List<Page> pages = content.getPages();
 
 		// Kit Status, 태그한 키트|
-		List<Tuple> tuples = userService.getInstallLogs(deviceId, contentId, region);
+		List<Tuple> tuples = userService.getInstallLogs(deviceId, contentId, page.getRegion());
 		List<ComicBookResp> comicBookResps = new ArrayList<>();
 		for (Page pageItem : pages) {
 			ComicBookResp comicBookResp = new ComicBookResp(pageItem);
@@ -180,11 +180,12 @@ public class ComicService {
 		return comicBookContentResp;
 	}
 
-	public List<ComicBookDetailResp> getRelatedComicDetailBookList(String deviceId, String contentId, Region region, Long pageUid) throws Exception {
+	public List<ComicBookDetailResp> getRelatedComicDetailBookList(String deviceId, String contentId, Long pageUid) throws Exception {
 		List<ComicBookDetailResp> comicBookDetailResps = new ArrayList<>();
+		Page page = pageService.findPageById(pageUid);
 
-		List<Page> pages = pageService.findByContentId(contentId, region);
-		List<Tuple> tuples = userService.getInstallLogs(deviceId, contentId, region);
+		List<Page> pages = pageService.findByContentId(contentId, page.getRegion());
+		List<Tuple> tuples = userService.getInstallLogs(deviceId, contentId, page.getRegion());
 
 		for (Page pageItem : pages) {
 			ComicBookDetailResp comicBookDetailResp = new ComicBookDetailResp(pageItem);
@@ -193,7 +194,7 @@ public class ComicService {
 			List<ComicBookEpisodeResp> comicBookEpisodeResps = new ArrayList<>();
 
 			if (this.getInstallStatus(pageItem.getPageUid(), tuples).equals(KitStatus.AVAILABLE)) {
-				videoResps = this.findVideoByPageUid(pageUid).stream().map(VideoResp::new).collect(Collectors.toList());
+				videoResps = this.findVideoByPageUid(pageItem.getPageUid()).stream().map(VideoResp::new).collect(Collectors.toList());
 				comicBookEpisodeResps = this.getEpisodeResps(pageItem);
 			}
 

@@ -48,8 +48,14 @@ public class ComicController {
 
 	@Operation(summary = "ComicBook 리스트 조회")
 	@GetMapping("/list")
-	public CommonResp<ComicBookContentResp> getComicBookListByContentId(@Valid @ModelAttribute ComicBookContentReq comicBookContentReq, Locale locale) throws Exception {
-		return new CommonResp<>(comicService.getComicBookContent(comicBookContentReq.getDeviceId(), comicBookContentReq.getContentId(), commonUtils.getCustomRegion(locale), comicBookContentReq.getPageUid()));
+	public CommonResp<ComicBookContentResp> getComicBookListByContentId(@Valid @ModelAttribute ComicBookContentReq comicBookContentReq) throws Exception {
+		return new CommonResp<>(comicService.getComicBookContent(comicBookContentReq.getDeviceId(), comicBookContentReq.getContentId(), comicBookContentReq.getPageUid()));
+	}
+
+	@Operation(summary = "ComicBook 컨텐츠 상세 정보 리스트 조회")
+	@GetMapping("/detail/list")
+	public CommonResp<List<ComicBookDetailResp>> getComicBookContents(@Valid @ModelAttribute ComicBookContentReq comicBookContentReq) throws Exception {
+		return new CommonResp<>(comicService.getRelatedComicDetailBookList(comicBookContentReq.getDeviceId(), comicBookContentReq.getContentId(), comicBookContentReq.getPageUid()));
 	}
 
 	@Operation(summary = "ComicBook 컨텐츠 상세 정보 조회")
@@ -61,12 +67,6 @@ public class ComicController {
 		comicBookDetailResp.setVideos(comicService.findVideoByPageUid(pageUid).stream().map(VideoResp::new).collect(Collectors.toList()));
 
 		return new CommonResp<>(comicBookDetailResp);
-	}
-
-	@Operation(summary = "ComicBook 컨텐츠 상세 정보 리스트 조회")
-	@GetMapping("/detail/list")
-	public CommonResp<List<ComicBookDetailResp>> getComicBookContents(@Valid @ModelAttribute ComicBookContentReq comicBookContentReq, Locale locale) throws Exception {
-		return new CommonResp<>(comicService.getRelatedComicDetailBookList(comicBookContentReq.getDeviceId(), comicBookContentReq.getContentId(), commonUtils.getCustomRegion(locale), comicBookContentReq.getPageUid()));
 	}
 
 	// TODO get Music Info
