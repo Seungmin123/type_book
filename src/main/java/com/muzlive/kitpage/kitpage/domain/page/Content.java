@@ -13,6 +13,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
+import javax.persistence.OrderBy;
 import javax.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -55,6 +56,7 @@ public class Content extends BaseTimeEntity implements Serializable {
 	private Region region;
 
 	@OneToMany(mappedBy = "content")
+	@OrderBy("pageUid ASC")
 	private List<Page> pages;
 
 
