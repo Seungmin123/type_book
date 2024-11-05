@@ -20,5 +20,5 @@ public class CheckTagReq {
 
 	@NotNull
 	@JsonProperty("region")
-	private Region region;
+	private String region;
 }

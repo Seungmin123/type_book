@@ -9,6 +9,7 @@ public enum Region {
 
 	KOR("KOR"),
 	ENG("ENG"),
+	USA("ENG"),
 	JPN("JPN");
 
 	private String code;
