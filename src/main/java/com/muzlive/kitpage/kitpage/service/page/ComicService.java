@@ -28,6 +28,7 @@ import com.muzlive.kitpage.kitpage.service.aws.S3Service;
 import com.muzlive.kitpage.kitpage.utils.constants.ApplicationConstants;
 import com.muzlive.kitpage.kitpage.utils.enums.ImageCode;
 import com.muzlive.kitpage.kitpage.utils.enums.KitStatus;
+import com.muzlive.kitpage.kitpage.utils.enums.Region;
 import com.querydsl.core.Tuple;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import java.time.LocalDateTime;
@@ -139,15 +140,15 @@ public class ComicService {
 		}
 	}
 
-	public ComicBookContentResp getComicBookContent(String contentId, Long pageUid, String deviceId) throws Exception {
-		Content content = pageService.findContentByContentId(contentId);
+	public ComicBookContentResp getComicBookContent(String deviceId, String contentId, Region region, Long pageUid) throws Exception {
+		Content content = pageService.findContentByContentId(contentId, region);
 
 		ComicBookContentResp comicBookContentResp = new ComicBookContentResp(content);
 
 		List<Page> pages = content.getPages();
 
 		// Kit Status, 태그한 키트|
-		List<Tuple> tuples = userService.getInstallLogs(contentId, deviceId);
+		List<Tuple> tuples = userService.getInstallLogs(deviceId, contentId, region);
 		List<ComicBookResp> comicBookResps = new ArrayList<>();
 		for (Page pageItem : pages) {
 			ComicBookResp comicBookResp = new ComicBookResp(pageItem);
@@ -179,18 +180,11 @@ public class ComicService {
 		return comicBookContentResp;
 	}
 
-	public List<ComicBookDetailResp> getRelatedComicDetailBookList(String contentId, Long pageUid, String deviceId) throws Exception {
+	public List<ComicBookDetailResp> getRelatedComicDetailBookList(String deviceId, String contentId, Region region, Long pageUid) throws Exception {
 		List<ComicBookDetailResp> comicBookDetailResps = new ArrayList<>();
 
-		Page page = pageService.findPageById(pageUid);
-		List<Page> pages = pageService.findByContentId(page.getContentId());
-		List<Tuple> tuples = userService.getInstallLogs(page.getContentId(), deviceId);
-
-		/*
-		* Content content = pageService.findContentByContentId(contentId);
-		List<Page> pages = content.getPages();
-		List<Tuple> tuples = userService.getInstallLogs(contentId, deviceId);
-		* */
+		List<Page> pages = pageService.findByContentId(contentId, region);
+		List<Tuple> tuples = userService.getInstallLogs(deviceId, contentId, region);
 
 		for (Page pageItem : pages) {
 			ComicBookDetailResp comicBookDetailResp = new ComicBookDetailResp(pageItem);

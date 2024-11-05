@@ -1,8 +1,10 @@
 package com.muzlive.kitpage.kitpage.utils;
 
+import com.muzlive.kitpage.kitpage.utils.enums.Region;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Locale;
 import java.util.Random;
 import javax.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -61,6 +63,19 @@ public class CommonUtils {
 		}
 		buffer.flush();
 		return buffer.toByteArray();
+	}
+
+	public Region getCustomRegion(Locale locale) {
+		switch (locale.getLanguage()) {
+			case "ko":
+			case "kr":
+				return Region.KOR;
+			case "jp":
+			case "ja":
+				return Region.JPN;
+			default:
+				return Region.ENG;
+		}
 	}
 
 }
