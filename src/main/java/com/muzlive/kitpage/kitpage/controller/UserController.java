@@ -118,7 +118,7 @@ public class UserController {
 		KihnoKitCheckReq kihnoKitCheckReq = KihnoKitCheckReq.builder()
 			.deviceId(checkTagReq.getDeviceId())
 			.kitId(paramSerialNumber)
-			.countryCode(checkTagReq.getRegion().getCode())
+			.countryCode(checkTagReq.getRegion())
 			.build();
 
 		Kit kit = userService.checkTag(checkTagReq.getDeviceId(), requestSerialNumber, kihnoV2TransferSerivce.kihnoKitCheck(kihnoKitCheckReq).getKihnoKitUid());
