@@ -17,6 +17,7 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
+import javax.persistence.OrderBy;
 import javax.persistence.PostLoad;
 import javax.persistence.PrePersist;
 import javax.persistence.PreUpdate;
@@ -67,6 +68,7 @@ public class ComicBook extends BaseTimeEntity {
 	private Page page;
 
 	@OneToMany(mappedBy = "comicBook")
+	@OrderBy("comicBookDetailUid ASC")
 	private List<ComicBookDetail> comicBookDetails;
 
 	@PrePersist
