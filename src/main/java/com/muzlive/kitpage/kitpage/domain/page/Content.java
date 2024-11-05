@@ -2,6 +2,7 @@ package com.muzlive.kitpage.kitpage.domain.page;
 
 import com.muzlive.kitpage.kitpage.domain.common.BaseTimeEntity;
 import com.muzlive.kitpage.kitpage.utils.enums.PageContentType;
+import com.muzlive.kitpage.kitpage.utils.enums.Region;
 import java.io.Serializable;
 import java.util.List;
 import javax.persistence.Column;
@@ -48,6 +49,10 @@ public class Content extends BaseTimeEntity implements Serializable {
 
 	@Column(name = "cover_image_uid")
 	private Long coverImageUid;
+
+	@Enumerated(EnumType.STRING)
+	@Column(name = "region")
+	private Region region;
 
 	@OneToMany(mappedBy = "content")
 	private List<Page> pages;

@@ -45,6 +45,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.util.Locale;
 import java.util.Set;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
@@ -266,7 +267,7 @@ public class UserController {
 		kitStatusResp.setIsInstalled(
 				comicService.getInstallStatus(
 					page.getPageUid(),
-					userService.getInstallLogs(page.getContentId(), kitStatusReq.getDeviceId()))
+					userService.getInstallLogs(kitStatusReq.getDeviceId(), page.getContentId(), page.getRegion()))
 				.equals(KitStatus.AVAILABLE));
 
 		return new CommonResp<>(kitStatusResp);

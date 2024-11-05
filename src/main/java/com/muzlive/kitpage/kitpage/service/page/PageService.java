@@ -29,6 +29,7 @@ import com.muzlive.kitpage.kitpage.domain.user.repository.ImageRepository;
 import com.muzlive.kitpage.kitpage.service.aws.S3Service;
 import com.muzlive.kitpage.kitpage.utils.constants.ApplicationConstants;
 import com.muzlive.kitpage.kitpage.utils.enums.ImageCode;
+import com.muzlive.kitpage.kitpage.utils.enums.Region;
 import com.muzlive.kitpage.kitpage.utils.enums.VideoCode;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import io.micrometer.core.instrument.util.StringUtils;
@@ -63,13 +64,13 @@ public class PageService {
 
 	private final VideoRepository videoRepository;
 
-	public Content findContentByContentId(String contentId) throws Exception {
-		return contentRepository.findByContentId(contentId)
+	public Content findContentByContentId(String contentId, Region region) throws Exception {
+		return contentRepository.findByContentIdAndRegion(contentId, region)
 			.orElseThrow(() -> new CommonException(ExceptionCode.CANNOT_FIND_MATCHED_ITEM));
 	}
 
-	public List<Page> findByContentId(String contentId) throws Exception {
-		return pageRepository.findAllByContentId(contentId)
+	public List<Page> findByContentId(String contentId, Region region) throws Exception {
+		return pageRepository.findAllByContentIdAndRegion(contentId, region)
 			.orElseThrow(() -> new CommonException(ExceptionCode.CANNOT_FIND_MATCHED_ITEM));
 	}
 

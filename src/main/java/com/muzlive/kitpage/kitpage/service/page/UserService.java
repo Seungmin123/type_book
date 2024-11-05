@@ -22,6 +22,7 @@ import com.muzlive.kitpage.kitpage.domain.user.repository.KitRepository;
 import com.muzlive.kitpage.kitpage.domain.user.repository.MemberLogRepository;
 import com.muzlive.kitpage.kitpage.domain.user.repository.MemberRepository;
 import com.muzlive.kitpage.kitpage.domain.user.repository.TokenLogRepository;
+import com.muzlive.kitpage.kitpage.utils.enums.Region;
 import com.querydsl.core.Tuple;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -104,7 +105,7 @@ public class UserService implements UserDetailsService {
 		return kit;
 	}
 
-	public List<Tuple> getInstallLogs(String contentId, String deviceId) throws Exception {
+	public List<Tuple> getInstallLogs(String deviceId, String contentId, Region region) throws Exception {
 		QInstallLog installLogSub = new QInstallLog("installLogSub");
 
 		List<Tuple> tuples = queryFactory
@@ -118,7 +119,7 @@ public class UserService implements UserDetailsService {
 						.from(installLogSub)
 						.innerJoin(page).on(page.pageUid.eq(installLogSub.pageUid))
 						.where(installLogSub.deviceId.eq(deviceId)
-							.and(page.contentId.eq(contentId)))
+							.and(page.contentId.eq(contentId).and(page.region.eq(region))))
 						.groupBy(page.pageUid))))
 			.fetch();
 
