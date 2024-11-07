@@ -13,7 +13,7 @@ public class AccessTokenReq {
 	private String deviceId;
 
 	@JsonProperty("region")
-	private Region region;
+	private String region;
 
 	@JsonProperty("modelName")
 	private String modelName;
