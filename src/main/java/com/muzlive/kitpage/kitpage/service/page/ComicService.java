@@ -195,7 +195,7 @@ public class ComicService {
 
 			if (this.getInstallStatus(pageItem.getPageUid(), tuples).equals(KitStatus.AVAILABLE)) {
 				videoResps = this.findVideoByPageUid(pageItem.getPageUid()).stream().map(VideoResp::new).collect(Collectors.toList());
-				comicBookEpisodeResps = this.getEpisodeResps(pageItem);
+				comicBookEpisodeResps = this.getEpisodeResps(pageItem.getPageUid());
 			}
 
 			comicBookDetailResp.setVideos(videoResps);
@@ -207,9 +207,10 @@ public class ComicService {
 		return comicBookDetailResps;
 	}
 
-	public List<ComicBookEpisodeResp> getEpisodeResps(Page page) throws Exception {
+	public List<ComicBookEpisodeResp> getEpisodeResps(Long pageUid) throws Exception {
 		List<ComicBookEpisodeResp> comicBookEpisodeResps = new ArrayList<>();
-		for(ComicBook comicBook : page.getComicBooks()) {
+		List<ComicBook> comicBooks = comicBookRepository.findAllByPageUid(pageUid).orElse(new ArrayList<>());
+		for(ComicBook comicBook : comicBooks) {
 			ComicBookEpisodeResp comicBookEpisodeResp = new ComicBookEpisodeResp(comicBook, ApplicationConstants.COMIC_BOOK_UNIT_1);
 
 			// 최근 업데이트 날짜 확인을 위해 for 루프 여기서 실행

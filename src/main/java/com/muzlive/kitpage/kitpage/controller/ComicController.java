@@ -63,7 +63,7 @@ public class ComicController {
 	public CommonResp<ComicBookDetailResp> getComicBookContent(@Valid @PathVariable Long pageUid) throws Exception {
 		Page page = pageService.findPageById(pageUid);
 		ComicBookDetailResp comicBookDetailResp = new ComicBookDetailResp(page);
-		comicBookDetailResp.setDetails(comicService.getEpisodeResps(page));
+		comicBookDetailResp.setDetails(comicService.getEpisodeResps(page.getPageUid()));
 		comicBookDetailResp.setVideos(comicService.findVideoByPageUid(pageUid).stream().map(VideoResp::new).collect(Collectors.toList()));
 
 		return new CommonResp<>(comicBookDetailResp);
