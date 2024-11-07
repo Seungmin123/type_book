@@ -2,6 +2,7 @@ package com.muzlive.kitpage.kitpage.domain.user.dto.req;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.muzlive.kitpage.kitpage.utils.enums.Region;
+import javax.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -9,12 +10,14 @@ import lombok.Setter;
 @Setter
 public class AccessTokenReq {
 
+	@NotNull
 	@JsonProperty("deviceId")
 	private String deviceId;
 
 	@JsonProperty("region")
 	private String region;
 
+	@NotNull
 	@JsonProperty("modelName")
 	private String modelName;
 
