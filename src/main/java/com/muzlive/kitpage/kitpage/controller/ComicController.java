@@ -46,12 +46,14 @@ public class ComicController {
 
 	private final ComicService comicService;
 
+	// N+1
 	@Operation(summary = "ComicBook 리스트 조회")
 	@GetMapping("/list")
 	public CommonResp<ComicBookContentResp> getComicBookListByContentId(@Valid @ModelAttribute ComicBookContentReq comicBookContentReq) throws Exception {
 		return new CommonResp<>(comicService.getComicBookContent(comicBookContentReq.getDeviceId(), comicBookContentReq.getContentId(), comicBookContentReq.getPageUid()));
 	}
 
+	// N+1
 	@Operation(summary = "ComicBook 컨텐츠 상세 정보 리스트 조회")
 	@GetMapping("/detail/list")
 	public CommonResp<List<ComicBookDetailResp>> getComicBookContents(@Valid @ModelAttribute ComicBookContentReq comicBookContentReq) throws Exception {

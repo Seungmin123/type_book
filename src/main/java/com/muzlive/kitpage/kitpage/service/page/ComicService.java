@@ -22,6 +22,7 @@ import com.muzlive.kitpage.kitpage.domain.page.comicbook.repository.ComicBookRep
 import com.muzlive.kitpage.kitpage.domain.page.comicbook.repository.VideoRepository;
 import com.muzlive.kitpage.kitpage.domain.page.dto.req.UploadComicBookDetailReq;
 import com.muzlive.kitpage.kitpage.domain.page.dto.req.UploadComicBookReq;
+import com.muzlive.kitpage.kitpage.domain.page.repository.PageRepository;
 import com.muzlive.kitpage.kitpage.domain.user.Image;
 import com.muzlive.kitpage.kitpage.domain.user.repository.ImageRepository;
 import com.muzlive.kitpage.kitpage.service.aws.S3Service;
@@ -56,6 +57,8 @@ public class ComicService {
 	private final UserService userService;
 
 	private final S3Service s3Service;
+
+	private final PageRepository pageRepository;
 
 	private final ImageRepository imageRepository;
 
@@ -145,7 +148,7 @@ public class ComicService {
 		Content content = page.getContent();
 		ComicBookContentResp comicBookContentResp = new ComicBookContentResp(content);
 
-		List<Page> pages = content.getPages();
+		List<Page> pages = pageRepository.findAllWithChild(page.getContentId(), page.getRegion()).orElse(new ArrayList<>());
 
 		// Kit Status, 태그한 키트|
 		List<Tuple> tuples = userService.getInstallLogs(deviceId, contentId, page.getRegion());
@@ -161,7 +164,7 @@ public class ComicService {
 			comicBookResps.add(comicBookResp);
 
 			// 총 용량, Volume 수정하면 좋을 것 같음
-			List<ComicBook> comicBooks = pageItem.getComicBooks();
+			List<ComicBook> comicBooks = comicBookRepository.findAllByPageUid(pageItem.getPageUid()).orElse(new ArrayList<>());
 			if(!CollectionUtils.isEmpty(comicBooks)) {
 				comicBookContentResp.setTotalVolume(comicBookContentResp.getTotalVolume() + comicBooks.size());
 
