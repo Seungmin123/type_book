@@ -36,32 +36,43 @@ public class JwtFilter extends OncePerRequestFilter {
 		String jwt = tokenProvider.resolveToken(request);
 
 		if (StringUtils.hasText(jwt) && tokenProvider.validateAccessToken(jwt)) {
-			Set<String> roles = tokenProvider.getRolesByToken(jwt);
-			String deviceId = tokenProvider.getDeviceIdByToken(jwt);
+			SimpleGrantedAuthority role = this.getRoleAuthority(jwt);
 
-			SimpleGrantedAuthority role = null;
-			if(roles.contains(UserRole.ENGINEER.getKey())) {
-				role = new SimpleGrantedAuthority(UserRole.ENGINEER.getKey());
-			} else if(roles.contains(UserRole.LINKER.getKey())) {
-				role = memberRepository.findByDeviceIdAndEmail(deviceId, tokenProvider.getEmailByToken(jwt))
-					.map(member -> new SimpleGrantedAuthority(UserRole.LINKER.getKey()))
-					.orElse(null);
-			} else if(roles.contains(UserRole.HALF_LINKER.getKey())) {
-				role = kitRepository.findByDeviceIdAndSerialNumber(deviceId, tokenProvider.getSerialNumberByToken(jwt))
-					.map(kit -> new SimpleGrantedAuthority(UserRole.HALF_LINKER.getKey()))
-					.orElse(null);
-			} else if(roles.contains(UserRole.GUEST.getKey())){
-				role = memberRepository.findByDeviceId(deviceId)
-					.map(member -> new SimpleGrantedAuthority(UserRole.GUEST.getKey()))
-					.orElse(null);
+			if(role == null) {
+				response.sendError(HttpServletResponse.SC_FORBIDDEN);
+				return;
 			}
 
-			UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(deviceId,null, Collections.singleton(role));
+			UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(tokenProvider.getDeviceIdByToken(jwt),null, Collections.singleton(role));
 			authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 			SecurityContextHolder.getContext().setAuthentication(authentication);
 		}
 
 		filterChain.doFilter(request, response);
+	}
+
+	private SimpleGrantedAuthority getRoleAuthority(String jwt) {
+		Set<String> roles = tokenProvider.getRolesByToken(jwt);
+		String deviceId = tokenProvider.getDeviceIdByToken(jwt);
+
+		SimpleGrantedAuthority role = null;
+		if(roles.contains(UserRole.ENGINEER.getKey())) {
+			role = new SimpleGrantedAuthority(UserRole.ENGINEER.getKey());
+		} else if(roles.contains(UserRole.LINKER.getKey())) {
+			role = memberRepository.findByDeviceIdAndEmail(deviceId, tokenProvider.getEmailByToken(jwt))
+				.map(member -> new SimpleGrantedAuthority(UserRole.LINKER.getKey()))
+				.orElse(null);
+		} else if(roles.contains(UserRole.HALF_LINKER.getKey())) {
+			role = kitRepository.findByDeviceIdAndSerialNumber(deviceId, tokenProvider.getSerialNumberByToken(jwt))
+				.map(kit -> new SimpleGrantedAuthority(UserRole.HALF_LINKER.getKey()))
+				.orElse(null);
+		} else if(roles.contains(UserRole.GUEST.getKey())){
+			role = memberRepository.findByDeviceId(deviceId)
+				.map(member -> new SimpleGrantedAuthority(UserRole.GUEST.getKey()))
+				.orElse(null);
+		}
+
+		return role;
 	}
 
 }
