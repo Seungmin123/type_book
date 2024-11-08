@@ -111,6 +111,8 @@ public class ComicService {
 				.writer(uploadComicBookReq.getWriter())
 				.illustrator(uploadComicBookReq.getIllustrator())
 				.volume(uploadComicBookReq.getVolume())
+				.volumeUnit(uploadComicBookReq.getVolumeUnit() == null ? "%d권" : uploadComicBookReq.getVolumeUnit())
+				.pageUnit(uploadComicBookReq.getPageUnit() == null ? "%d쪽" : uploadComicBookReq.getPageUnit())
 				.build()
 		);
 	}

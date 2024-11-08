@@ -29,4 +29,10 @@ public class UploadComicBookReq {
 	@JsonProperty("volume")
 	private Integer volume;
 
+	@JsonProperty("volumeUnit")
+	private String volumeUnit;
+
+	@JsonProperty("pageUnit")
+	private String pageUnit;
+
 }
