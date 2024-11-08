@@ -14,7 +14,7 @@ public enum ExceptionCode {
     CANNOT_FIND_ITEM_THAT_MATCH_THE_PARAM("10400", "There are no items that match the parameters.", HttpStatus.BAD_REQUEST),
 
     DIFFERENT_APP_KIT("10403", "The kit is not available in kit-page", HttpStatus.FORBIDDEN),
-    CANNOT_FIND_MATCHED_ITEM(HttpStatus.GONE),
+    CANNOT_FIND_MATCHED_ITEM("10404", "There are no items that mate the parameters", HttpStatus.GONE),
     CANNOT_FIND_MATCHED_KIHNO_ITEM("10403", "There are no items in kihno that match the parameters.", HttpStatus.FORBIDDEN),
 
     INTERNAL_SERVER_ERROR("10500", "server error", HttpStatus.INTERNAL_SERVER_ERROR),
