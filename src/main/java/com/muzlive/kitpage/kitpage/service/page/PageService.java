@@ -104,6 +104,17 @@ public class PageService {
 		return pages;
 	}
 
+	public boolean existsByImageUidAndSerialNumber(Long imageUid, String serialNumber) throws Exception {
+		return queryFactory
+			.selectOne()
+			.from(kit)
+				.innerJoin(comicBook).on(comicBook.pageUid.eq(kit.pageUid))
+				.innerJoin(comicBookDetail).on(comicBookDetail.comicBookUid.eq(comicBook.comicBookUid))
+			.where(kit.serialNumber.eq(serialNumber)
+				.and(comicBookDetail.imageUid.eq(imageUid)))
+			.fetchFirst() != null;
+	}
+
 	@Transactional
 	public Video upsertVideo(Video video) throws Exception {
 		return videoRepository.save(video);
