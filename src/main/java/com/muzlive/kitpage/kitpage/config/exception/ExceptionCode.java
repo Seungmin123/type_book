@@ -17,6 +17,8 @@ public enum ExceptionCode {
     CANNOT_FIND_MATCHED_ITEM("10404", "There are no items that mate the parameters", HttpStatus.GONE),
     CANNOT_FIND_MATCHED_KIHNO_ITEM("10403", "There are no items in kihno that match the parameters.", HttpStatus.FORBIDDEN),
 
+    NON_DOWNLOADABLE_TOKEN("10405", "Downloads are not possible with this token", HttpStatus.FORBIDDEN),
+
     INTERNAL_SERVER_ERROR("10500", "server error", HttpStatus.INTERNAL_SERVER_ERROR),
     KITTOR_EXTERNAL_SERVER_ERROR("10501", "kittor external server error", HttpStatus.INTERNAL_SERVER_ERROR)
     ;

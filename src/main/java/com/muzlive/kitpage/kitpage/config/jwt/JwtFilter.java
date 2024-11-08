@@ -41,7 +41,7 @@ public class JwtFilter extends OncePerRequestFilter {
 
 			SimpleGrantedAuthority role = null;
 			if(roles.contains(UserRole.ENGINEER.getKey())) {
-				role = new SimpleGrantedAuthority(UserRole.LINKER.getKey());
+				role = new SimpleGrantedAuthority(UserRole.ENGINEER.getKey());
 			} else if(roles.contains(UserRole.LINKER.getKey())) {
 				role = memberRepository.findByDeviceIdAndEmail(deviceId, tokenProvider.getEmailByToken(jwt))
 					.map(member -> new SimpleGrantedAuthority(UserRole.LINKER.getKey()))
