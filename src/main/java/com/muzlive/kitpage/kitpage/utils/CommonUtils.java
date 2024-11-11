@@ -88,12 +88,12 @@ public class CommonUtils {
 		if (hours > 0) {
 			formattedDuration.append(hours).append(":");
 		}
-		if (minutes > 0) {
-			formattedDuration.append(minutes).append(":");
-		}
-		if (seconds > 0) {
-			formattedDuration.append(seconds);
-		}
+
+		// 분이 없는 경우 00으로 표시, 한 자리일 경우 앞에 0 추가
+		formattedDuration.append(String.format("%02d:", minutes));
+
+		// 초는 한 자리일 경우 앞에 0 추가
+		formattedDuration.append(String.format("%02d", seconds));
 
 		return formattedDuration.toString();
 	}
