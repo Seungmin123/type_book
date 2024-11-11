@@ -1,6 +1,7 @@
 package com.muzlive.kitpage.kitpage.domain.page.dto.req;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import javax.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.web.multipart.MultipartFile;
@@ -9,14 +10,19 @@ import org.springframework.web.multipart.MultipartFile;
 @Setter
 public class UploadVideoReq {
 
+	@NotNull
 	@JsonProperty("contentId")
 	private String contentId;
+
+	@NotNull
+	@JsonProperty("pageUid")
+	private Long pageUid;
 
 	@JsonProperty("album")
 	private String album;
 
-	@JsonProperty("artist")
-	private String artist;
+	@JsonProperty("duration")
+	private String duration;
 
 	@JsonProperty("title")
 	private String title;

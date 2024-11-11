@@ -20,7 +20,9 @@ public enum ExceptionCode {
     NON_DOWNLOADABLE_TOKEN("10405", "Downloads are not possible with this token", HttpStatus.FORBIDDEN),
 
     INTERNAL_SERVER_ERROR("10500", "server error", HttpStatus.INTERNAL_SERVER_ERROR),
-    KITTOR_EXTERNAL_SERVER_ERROR("10501", "kittor external server error", HttpStatus.INTERNAL_SERVER_ERROR)
+    KITTOR_EXTERNAL_SERVER_ERROR("10501", "kittor external server error", HttpStatus.INTERNAL_SERVER_ERROR),
+
+    YOUTUBE_UPLOAD_ERROR("10601", "youtube upload error")
     ;
 
     // add error code -> update
