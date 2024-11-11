@@ -27,23 +27,33 @@ import com.muzlive.kitpage.kitpage.domain.user.dto.req.VersionInfoReq;
 import com.muzlive.kitpage.kitpage.domain.user.dto.resp.VersionInfoResp;
 import com.muzlive.kitpage.kitpage.domain.user.repository.ImageRepository;
 import com.muzlive.kitpage.kitpage.service.aws.S3Service;
+import com.muzlive.kitpage.kitpage.utils.CommonUtils;
 import com.muzlive.kitpage.kitpage.utils.constants.ApplicationConstants;
 import com.muzlive.kitpage.kitpage.utils.enums.ImageCode;
 import com.muzlive.kitpage.kitpage.utils.enums.Region;
 import com.muzlive.kitpage.kitpage.utils.enums.VideoCode;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import io.micrometer.core.instrument.util.StringUtils;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
+import javax.imageio.ImageIO;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
+@Slf4j
 @RequiredArgsConstructor
 @Service
 public class PageService {
@@ -63,6 +73,8 @@ public class PageService {
 	private final MusicRepository musicRepository;
 
 	private final VideoRepository videoRepository;
+
+	private final CommonUtils commonUtils;
 
 	public Content findContentByContentId(String contentId, Region region) throws Exception {
 		return contentRepository.findByContentIdAndRegion(contentId, region)
@@ -201,7 +213,7 @@ public class PageService {
 			.orElseThrow(() -> new CommonException(ExceptionCode.CANNOT_FIND_MATCHED_ITEM));
 
 		String streamUrl = uploadVideoReq.getStreamUrl();
-		VideoCode videoCode = VideoCode.STREAM;
+		VideoCode videoCode = VideoCode.YOUTUBE;
 
 		if(Objects.nonNull(uploadVideoReq.getFile())) {
 			// S3 Cover Image Upload
@@ -215,10 +227,11 @@ public class PageService {
 
 		Video video = Video.builder()
 			.contentId(uploadVideoReq.getContentId())
-			.artist(uploadVideoReq.getArtist())
-			.title(uploadVideoReq.getTitle())
+			.duration(uploadVideoReq.getDuration() == null ? "" : uploadVideoReq.getDuration())
+			.title(uploadVideoReq.getTitle() == null ? "" : uploadVideoReq.getTitle())
 			.streamUrl(streamUrl)
 			.videoCode(videoCode)
+			.pageUid(uploadVideoReq.getPageUid())
 			.build();
 
 		if(Objects.nonNull(uploadVideoReq.getImage())) {
@@ -238,6 +251,39 @@ public class PageService {
 		videoRepository.save(video);
 
 		return video;
+	}
+
+	public byte[] downloadFileFromUrl(String fileUrl) throws Exception {
+		URL url = new URL(fileUrl);
+		URLConnection connection = url.openConnection();
+		try (InputStream inputStream = connection.getInputStream()) {
+			return commonUtils.inputStreamToByteArray(inputStream);
+		} catch(Exception e) {
+			log.error(e.getMessage());
+			return null;
+		}
+	}
+
+	public Long uploadYoutubeThumbnail(String contentId, String url) throws Exception {
+		byte[] thumbnail = this.downloadFileFromUrl(url);
+
+		String saveFileName = UUID.randomUUID() + "." + FilenameUtils.getExtension(url);
+		String coverImagePath = contentId + "/" + ApplicationConstants.VIDEO + "/" + saveFileName;
+		s3Service.uploadFile(coverImagePath, thumbnail);
+
+		BufferedImage bufferedImage = ImageIO.read(new ByteArrayInputStream(thumbnail));
+		Image image = Image.builder()
+			.imagePath(coverImagePath)
+			.imageCode(ImageCode.VIDEO_COVER_IMAGE)
+			.imageSize(thumbnail.length == 0 ? 0 : (long) thumbnail.length)
+			.width(bufferedImage.getWidth())
+			.height(bufferedImage.getHeight())
+			.originalFileName("")
+			.saveFileName(saveFileName)
+			.md5(DigestUtils.md5Hex(thumbnail))
+			.build();
+
+		return imageRepository.save(image).getImageUid();
 	}
 
 	public VersionInfoResp getVersionInfo(VersionInfoReq versionInfoReq) throws Exception {

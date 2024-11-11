@@ -4,6 +4,7 @@ import com.muzlive.kitpage.kitpage.utils.enums.Region;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.Duration;
 import java.util.Locale;
 import java.util.Random;
 import javax.servlet.http.HttpServletRequest;
@@ -76,6 +77,25 @@ public class CommonUtils {
 			default:
 				return Region.ENG;
 		}
+	}
+
+	public String convertDurationToString(Duration duration) throws Exception {
+		long hours = duration.toHours();
+		long minutes = duration.toMinutesPart();
+		long seconds = duration.toSecondsPart();
+
+		StringBuilder formattedDuration = new StringBuilder();
+		if (hours > 0) {
+			formattedDuration.append(hours).append(":");
+		}
+		if (minutes > 0) {
+			formattedDuration.append(minutes).append(":");
+		}
+		if (seconds > 0) {
+			formattedDuration.append(seconds);
+		}
+
+		return formattedDuration.toString();
 	}
 
 }
