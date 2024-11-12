@@ -107,12 +107,7 @@ public class UserController {
 	@Operation(summary = "체크 태그 API", description = "키노 서버를 통한 체크 태그 API")
 	@PostMapping("/checkTag")
 	public CommonResp<CheckTagResp> checkTag(@Valid @RequestBody CheckTagReq checkTagReq, HttpServletRequest httpServletRequest) throws Exception {
-		// Token DeviceID / Request DeviceID 검사
-		/*String validateToken = jwtTokenProvider.resolveToken(httpServletRequest);
-		if(!jwtTokenProvider.getDeviceIdByToken(validateToken).equals(checkTagReq.getDeviceId()))
-			throw new CommonException(ExceptionCode.INVALID_JWT);*/
-		String jwt = jwtTokenProvider.resolveToken(httpServletRequest);
-		String deviceId = jwtTokenProvider.getDeviceIdByToken(jwt);
+		String deviceId = jwtTokenProvider.getDeviceIdByToken(jwtTokenProvider.resolveToken(httpServletRequest));
 		Page page = userService.getPageBySerialNumber(checkTagReq.getSerialNumber());
 
 		String requestSerialNumber = (checkTagReq.getSerialNumber().length() > 8) ? checkTagReq.getSerialNumber().substring(0, 8) : checkTagReq.getSerialNumber();
