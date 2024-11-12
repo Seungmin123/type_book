@@ -11,14 +11,7 @@ import lombok.Setter;
 public class CheckTagReq {
 
 	@NotNull
-	@JsonProperty("deviceId")
-	private String deviceId;
-
-	@NotNull
 	@JsonProperty("serialNumber")
 	private String serialNumber;
 
-	@NotNull
-	@JsonProperty("region")
-	private String region;
 }

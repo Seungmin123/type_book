@@ -106,36 +106,37 @@ public class UserController {
 
 	@Operation(summary = "체크 태그 API", description = "키노 서버를 통한 체크 태그 API")
 	@PostMapping("/checkTag")
-	public CommonResp<CheckTagResp> connect(@Valid @RequestBody CheckTagReq checkTagReq, HttpServletRequest httpServletRequest) throws Exception {
+	public CommonResp<CheckTagResp> checkTag(@Valid @RequestBody CheckTagReq checkTagReq, HttpServletRequest httpServletRequest) throws Exception {
 		// Token DeviceID / Request DeviceID 검사
 		/*String validateToken = jwtTokenProvider.resolveToken(httpServletRequest);
 		if(!jwtTokenProvider.getDeviceIdByToken(validateToken).equals(checkTagReq.getDeviceId()))
 			throw new CommonException(ExceptionCode.INVALID_JWT);*/
+		String jwt = jwtTokenProvider.resolveToken(httpServletRequest);
+		String deviceId = jwtTokenProvider.getDeviceIdByToken(jwt);
+		Page page = userService.getPageBySerialNumber(checkTagReq.getSerialNumber());
 
 		String requestSerialNumber = (checkTagReq.getSerialNumber().length() > 8) ? checkTagReq.getSerialNumber().substring(0, 8) : checkTagReq.getSerialNumber();
 		String paramSerialNumber = (checkTagReq.getSerialNumber().length() < 10) ? checkTagReq.getSerialNumber() + commonUtils.makeRandomHexString() : checkTagReq.getSerialNumber();
 
 		KihnoKitCheckReq kihnoKitCheckReq = KihnoKitCheckReq.builder()
-			.deviceId(checkTagReq.getDeviceId())
+			.deviceId(deviceId)
 			.kitId(paramSerialNumber)
-			.countryCode(checkTagReq.getRegion())
+			.countryCode(page.getRegion().getCode())
 			.build();
 
-		Kit kit = userService.checkTag(checkTagReq.getDeviceId(), requestSerialNumber, kihnoV2TransferSerivce.kihnoKitCheck(kihnoKitCheckReq).getKihnoKitUid());
+		userService.checkTag(deviceId, requestSerialNumber, kihnoV2TransferSerivce.kihnoKitCheck(kihnoKitCheckReq).getKihnoKitUid());
 
 		Set<String> roles = jwtTokenProvider.getRolesByToken(jwtTokenProvider.resolveToken(httpServletRequest));
 		roles.add(UserRole.HALF_LINKER.getKey());
 		// token
-		String token = jwtTokenProvider.createAccessToken(checkTagReq.getDeviceId(), checkTagReq.getSerialNumber(), roles);
+		String token = jwtTokenProvider.createAccessToken(deviceId, checkTagReq.getSerialNumber(), roles);
 		userService.insertTokenLog(
 			TokenLog.builder()
 				.token(token)
-				.deviceId(checkTagReq.getDeviceId())
+				.deviceId(deviceId)
 				.serialNumber(requestSerialNumber)
 				.tokenType(TokenType.CHECK_TAG)
 				.build());
-
-		Page page = pageService.findPageById(kit.getPageUid());
 
 		CheckTagResp checkTagResp = new CheckTagResp(page, token);
 		return new CommonResp<>(checkTagResp);
