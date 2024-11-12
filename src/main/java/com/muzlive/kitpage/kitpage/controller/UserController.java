@@ -110,7 +110,8 @@ public class UserController {
 		String requestSerialNumber = (checkTagReq.getSerialNumber().length() > 8) ? checkTagReq.getSerialNumber().substring(0, 8) : checkTagReq.getSerialNumber();
 		String paramSerialNumber = (checkTagReq.getSerialNumber().length() < 10) ? checkTagReq.getSerialNumber() + commonUtils.makeRandomHexString() : checkTagReq.getSerialNumber();
 
-		String deviceId = jwtTokenProvider.getDeviceIdByToken(jwtTokenProvider.resolveToken(httpServletRequest));
+		String jwt = jwtTokenProvider.resolveToken(httpServletRequest);
+		String deviceId = jwtTokenProvider.getDeviceIdByToken(jwt);
 		Page page = userService.getPageBySerialNumber(requestSerialNumber);
 
 		KihnoKitCheckReq kihnoKitCheckReq = KihnoKitCheckReq.builder()
@@ -121,7 +122,7 @@ public class UserController {
 
 		userService.checkTag(deviceId, requestSerialNumber, kihnoV2TransferSerivce.kihnoKitCheck(kihnoKitCheckReq).getKihnoKitUid());
 
-		Set<String> roles = jwtTokenProvider.getRolesByToken(jwtTokenProvider.resolveToken(httpServletRequest));
+		Set<String> roles = jwtTokenProvider.getRolesByToken(jwt);
 		roles.add(UserRole.HALF_LINKER.getKey());
 		// token
 		String token = jwtTokenProvider.createAccessToken(deviceId, requestSerialNumber, roles);
