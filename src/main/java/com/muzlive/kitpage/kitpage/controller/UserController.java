@@ -107,11 +107,11 @@ public class UserController {
 	@Operation(summary = "체크 태그 API", description = "키노 서버를 통한 체크 태그 API")
 	@PostMapping("/checkTag")
 	public CommonResp<CheckTagResp> checkTag(@Valid @RequestBody CheckTagReq checkTagReq, HttpServletRequest httpServletRequest) throws Exception {
-		String deviceId = jwtTokenProvider.getDeviceIdByToken(jwtTokenProvider.resolveToken(httpServletRequest));
-		Page page = userService.getPageBySerialNumber(checkTagReq.getSerialNumber());
-
 		String requestSerialNumber = (checkTagReq.getSerialNumber().length() > 8) ? checkTagReq.getSerialNumber().substring(0, 8) : checkTagReq.getSerialNumber();
 		String paramSerialNumber = (checkTagReq.getSerialNumber().length() < 10) ? checkTagReq.getSerialNumber() + commonUtils.makeRandomHexString() : checkTagReq.getSerialNumber();
+
+		String deviceId = jwtTokenProvider.getDeviceIdByToken(jwtTokenProvider.resolveToken(httpServletRequest));
+		Page page = userService.getPageBySerialNumber(requestSerialNumber);
 
 		KihnoKitCheckReq kihnoKitCheckReq = KihnoKitCheckReq.builder()
 			.deviceId(deviceId)
@@ -124,7 +124,7 @@ public class UserController {
 		Set<String> roles = jwtTokenProvider.getRolesByToken(jwtTokenProvider.resolveToken(httpServletRequest));
 		roles.add(UserRole.HALF_LINKER.getKey());
 		// token
-		String token = jwtTokenProvider.createAccessToken(deviceId, checkTagReq.getSerialNumber(), roles);
+		String token = jwtTokenProvider.createAccessToken(deviceId, requestSerialNumber, roles);
 		userService.insertTokenLog(
 			TokenLog.builder()
 				.token(token)
