@@ -25,8 +25,6 @@ public class ComicBookContentResp {
 
 	private List<ComicBookResp> comicBookResps;
 
-	private ComicBookResp taggedComicBook;
-
 	public ComicBookContentResp(Content content) {
 		this.contentId = content.getContentId();
 		this.contentImageUid = content.getCoverImageUid();

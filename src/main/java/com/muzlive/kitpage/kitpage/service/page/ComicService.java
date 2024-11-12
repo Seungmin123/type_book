@@ -145,24 +145,16 @@ public class ComicService {
 		}
 	}
 
-	public ComicBookContentResp getComicBookContent(String deviceId, String contentId, Long pageUid) throws Exception {
-		Page page = pageService.findPageById(pageUid);
-		Content content = page.getContent();
-		ComicBookContentResp comicBookContentResp = new ComicBookContentResp(content);
-
-		List<Page> pages = pageRepository.findAllWithChild(page.getContentId(), page.getRegion()).orElse(new ArrayList<>());
+	public ComicBookContentResp getComicBookContent(String deviceId, String contentId, Region region) throws Exception {
+		List<Page> pages = pageRepository.findAllWithChild(contentId, region).orElse(new ArrayList<>());
+		ComicBookContentResp comicBookContentResp = new ComicBookContentResp(pages.get(0).getContent());
 
 		// Kit Status, 태그한 키트|
-		List<Tuple> tuples = userService.getInstallLogs(deviceId, contentId, page.getRegion());
+		List<Tuple> tuples = userService.getInstallLogs(deviceId, contentId, region);
 		List<ComicBookResp> comicBookResps = new ArrayList<>();
 		for (Page pageItem : pages) {
 			ComicBookResp comicBookResp = new ComicBookResp(pageItem);
 			comicBookResp.setKitStatus(this.getInstallStatus(pageItem.getPageUid(), tuples));
-
-			if(pageItem.getPageUid().equals(pageUid)) {
-				comicBookContentResp.setTaggedComicBook(comicBookResp);
-			}
-
 			comicBookResps.add(comicBookResp);
 
 			// 총 용량, Volume 수정하면 좋을 것 같음
@@ -185,12 +177,10 @@ public class ComicService {
 		return comicBookContentResp;
 	}
 
-	public List<ComicBookDetailResp> getRelatedComicDetailBookList(String deviceId, String contentId, Long pageUid) throws Exception {
+	public List<ComicBookDetailResp> getRelatedComicDetailBookList(String deviceId, String contentId, Region region) throws Exception {
 		List<ComicBookDetailResp> comicBookDetailResps = new ArrayList<>();
-		Page page = pageService.findPageById(pageUid);
-
-		List<Page> pages = pageService.findByContentId(contentId, page.getRegion());
-		List<Tuple> tuples = userService.getInstallLogs(deviceId, contentId, page.getRegion());
+		List<Page> pages = pageService.findByContentId(contentId, region);
+		List<Tuple> tuples = userService.getInstallLogs(deviceId, contentId, region);
 
 		for (Page pageItem : pages) {
 			ComicBookDetailResp comicBookDetailResp = new ComicBookDetailResp(pageItem);

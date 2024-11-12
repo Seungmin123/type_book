@@ -14,11 +14,7 @@ public class ComicBookContentReq {
 	private String contentId;
 
 	@NotNull
-	@JsonProperty("deviceId")
-	private String deviceId;
-
-	@NotNull
-	@JsonProperty("pageUid")
-	private Long pageUid;
+	@JsonProperty("region")
+	private String region;
 
 }

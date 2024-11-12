@@ -14,6 +14,7 @@ import com.muzlive.kitpage.kitpage.domain.user.KitLog;
 import com.muzlive.kitpage.kitpage.service.page.ComicService;
 import com.muzlive.kitpage.kitpage.service.page.PageService;
 import com.muzlive.kitpage.kitpage.utils.CommonUtils;
+import com.muzlive.kitpage.kitpage.utils.enums.Region;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.ArrayList;
@@ -49,15 +50,21 @@ public class ComicController {
 	// N+1
 	@Operation(summary = "ComicBook 리스트 조회")
 	@GetMapping("/list")
-	public CommonResp<ComicBookContentResp> getComicBookListByContentId(@Valid @ModelAttribute ComicBookContentReq comicBookContentReq) throws Exception {
-		return new CommonResp<>(comicService.getComicBookContent(comicBookContentReq.getDeviceId(), comicBookContentReq.getContentId(), comicBookContentReq.getPageUid()));
+	public CommonResp<ComicBookContentResp> getComicBookListByContentId(@Valid @ModelAttribute ComicBookContentReq comicBookContentReq, HttpServletRequest httpServletRequest) throws Exception {
+		return new CommonResp<>(comicService.getComicBookContent(
+			jwtTokenProvider.getDeviceIdByToken(jwtTokenProvider.resolveToken(httpServletRequest)),
+			comicBookContentReq.getContentId(),
+			Region.getRegionByName(comicBookContentReq.getRegion())));
 	}
 
 	// N+1
 	@Operation(summary = "ComicBook 컨텐츠 상세 정보 리스트 조회")
 	@GetMapping("/detail/list")
-	public CommonResp<List<ComicBookDetailResp>> getComicBookContents(@Valid @ModelAttribute ComicBookContentReq comicBookContentReq) throws Exception {
-		return new CommonResp<>(comicService.getRelatedComicDetailBookList(comicBookContentReq.getDeviceId(), comicBookContentReq.getContentId(), comicBookContentReq.getPageUid()));
+	public CommonResp<List<ComicBookDetailResp>> getComicBookContents(@Valid @ModelAttribute ComicBookContentReq comicBookContentReq, HttpServletRequest httpServletRequest) throws Exception {
+		return new CommonResp<>(comicService.getRelatedComicDetailBookList(
+			jwtTokenProvider.getDeviceIdByToken(jwtTokenProvider.resolveToken(httpServletRequest)),
+			comicBookContentReq.getContentId(),
+			Region.getRegionByName(comicBookContentReq.getRegion())));
 	}
 
 	@Operation(summary = "ComicBook 컨텐츠 상세 정보 조회")
