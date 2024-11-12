@@ -1,6 +1,7 @@
 package com.muzlive.kitpage.kitpage.domain.user.dto.resp;
 
 import com.muzlive.kitpage.kitpage.domain.page.Page;
+import com.muzlive.kitpage.kitpage.utils.enums.Region;
 import java.util.Objects;
 import lombok.Getter;
 import lombok.Setter;
@@ -21,13 +22,16 @@ public class CheckTagResp {
 
 	private String writer;
 
+	private Region region;
+
 	public CheckTagResp(Page page, String token) {
 		this.token = token;
 		this.pageUid = page.getPageUid();
 		this.contentId = page.getContentId();
 		this.coverImageUid = page.getCoverImageUid();
-		this.title = page.getSubTitle();
+		this.title = page.getTitle();
 		this.writer = (Objects.nonNull(page.getComicBooks().get(0))) ? page.getComicBooks().get(0).getWriter() : "";
+		this.region = page.getRegion();
 	}
 
 }
