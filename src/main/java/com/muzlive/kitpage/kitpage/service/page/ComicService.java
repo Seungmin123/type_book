@@ -147,6 +147,7 @@ public class ComicService {
 
 	public ComicBookContentResp getComicBookContent(String deviceId, String contentId, Region region) throws Exception {
 		List<Page> pages = pageRepository.findAllWithChild(contentId, region).orElse(new ArrayList<>());
+		if(CollectionUtils.isEmpty(pages)) throw new CommonException(ExceptionCode.CANNOT_FIND_MATCHED_ITEM);
 		ComicBookContentResp comicBookContentResp = new ComicBookContentResp(pages.get(0).getContent());
 
 		// Kit Status, 태그한 키트|
