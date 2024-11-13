@@ -101,6 +101,11 @@ dependencies {
 
 	implementation group: 'commons-fileupload', name: 'commons-fileupload', version: '1.4'
 
+	// Image Convert
+	implementation 'org.sejda.imageio:webp-imageio:0.1.6'
+	//implementation group: 'org.imgscalr', name: 'imgscalr-lib', version: '4.2'
+
+
 	// test
 	runtimeOnly 'com.h2database:h2'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
