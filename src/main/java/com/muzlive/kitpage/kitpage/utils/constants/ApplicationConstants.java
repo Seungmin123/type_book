@@ -18,6 +18,8 @@ public class ApplicationConstants {
 
 	public static final String IMAGE = "image";
 
+	public static final String CONVERT = "convert";
+
 	public static final String CONTENT = "content";
 
 	public static final String MUSIC = "music";
