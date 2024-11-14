@@ -21,4 +21,11 @@ public interface PageRepository extends JpaRepository<Page, Long> {
 		+ "FROM Page p "
 		+ "WHERE p.contentId = :contentId AND p.region = :region")
 	Optional<List<Page>> findAllWithChild(String contentId, Region region);
+
+	@EntityGraph(attributePaths = {"comicBooks"})
+	@Query("SELECT DISTINCT p "
+		+ "FROM Page p "
+		+ "INNER JOIN Kit k ON k.pageUid = p.pageUid "
+		+ "WHERE k.serialNumber = :serialNumber")
+	Optional<Page> findWithChildBySerialNumber(String serialNumber);
 }

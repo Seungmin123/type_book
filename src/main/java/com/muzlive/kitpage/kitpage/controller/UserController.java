@@ -50,6 +50,7 @@ import java.util.Set;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -113,7 +114,8 @@ public class UserController {
 
 		String jwt = jwtTokenProvider.resolveToken(httpServletRequest);
 		String deviceId = jwtTokenProvider.getDeviceIdByToken(jwt);
-		Page page = userService.getPageBySerialNumber(requestSerialNumber);
+		// TODO Contents 확장 시 여기부터 분기 처리
+		Page page = comicService.findPageWithComicBooksBySerialNumber(requestSerialNumber);
 
 		KihnoKitCheckReq kihnoKitCheckReq = KihnoKitCheckReq.builder()
 			.deviceId(deviceId)
@@ -136,6 +138,10 @@ public class UserController {
 				.build());
 
 		CheckTagResp checkTagResp = new CheckTagResp(page, token);
+
+		long totalSize = comicService.getImageSizeByPageUid(12L);
+		checkTagResp.setTotalSize(totalSize);
+
 		return new CommonResp<>(checkTagResp);
 	}
 

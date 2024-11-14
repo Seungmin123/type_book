@@ -24,6 +24,8 @@ public class CheckTagResp {
 
 	private Region region;
 
+	private Long totalSize;
+
 	public CheckTagResp(Page page, String token) {
 		this.token = token;
 		this.pageUid = page.getPageUid();

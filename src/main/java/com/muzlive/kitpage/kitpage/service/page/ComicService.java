@@ -1,5 +1,9 @@
 package com.muzlive.kitpage.kitpage.service.page;
 
+import static com.muzlive.kitpage.kitpage.domain.page.QPage.page;
+import static com.muzlive.kitpage.kitpage.domain.page.comicbook.QComicBook.comicBook;
+import static com.muzlive.kitpage.kitpage.domain.page.comicbook.QComicBookDetail.comicBookDetail;
+import static com.muzlive.kitpage.kitpage.domain.user.QImage.image;
 import static com.muzlive.kitpage.kitpage.domain.user.QInstallLog.installLog;
 import static com.muzlive.kitpage.kitpage.domain.user.QKit.kit;
 
@@ -42,6 +46,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import javax.imageio.IIOImage;
@@ -234,19 +239,54 @@ public class ComicService {
 			if(!CollectionUtils.isEmpty(comicBooks)) {
 				comicBookContentResp.setTotalVolume(comicBookContentResp.getTotalVolume() + comicBooks.size());
 
-				for(ComicBook comicBook : comicBooks) {
-					List<ComicBookDetail> comicBookDetails = comicBook.getComicBookDetails();
-					if(!CollectionUtils.isEmpty(comicBookDetails)) {
-						Long imageSize = comicBookDetails.stream().mapToLong(v -> v.getImage().getImageSize()).sum();
-						comicBookContentResp.setTotalSize(comicBookContentResp.getTotalSize() + imageSize);
-					}
-				}
+				long totalSize = comicBooks.stream()
+					.mapToLong(this::getComicBookImageSize)
+					.sum();
+				comicBookContentResp.setTotalSize(totalSize);
 			}
 
 		}
 		comicBookContentResp.setComicBookResps(comicBookResps);
 
 		return comicBookContentResp;
+	}
+
+	public Page findPageWithComicBooksBySerialNumber(String serialNumber) throws Exception {
+		return pageRepository.findWithChildBySerialNumber(serialNumber).orElseThrow(() -> new CommonException(ExceptionCode.CANNOT_FIND_MATCHED_ITEM));
+	}
+
+	public Long getImageSizeByPageUid(Long pageUid) throws Exception {
+		return Optional.ofNullable(
+			queryFactory
+				.select(image.imageSize.sum())
+				.from(image)
+				.innerJoin(comicBookDetail).on(comicBookDetail.imageUid.eq(image.imageUid))
+				.innerJoin(comicBook).on(comicBook.comicBookUid.eq(comicBookDetail.comicBookUid))
+				.innerJoin(page).on(page.pageUid.eq(comicBook.pageUid))
+				.where(page.pageUid.eq(pageUid))
+				.fetchFirst()
+		).orElse(0L);
+	}
+
+	public Long getImageSizeByComicBookUid(Long comicBookUid) throws Exception {
+		return Optional.ofNullable(
+			queryFactory
+				.select(image.imageSize.sum())
+				.from(image)
+				.innerJoin(comicBookDetail).on(comicBookDetail.imageUid.eq(image.imageUid))
+				.innerJoin(comicBook).on(comicBook.comicBookUid.eq(comicBookDetail.comicBookUid))
+				.where(comicBook.comicBookUid.eq(comicBookUid))
+			.fetchFirst()
+		).orElse(0L);
+	}
+
+	public Long getComicBookImageSize(ComicBook comicBook) {
+		List<ComicBookDetail> comicBookDetails = comicBook.getComicBookDetails();
+		if(!CollectionUtils.isEmpty(comicBookDetails)) {
+			return comicBookDetails.stream().mapToLong(v -> v.getImage().getImageSize()).sum();
+		}
+
+		return 0L;
 	}
 
 	public List<ComicBookDetailResp> getRelatedComicDetailBookList(String deviceId, String contentId, Region region) throws Exception {
