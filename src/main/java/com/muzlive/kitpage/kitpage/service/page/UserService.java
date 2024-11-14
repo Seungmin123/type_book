@@ -89,11 +89,9 @@ public class UserService implements UserDetailsService {
 	}
 
 	@Transactional
-	public Kit checkTag(String deviceId, String serialNumber, Long kihnoKitUid) throws Exception {
+	public Kit checkTag(String serialNumber, Long kihnoKitUid) throws Exception {
 		Kit kit = kitRepository.findBySerialNumber(serialNumber).orElseThrow(() -> new CommonException(ExceptionCode.CANNOT_FIND_MATCHED_ITEM));
-		kit.setDeviceId(deviceId);
 		kit.setKihnoKitUid(kihnoKitUid);
-
 		return this.upsertKit(kit);
 	}
 

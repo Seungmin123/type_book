@@ -120,7 +120,7 @@ public class UserController {
 			.countryCode(page.getRegion().getCode())
 			.build();
 
-		userService.checkTag(deviceId, requestSerialNumber, kihnoV2TransferSerivce.kihnoKitCheck(kihnoKitCheckReq).getKihnoKitUid());
+		userService.checkTag(requestSerialNumber, kihnoV2TransferSerivce.kihnoKitCheck(kihnoKitCheckReq).getKihnoKitUid());
 
 		Set<String> roles = jwtTokenProvider.getRolesByToken(jwt);
 		roles.add(UserRole.HALF_LINKER.getKey());
