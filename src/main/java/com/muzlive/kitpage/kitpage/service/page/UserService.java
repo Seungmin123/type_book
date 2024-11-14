@@ -29,7 +29,9 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 import java.sql.Array;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.parameters.P;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -105,6 +107,12 @@ public class UserService implements UserDetailsService {
 		kitLogRepository.save(KitLog.of(kit));
 
 		return kit;
+	}
+
+	@Transactional
+	public void clearDeviceIdHistory(String deviceId) throws Exception {
+		List<Kit> kits = kitRepository.findByDeviceId(deviceId).orElseThrow(() -> new CommonException(ExceptionCode.CANNOT_FIND_MATCHED_ITEM));
+		kits.forEach(k -> k.setDeviceId(""));
 	}
 
 	public List<Tuple> getInstallLogs(String deviceId, String contentId, Region region) throws Exception {

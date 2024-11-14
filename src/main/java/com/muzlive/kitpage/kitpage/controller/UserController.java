@@ -53,6 +53,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -145,6 +146,14 @@ public class UserController {
 		Kit kit = userService.findBySerialNumber(jwtTokenProvider.getSerialNumberByToken(jwt));
 		kit.setDeviceId(jwtTokenProvider.getDeviceIdByToken(jwt));
 		userService.upsertKit(kit);
+		return new CommonResp<>();
+	}
+
+	@Operation(summary = "키트 태그 기록 초기화 API")
+	@PutMapping("/clear")
+	public CommonResp<Void> clearTagHistory(HttpServletRequest httpServletRequest) throws Exception {
+		String jwt = jwtTokenProvider.resolveToken(httpServletRequest);
+		userService.clearDeviceIdHistory(jwtTokenProvider.getDeviceIdByToken(jwt));
 		return new CommonResp<>();
 	}
 
