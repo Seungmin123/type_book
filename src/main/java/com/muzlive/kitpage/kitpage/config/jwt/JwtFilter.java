@@ -1,11 +1,12 @@
 package com.muzlive.kitpage.kitpage.config.jwt;
 
-import com.muzlive.kitpage.kitpage.config.exception.CommonException;
-import com.muzlive.kitpage.kitpage.config.exception.ExceptionCode;
 import com.muzlive.kitpage.kitpage.domain.user.repository.KitRepository;
 import com.muzlive.kitpage.kitpage.domain.user.repository.MemberRepository;
+import com.muzlive.kitpage.kitpage.domain.user.repository.TokenLogRepository;
+import com.muzlive.kitpage.kitpage.utils.enums.TokenType;
 import com.muzlive.kitpage.kitpage.utils.enums.UserRole;
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.Set;
 import javax.servlet.FilterChain;
@@ -30,6 +31,8 @@ public class JwtFilter extends OncePerRequestFilter {
 	private final MemberRepository memberRepository;
 
 	private final KitRepository kitRepository;
+
+	private final TokenLogRepository tokenLogRepository;
 
 	@Override
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
@@ -58,21 +61,21 @@ public class JwtFilter extends OncePerRequestFilter {
 		SimpleGrantedAuthority role = null;
 		if(roles.contains(UserRole.ENGINEER.getKey())) {
 			role = new SimpleGrantedAuthority(UserRole.ENGINEER.getKey());
-		} else if(roles.contains(UserRole.LINKER.getKey())) {
-			role = memberRepository.findByDeviceIdAndEmail(deviceId, tokenProvider.getEmailByToken(jwt))
-				.map(member -> new SimpleGrantedAuthority(UserRole.LINKER.getKey()))
-				.orElse(null);
-		} else if(roles.contains(UserRole.HALF_LINKER.getKey())) {
-			role = kitRepository.findByDeviceIdAndSerialNumber(deviceId, tokenProvider.getSerialNumberByToken(jwt))
-				.map(kit -> new SimpleGrantedAuthority(UserRole.HALF_LINKER.getKey()))
-				.orElse(null);
-		} else if(roles.contains(UserRole.GUEST.getKey())){
-			role = memberRepository.findByDeviceId(deviceId)
-				.map(member -> new SimpleGrantedAuthority(UserRole.GUEST.getKey()))
-				.orElse(null);
+		} else if(roles.contains(UserRole.LINKER.getKey()) && (this.validUserToken(deviceId, TokenType.LOGIN) || this.validUserToken(deviceId, TokenType.LOGIN))) {
+			role = new SimpleGrantedAuthority(UserRole.LINKER.getKey());
+		} else if(roles.contains(UserRole.HALF_LINKER.getKey()) && this.validUserToken(deviceId, TokenType.CHECK_TAG)) {
+			role = new SimpleGrantedAuthority(UserRole.HALF_LINKER.getKey());
+		} else if(roles.contains(UserRole.GUEST.getKey()) && this.validUserToken(deviceId, TokenType.ACCESS)){
+			role = new SimpleGrantedAuthority(UserRole.GUEST.getKey());
 		}
 
 		return role;
+	}
+
+	private boolean validUserToken(String deviceId, TokenType type) {
+		return tokenLogRepository.findFirstByDeviceIdAndTypeOrderByCreatedAtDesc(deviceId, type)
+			.map(tokenLog -> tokenLog.getCreatedAt().plusDays(1).isAfter(LocalDateTime.now()))
+			.orElse(false);
 	}
 
 }
