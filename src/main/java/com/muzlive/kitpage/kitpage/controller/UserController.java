@@ -139,7 +139,7 @@ public class UserController {
 
 		CheckTagResp checkTagResp = new CheckTagResp(page, token);
 
-		long totalSize = comicService.getImageSizeByPageUid(12L);
+		long totalSize = comicService.getImageSizeByPageUid(page.getPageUid());
 		checkTagResp.setTotalSize(totalSize);
 
 		return new CommonResp<>(checkTagResp);
