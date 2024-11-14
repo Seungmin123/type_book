@@ -29,7 +29,9 @@ import com.muzlive.kitpage.kitpage.domain.page.dto.req.UploadComicBookDetailReq;
 import com.muzlive.kitpage.kitpage.domain.page.dto.req.UploadComicBookReq;
 import com.muzlive.kitpage.kitpage.domain.page.repository.PageRepository;
 import com.muzlive.kitpage.kitpage.domain.user.Image;
+import com.muzlive.kitpage.kitpage.domain.user.Kit;
 import com.muzlive.kitpage.kitpage.domain.user.repository.ImageRepository;
+import com.muzlive.kitpage.kitpage.domain.user.repository.KitRepository;
 import com.muzlive.kitpage.kitpage.service.aws.S3Service;
 import com.muzlive.kitpage.kitpage.utils.constants.ApplicationConstants;
 import com.muzlive.kitpage.kitpage.utils.enums.ImageCode;
@@ -75,6 +77,8 @@ public class ComicService {
 	private final UserService userService;
 
 	private final S3Service s3Service;
+
+	private final KitRepository kitRepository;
 
 	private final PageRepository pageRepository;
 
@@ -226,12 +230,10 @@ public class ComicService {
 		if(CollectionUtils.isEmpty(pages)) throw new CommonException(ExceptionCode.CANNOT_FIND_MATCHED_ITEM);
 		ComicBookContentResp comicBookContentResp = new ComicBookContentResp(pages.get(0).getContent());
 
-		// Kit Status, 태그한 키트|
-		List<Tuple> tuples = userService.getInstallLogs(deviceId, contentId, region);
 		List<ComicBookResp> comicBookResps = new ArrayList<>();
 		for (Page pageItem : pages) {
 			ComicBookResp comicBookResp = new ComicBookResp(pageItem);
-			comicBookResp.setKitStatus(this.getInstallStatus(pageItem.getPageUid(), tuples));
+			comicBookResp.setKitStatus(this.getInstallStatus(pageItem.getPageUid(), deviceId));
 
 			// 총 용량, Volume 수정하면 좋을 것 같음
 			List<ComicBook> comicBooks = comicBookRepository.findAllByPageUid(pageItem.getPageUid()).orElse(new ArrayList<>());
@@ -293,7 +295,6 @@ public class ComicService {
 	public List<ComicBookDetailResp> getRelatedComicDetailBookList(String deviceId, String contentId, Region region) throws Exception {
 		List<ComicBookDetailResp> comicBookDetailResps = new ArrayList<>();
 		List<Page> pages = pageService.findByContentId(contentId, region);
-		List<Tuple> tuples = userService.getInstallLogs(deviceId, contentId, region);
 
 		for (Page pageItem : pages) {
 			ComicBookDetailResp comicBookDetailResp = new ComicBookDetailResp(pageItem);
@@ -301,7 +302,7 @@ public class ComicService {
 			List<VideoResp> videoResps = new ArrayList<>();
 			List<ComicBookEpisodeResp> comicBookEpisodeResps = new ArrayList<>();
 
-			if (this.getInstallStatus(pageItem.getPageUid(), tuples).equals(KitStatus.AVAILABLE)) {
+			if (this.getInstallStatus(pageItem.getPageUid(), deviceId).equals(KitStatus.AVAILABLE)) {
 				videoResps = this.findVideoByPageUid(pageItem.getPageUid()).stream().map(VideoResp::new).collect(Collectors.toList());
 				comicBookEpisodeResps = this.getEpisodeResps(pageItem.getPageUid());
 			}
@@ -363,5 +364,16 @@ public class ComicService {
 		return KitStatus.NEVER_USE;
 	}
 
+	public KitStatus getInstallStatus(Long pageUid, String deviceId) throws Exception {
+		return kitRepository.findByPageUidAndDeviceId(pageUid, deviceId)
+			.map(k -> {
+				if(k.getModifiedAt().plusDays(1).isBefore(LocalDateTime.now())) {
+					return KitStatus.EXPIRED;
+				} else {
+					return KitStatus.AVAILABLE;
+				}
+			})
+			.orElse(KitStatus.NEVER_USE);
+	}
 
 }

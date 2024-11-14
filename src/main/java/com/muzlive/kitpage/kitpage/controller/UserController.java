@@ -279,9 +279,7 @@ public class UserController {
 		kitStatusResp.setCreatedAt(page.getCreatedAt());
 
 		kitStatusResp.setIsInstalled(
-				comicService.getInstallStatus(
-					page.getPageUid(),
-					userService.getInstallLogs(kitStatusReq.getDeviceId(), page.getContentId(), page.getRegion()))
+			comicService.getInstallStatus(page.getPageUid(), kitStatusReq.getDeviceId())
 				.equals(KitStatus.AVAILABLE));
 
 		return new CommonResp<>(kitStatusResp);

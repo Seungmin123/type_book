@@ -14,4 +14,6 @@ public interface KitRepository extends JpaRepository<Kit, Long> {
 	Optional<Kit> findByDeviceIdAndSerialNumber(String deviceId, String serialNumber);
 
 	Optional<List<Kit>> findByDeviceId(String deviceId);
+
+	Optional<Kit> findByPageUidAndDeviceId(Long pageUid, String deviceId);
 }
