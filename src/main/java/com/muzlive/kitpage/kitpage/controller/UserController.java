@@ -138,6 +138,16 @@ public class UserController {
 		return new CommonResp<>(checkTagResp);
 	}
 
+	@Operation(summary = "인스톨 완료 API")
+	@PostMapping("/install/complete")
+	public CommonResp<Void> installComplete(HttpServletRequest httpServletRequest) throws Exception {
+		String jwt = jwtTokenProvider.resolveToken(httpServletRequest);
+		Kit kit = userService.findBySerialNumber(jwtTokenProvider.getSerialNumberByToken(jwt));
+		kit.setDeviceId(jwtTokenProvider.getDeviceIdByToken(jwt));
+		userService.upsertKit(kit);
+		return new CommonResp<>();
+	}
+
 	@Operation(summary = "회원가입 API")
 	@PostMapping("/join")
 	public CommonResp<String> userJoin(
@@ -236,14 +246,6 @@ public class UserController {
 	@GetMapping("/version")
 	public CommonResp<VersionInfoResp> getVersion(@ModelAttribute @Valid VersionInfoReq versionInfoReq) throws Exception {
 		return new CommonResp<>(pageService.getVersionInfo(versionInfoReq));
-	}
-
-	@Operation(summary = "인스톨 완료 API")
-	@PostMapping("/install/complete")
-	public CommonResp<Void> installComplete(@Valid @RequestBody InstallNoticeReq installNoticeReq) throws Exception {
-		KitLog kitLog = userService.findLatestKitLog(installNoticeReq.getDeviceId(), installNoticeReq.getSerialNumber().substring(0, 8));
-		userService.insertInstallLog(new InstallLog(kitLog));
-		return new CommonResp<>();
 	}
 
 	@Operation(summary = "키트 점검 API")

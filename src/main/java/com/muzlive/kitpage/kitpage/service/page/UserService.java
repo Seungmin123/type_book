@@ -84,6 +84,10 @@ public class UserService implements UserDetailsService {
 		return member;
 	}
 
+	public Kit findBySerialNumber(String serialNumber) throws Exception {
+		return kitRepository.findBySerialNumber(serialNumber).orElseThrow(() -> new CommonException(ExceptionCode.CANNOT_FIND_MATCHED_ITEM));
+	}
+
 	public KitLog findLatestKitLog(String deviceId, String serialNumber) throws Exception {
 		return kitLogRepository.findFirstByDeviceIdAndSerialNumberOrderByKitLogUidDesc(deviceId, serialNumber).orElseThrow(() -> new CommonException(ExceptionCode.CANNOT_FIND_MATCHED_ITEM));
 	}
