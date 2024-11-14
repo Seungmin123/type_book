@@ -232,7 +232,6 @@ public class ComicService {
 		for (Page pageItem : pages) {
 			ComicBookResp comicBookResp = new ComicBookResp(pageItem);
 			comicBookResp.setKitStatus(this.getInstallStatus(pageItem.getPageUid(), tuples));
-			comicBookResps.add(comicBookResp);
 
 			// 총 용량, Volume 수정하면 좋을 것 같음
 			List<ComicBook> comicBooks = comicBookRepository.findAllByPageUid(pageItem.getPageUid()).orElse(new ArrayList<>());
@@ -242,8 +241,10 @@ public class ComicService {
 				long totalSize = comicBooks.stream()
 					.mapToLong(this::getComicBookImageSize)
 					.sum();
-				comicBookContentResp.setTotalSize(totalSize);
+				comicBookResp.setTotalSize(totalSize);
 			}
+
+			comicBookResps.add(comicBookResp);
 
 		}
 		comicBookContentResp.setComicBookResps(comicBookResps);
