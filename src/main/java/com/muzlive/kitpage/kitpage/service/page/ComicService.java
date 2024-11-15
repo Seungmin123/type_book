@@ -365,7 +365,7 @@ public class ComicService {
 	}
 
 	public KitStatus getInstallStatus(Long pageUid, String deviceId) throws Exception {
-		return kitRepository.findByPageUidAndDeviceId(pageUid, deviceId)
+		return kitRepository.findFirstByPageUidAndDeviceIdOrderByCreatedAtDesc(pageUid, deviceId)
 			.map(k -> {
 				if(k.getModifiedAt().plusDays(1).isBefore(LocalDateTime.now())) {
 					return KitStatus.EXPIRED;
