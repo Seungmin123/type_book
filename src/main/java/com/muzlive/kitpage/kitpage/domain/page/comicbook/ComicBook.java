@@ -74,7 +74,7 @@ public class ComicBook extends BaseTimeEntity {
 	private Page page;
 
 	@OneToMany(mappedBy = "comicBook")
-	@OrderBy("comicBookDetailUid ASC")
+	@OrderBy("page ASC")
 	private List<ComicBookDetail> comicBookDetails;
 
 	@PrePersist
