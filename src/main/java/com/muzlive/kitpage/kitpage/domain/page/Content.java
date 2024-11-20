@@ -15,8 +15,10 @@ import javax.persistence.Id;
 import javax.persistence.OneToMany;
 import javax.persistence.OrderBy;
 import javax.persistence.Table;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 
@@ -48,6 +50,7 @@ public class Content extends BaseTimeEntity implements Serializable {
 	@Column(name = "info_text")
 	private String infoText;
 
+	@Setter
 	@Column(name = "cover_image_uid")
 	private Long coverImageUid;
 
@@ -59,5 +62,14 @@ public class Content extends BaseTimeEntity implements Serializable {
 	@OrderBy("pageUid ASC")
 	private List<Page> pages;
 
-
+	@Builder
+	public Content(String contentId, PageContentType contentType, String title,
+		String infoText, Long coverImageUid, Region region) {
+		this.contentId = contentId;
+		this.contentType = contentType;
+		this.title = title;
+		this.infoText = infoText;
+		this.coverImageUid = coverImageUid;
+		this.region = region;
+	}
 }

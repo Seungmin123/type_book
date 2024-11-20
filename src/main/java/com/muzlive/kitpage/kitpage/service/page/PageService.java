@@ -16,6 +16,7 @@ import com.muzlive.kitpage.kitpage.domain.page.comicbook.Video;
 import com.muzlive.kitpage.kitpage.domain.page.comicbook.repository.ComicBookRepository;
 import com.muzlive.kitpage.kitpage.domain.page.comicbook.repository.MusicRepository;
 import com.muzlive.kitpage.kitpage.domain.page.comicbook.repository.VideoRepository;
+import com.muzlive.kitpage.kitpage.domain.page.dto.req.CreateContentReq;
 import com.muzlive.kitpage.kitpage.domain.page.dto.req.CreatePageReq;
 import com.muzlive.kitpage.kitpage.domain.page.dto.req.UploadMusicReq;
 import com.muzlive.kitpage.kitpage.domain.page.dto.req.UploadVideoReq;
@@ -61,6 +62,8 @@ public class PageService {
 	private final JPAQueryFactory queryFactory;
 
 	private final S3Service s3Service;
+
+	private final FileService fileService;
 
 	private final ContentRepository contentRepository;
 
@@ -133,7 +136,7 @@ public class PageService {
 	}
 
 	@Transactional
-	public void createPage(CreatePageReq createPageReq) throws Exception {
+	public Page createPage(CreatePageReq createPageReq) throws Exception {
 		String contentId = createPageReq.getContentId();
 
 		if(StringUtils.isEmpty(contentId)) {
@@ -154,7 +157,7 @@ public class PageService {
 		image.setSaveFileName(saveFileName);
 		imageRepository.save(image);
 
-		pageRepository.save(
+		return pageRepository.save(
 			Page.builder()
 			.contentId(contentId)
 			.contentType(createPageReq.getContentType())
@@ -164,6 +167,18 @@ public class PageService {
 			.infoText(createPageReq.getInfoText())
 			.company(createPageReq.getCompany())
 			.region(createPageReq.getRegion())
+			.build());
+	}
+
+	@Transactional
+	public void createContent(CreateContentReq createContentReq) throws Exception {
+		contentRepository.save(Content.builder()
+				.contentId(createContentReq.getContentId())
+				.contentType(createContentReq.getContentType())
+				.title(createContentReq.getTitle())
+				.infoText(createContentReq.getInfoText())
+				.coverImageUid(fileService.uploadConvertFile(createContentReq.getContentId(), createContentReq.getImage(), ImageCode.CONTENT_COVER_IMAGE))
+				.region(createContentReq.getRegion())
 			.build());
 	}
 

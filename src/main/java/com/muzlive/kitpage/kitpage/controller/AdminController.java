@@ -4,6 +4,7 @@ import com.muzlive.kitpage.kitpage.config.exception.CommonException;
 import com.muzlive.kitpage.kitpage.config.exception.ExceptionCode;
 import com.muzlive.kitpage.kitpage.domain.common.dto.resp.CommonResp;
 import com.muzlive.kitpage.kitpage.domain.page.comicbook.Video;
+import com.muzlive.kitpage.kitpage.domain.page.dto.req.CreateContentReq;
 import com.muzlive.kitpage.kitpage.domain.page.dto.req.CreatePageReq;
 import com.muzlive.kitpage.kitpage.domain.page.dto.req.UploadComicBookDetailReq;
 import com.muzlive.kitpage.kitpage.domain.page.dto.req.UploadComicBookReq;
@@ -14,20 +15,13 @@ import com.muzlive.kitpage.kitpage.service.page.ComicService;
 import com.muzlive.kitpage.kitpage.service.page.PageService;
 import com.muzlive.kitpage.kitpage.service.transfer.kihno.MuzTransferService;
 import com.muzlive.kitpage.kitpage.utils.CommonUtils;
-import com.muzlive.kitpage.kitpage.utils.constants.ApplicationConstants;
 import com.muzlive.kitpage.kitpage.utils.enums.VideoCode;
-import io.micrometer.core.instrument.util.StringUtils;
-import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
-import javax.imageio.ImageIO;
 import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.apache.commons.io.FilenameUtils;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -52,15 +46,22 @@ public class AdminController {
 	private final CommonUtils commonUtils;
 
 	@PostMapping("/page")
-	CommonResp<Void> createPage(@Valid @ModelAttribute CreatePageReq createPageReq) throws Exception {
-		pageService.createPage(createPageReq);
+	CommonResp<String> createPage(@Valid @ModelAttribute CreatePageReq createPageReq) throws Exception {
+		return new CommonResp<>(pageService.createPage(createPageReq).getContentId());
+	}
+
+	@PostMapping("/content")
+	CommonResp<Void> createContent(@Valid @ModelAttribute CreateContentReq createContentReq) throws Exception {
+		pageService.createContent(createContentReq);
 		return new CommonResp<>();
 	}
 
 	@PostMapping("/comic")
-	CommonResp<Void> uploadComicBook(@Valid @ModelAttribute UploadComicBookReq uploadComicBookReq) throws Exception {
-		comicService.insertComicBook(pageService.findPageById(uploadComicBookReq.getPageUid()).getContentId(), uploadComicBookReq);
-		return new CommonResp<>();
+	CommonResp<Long> uploadComicBook(@Valid @ModelAttribute UploadComicBookReq uploadComicBookReq) throws Exception {
+		return new CommonResp<>(comicService.insertComicBook(
+			pageService.findPageById(uploadComicBookReq.getPageUid()).getContentId(),
+			uploadComicBookReq
+		).getComicBookUid());
 	}
 
 	@PostMapping("/comic/detail")
@@ -113,16 +114,6 @@ public class AdminController {
 			pageService.upsertVideo(video);
 		}
 
-		return new CommonResp<>();
-	}
-
-	@GetMapping("/vv")
-	CommonResp<List<com.google.api.services.youtube.model.Video>> ss() throws Exception {
-		List<String> ff = Arrays.asList("Y4qiKjTRaQQ", "9SI-LZCTsYA", "QvPqLpM5-jY", "-KVVL_djXbU", "MlZH1TdbQ3c", "uHIunVepoNw");;
-		List<com.google.api.services.youtube.model.Video> youtubeResp = youtubeService.getMultipleVideoDetails(ff);
-		String thumbnailUrl = youtubeResp.get(0).getSnippet().getThumbnails().getStandard().getUrl();
-		String duration = commonUtils.convertDurationToString(Duration.parse(youtubeResp.get(0).getContentDetails().getDuration()));
-		String title = youtubeResp.get(0).getSnippet().getTitle();
 		return new CommonResp<>();
 	}
 }
