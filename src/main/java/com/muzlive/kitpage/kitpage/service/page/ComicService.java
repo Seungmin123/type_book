@@ -147,13 +147,18 @@ public class ComicService {
 		String episode = Objects.nonNull(uploadComicBookDetailReq.getEpisode()) ? uploadComicBookDetailReq.getEpisode() : "";
 		int page = this.findComicBookMaxPage(comicBook.getComicBookUid());
 
+		List<ComicBookDetail> comicBookDetails = new ArrayList<>();
 		for(MultipartFile multipartFile : uploadComicBookDetailReq.getImages()) {
-			comicBookDetailRepository.save(ComicBookDetail.builder()
+			comicBookDetails.add(ComicBookDetail.builder()
 				.comicBookUid(comicBook.getComicBookUid())
 				.episode(episode)
 				.page(page++)
 				.imageUid(fileService.uploadConvertFile(comicBook.getPage().getContentId(), multipartFile, ImageCode.COMIC_IMAGE))
 				.build());
+		}
+
+		if(!CollectionUtils.isEmpty(comicBookDetails)) {
+			comicBookDetailRepository.saveAll(comicBookDetails);
 		}
 	}
 
