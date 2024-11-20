@@ -10,5 +10,7 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
 
 	Optional<Member> findByDeviceId(String deviceId);
 
+	Optional<Member> findFirstByDeviceIdOrderByModifiedAt(String deviceId);
+
 	Optional<Member> findByDeviceIdAndEmail(String deviceId, String email);
 }

@@ -75,7 +75,7 @@ public class UserService implements UserDetailsService {
 	}
 
 	public Member findByDeviceId(String deviceId) throws Exception {
-		return memberRepository.findByDeviceId(deviceId).orElse(Member.builder().build());
+		return memberRepository.findFirstByDeviceIdOrderByModifiedAt(deviceId).orElse(Member.builder().build());
 	}
 
 	@Transactional
