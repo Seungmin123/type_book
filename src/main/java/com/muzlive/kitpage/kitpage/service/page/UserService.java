@@ -74,6 +74,7 @@ public class UserService implements UserDetailsService {
 		installLogRepository.save(installLog);
 	}
 
+	@Transactional
 	public Member findByDeviceId(String deviceId) throws Exception {
 		return memberRepository.findByDeviceIdWithLock(deviceId).orElse(Member.builder().build());
 	}
