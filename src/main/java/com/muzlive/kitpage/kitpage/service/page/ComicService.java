@@ -74,7 +74,7 @@ public class ComicService {
 
 	private final PageService pageService;
 
-	private final UserService userService;
+	private final FileService fileService;
 
 	private final S3Service s3Service;
 
@@ -114,7 +114,7 @@ public class ComicService {
 	}
 
 	@Transactional
-	public void insertComicBook(String contentId, UploadComicBookReq uploadComicBookReq) throws Exception {
+	public ComicBook insertComicBook(String contentId, UploadComicBookReq uploadComicBookReq) throws Exception {
 		// S3 Cover Image Upload
 		String saveFileName = UUID.randomUUID() + "." + FilenameUtils.getExtension(uploadComicBookReq.getCoverImage().getOriginalFilename());
 		String coverImagePath = contentId + "/" + ApplicationConstants.IMAGE + "/" + saveFileName;
@@ -126,7 +126,7 @@ public class ComicService {
 		imageRepository.save(image);
 
 		// Page, ComicBook DB Insert
-		comicBookRepository.save(
+		return comicBookRepository.save(
 			ComicBook.builder()
 				.pageUid(uploadComicBookReq.getPageUid())
 				.coverImageUid(image.getImageUid())
@@ -148,82 +148,15 @@ public class ComicService {
 		int page = this.findComicBookMaxPage(comicBook.getComicBookUid());
 
 		for(MultipartFile multipartFile : uploadComicBookDetailReq.getImages()) {
-			// S3 Cover Image Upload
-			String ext = "." + FilenameUtils.getExtension(multipartFile.getOriginalFilename());
-
-			String saveFileName = UUID.randomUUID() + ".webp";
-			String imagePath = comicBook.getPage().getContentId() + "/" + ApplicationConstants.CONVERT + "/" + saveFileName;
-
-			// 원본
-			String originSaveFileName = saveFileName.replace(".webp", ext);
-			String originImagePath = comicBook.getPage().getContentId() + "/" + ApplicationConstants.IMAGE + "/" + originSaveFileName;
-			s3Service.uploadFile(originImagePath, multipartFile);
-
-			// Image DB Insert
-			Image image = Image.of(imagePath, ImageCode.COMIC_IMAGE, multipartFile);
-			image.setSaveFileName(saveFileName);
-
-			// Converting
-			try {
-				byte[] convertFile = this.convertToWebP(multipartFile.getBytes(), 1200, 0.8f);
-				s3Service.uploadFile(imagePath, convertFile);
-				BufferedImage bufferedImage = ImageIO.read(new ByteArrayInputStream(convertFile));
-				image.setWidth(bufferedImage.getWidth());
-				image.setHeight(bufferedImage.getHeight());
-				image.setImageSize((long) convertFile.length);
-				image.setMd5(DigestUtils.md5Hex(convertFile));
-
-			} catch (Exception e) {
-				log.error(e.getMessage());
-			}
-
-			imageRepository.save(image);
-
 			comicBookDetailRepository.save(ComicBookDetail.builder()
 				.comicBookUid(comicBook.getComicBookUid())
 				.episode(episode)
 				.page(page++)
-				.imageUid(image.getImageUid())
+				.imageUid(fileService.uploadConvertFile(comicBook.getPage().getContentId(), multipartFile, ImageCode.COMIC_IMAGE))
 				.build());
 		}
 	}
 
-	private byte[] convertToWebP(byte[] file, int targetWidth, float quality) throws Exception {
-		// MultipartFile에서 이미지를 읽어 BufferedImage로 변환
-		BufferedImage originalImage = ImageIO.read(new ByteArrayInputStream(file));
-
-		// 비율에 맞춰 세로 크기 계산
-		int targetHeight = (int) ((double) targetWidth / originalImage.getWidth() * originalImage.getHeight());
-
-		// 리사이즈된 이미지 생성
-		java.awt.Image resizedImage = originalImage.getScaledInstance(targetWidth, targetHeight, java.awt.Image.SCALE_SMOOTH);
-		BufferedImage outputImage = new BufferedImage(targetWidth, targetHeight, BufferedImage.TYPE_INT_RGB);
-
-		Graphics2D g2d = outputImage.createGraphics();
-		g2d.drawImage(resizedImage, 0, 0, null);
-		g2d.dispose();
-
-		// WebP 포맷으로 변환하고 결과를 바이트 배열로 저장
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		ImageWriter writer = ImageIO.getImageWritersByFormatName("webp").next();
-
-		try (MemoryCacheImageOutputStream ios = new MemoryCacheImageOutputStream(baos)) {
-			writer.setOutput(ios);
-
-			WebPWriteParam writeParam = new WebPWriteParam(writer.getLocale());
-			writeParam.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
-			writeParam.setCompressionType("Lossy"); // 압축 유형 설정
-			writeParam.setCompressionQuality(quality); // 압축 품질 설정 (0.0 ~ 1.0)
-
-			writer.write(null, new IIOImage(outputImage, null, null), writeParam);
-		} catch (Exception e) {
-			throw e;
-		} finally {
-			writer.dispose();
-		}
-
-		return baos.toByteArray();
-	}
 
 	public ComicBookContentResp getComicBookContent(String deviceId, String contentId, Region region) throws Exception {
 		List<Page> pages = pageRepository.findAllWithChild(contentId, region).orElse(new ArrayList<>());
