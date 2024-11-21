@@ -84,7 +84,6 @@ public class UserController {
 
 	@Operation(summary = "Token 발급 API", description = "앱 실행 시 호출, 그 이후 Header Authorization 추가")
 	@PostMapping("/token")
-	@Transactional
 	public CommonResp<String> createToken(@Valid @RequestBody AccessTokenReq accessTokenReq, HttpServletRequest httpServletRequest) throws Exception {
 
 		// Token 정보 저장
@@ -98,12 +97,7 @@ public class UserController {
 				.build());
 
 		// Member 정보 저장
-		Member member = userService.findByDeviceId(accessTokenReq.getDeviceId());
-		member.setDeviceId(accessTokenReq.getDeviceId());
-		member.setModelName(accessTokenReq.getModelName());
-		member.setIpAddress(commonUtils.getIp(httpServletRequest));
-
-		userService.upsertMember(member);
+		userService.upsertMemberLog(accessTokenReq.getDeviceId(), accessTokenReq.getModelName(), commonUtils.getIp(httpServletRequest));
 
 		return new CommonResp<>(token);
 	}
@@ -177,7 +171,7 @@ public class UserController {
 
 		Member member = userService.findByDeviceId(jwtTokenProvider.getDeviceIdByToken(jwt));
 		member.setKittorToken(resp.getAccessToken());
-		userService.upsertMember(member);
+		userService.saveMemberAndLog(member);
 
 		Set<String> roles = jwtTokenProvider.getRolesByToken(jwt);
 		roles.add(UserRole.LINKER.getKey());
@@ -205,7 +199,7 @@ public class UserController {
 
 		Member member = userService.findByDeviceId(jwtTokenProvider.getDeviceIdByToken(jwt));
 		member.setKittorToken(resp.getAccessToken());
-		userService.upsertMember(member);
+		userService.saveMemberAndLog(member);
 
 		Set<String> roles = jwtTokenProvider.getRolesByToken(jwt);
 		roles.add(UserRole.LINKER.getKey());

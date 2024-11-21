@@ -80,11 +80,22 @@ public class UserService implements UserDetailsService {
 	}
 
 	@Transactional
-	public Member upsertMember(Member member) throws Exception {
+	public Member saveMemberAndLog(Member member) throws Exception {
 		member = memberRepository.save(member);
 		memberLogRepository.save(MemberLog.of(member));
 
 		return member;
+	}
+
+	@Transactional
+	public void upsertMemberLog(String deviceId, String modelName, String ipAddress) throws Exception {
+		Member member = memberRepository.findByDeviceIdWithLock(deviceId).orElseGet(() -> Member.builder()
+			.deviceId(deviceId)
+			.build());
+		member.setModelName(modelName);
+		member.setIpAddress(ipAddress);
+
+		this.saveMemberAndLog(member);
 	}
 
 	public Kit findBySerialNumber(String serialNumber) throws Exception {
