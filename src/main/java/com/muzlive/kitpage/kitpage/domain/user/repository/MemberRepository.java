@@ -16,7 +16,7 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
 	Optional<Member> findByDeviceId(String deviceId);
 
 	@QueryHints({
-		@QueryHint(name = "javax.persistence.lock.timeout", value = "3000") // 5초
+		@QueryHint(name = "javax.persistence.lock.timeout", value = "3000") // 3초
 	})
 	@Lock(LockModeType.PESSIMISTIC_WRITE)
 	@Query("SELECT m FROM Member m WHERE m.deviceId = :deviceId")
