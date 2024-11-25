@@ -22,13 +22,16 @@ import com.muzlive.kitpage.kitpage.domain.user.repository.KitRepository;
 import com.muzlive.kitpage.kitpage.domain.user.repository.MemberLogRepository;
 import com.muzlive.kitpage.kitpage.domain.user.repository.MemberRepository;
 import com.muzlive.kitpage.kitpage.domain.user.repository.TokenLogRepository;
+import com.muzlive.kitpage.kitpage.utils.enums.Region;
 import com.querydsl.core.Tuple;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import java.sql.Array;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.parameters.P;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -71,16 +74,32 @@ public class UserService implements UserDetailsService {
 		installLogRepository.save(installLog);
 	}
 
+	@Transactional
 	public Member findByDeviceId(String deviceId) throws Exception {
-		return memberRepository.findByDeviceId(deviceId).orElse(Member.builder().build());
+		return memberRepository.findByDeviceIdWithLock(deviceId).orElse(Member.builder().build());
 	}
 
 	@Transactional
-	public Member upsertMember(Member member) throws Exception {
+	public Member saveMemberAndLog(Member member) throws Exception {
 		member = memberRepository.save(member);
 		memberLogRepository.save(MemberLog.of(member));
 
 		return member;
+	}
+
+	@Transactional
+	public void upsertMemberLog(String deviceId, String modelName, String ipAddress) throws Exception {
+		Member member = memberRepository.findByDeviceIdWithLock(deviceId).orElseGet(() -> Member.builder()
+			.deviceId(deviceId)
+			.build());
+		member.setModelName(modelName);
+		member.setIpAddress(ipAddress);
+
+		this.saveMemberAndLog(member);
+	}
+
+	public Kit findBySerialNumber(String serialNumber) throws Exception {
+		return kitRepository.findBySerialNumber(serialNumber).orElseThrow(() -> new CommonException(ExceptionCode.CANNOT_FIND_MATCHED_ITEM));
 	}
 
 	public KitLog findLatestKitLog(String deviceId, String serialNumber) throws Exception {
@@ -88,11 +107,9 @@ public class UserService implements UserDetailsService {
 	}
 
 	@Transactional
-	public Kit checkTag(String deviceId, String serialNumber, Long kihnoKitUid) throws Exception {
+	public Kit checkTag(String serialNumber, Long kihnoKitUid) throws Exception {
 		Kit kit = kitRepository.findBySerialNumber(serialNumber).orElseThrow(() -> new CommonException(ExceptionCode.CANNOT_FIND_MATCHED_ITEM));
-		kit.setDeviceId(deviceId);
 		kit.setKihnoKitUid(kihnoKitUid);
-
 		return this.upsertKit(kit);
 	}
 
@@ -104,7 +121,13 @@ public class UserService implements UserDetailsService {
 		return kit;
 	}
 
-	public List<Tuple> getInstallLogs(String contentId, String deviceId) throws Exception {
+	@Transactional
+	public void clearDeviceIdHistory(String deviceId) throws Exception {
+		List<Kit> kits = kitRepository.findByDeviceId(deviceId).orElseThrow(() -> new CommonException(ExceptionCode.CANNOT_FIND_MATCHED_ITEM));
+		kits.forEach(k -> k.setDeviceId(""));
+	}
+
+	public List<Tuple> getInstallLogs(String deviceId, String contentId, Region region) throws Exception {
 		QInstallLog installLogSub = new QInstallLog("installLogSub");
 
 		List<Tuple> tuples = queryFactory
@@ -118,7 +141,7 @@ public class UserService implements UserDetailsService {
 						.from(installLogSub)
 						.innerJoin(page).on(page.pageUid.eq(installLogSub.pageUid))
 						.where(installLogSub.deviceId.eq(deviceId)
-							.and(page.contentId.eq(contentId)))
+							.and(page.contentId.eq(contentId).and(page.region.eq(region))))
 						.groupBy(page.pageUid))))
 			.fetch();
 

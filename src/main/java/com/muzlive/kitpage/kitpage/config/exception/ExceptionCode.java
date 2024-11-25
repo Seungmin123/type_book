@@ -3,22 +3,26 @@ package com.muzlive.kitpage.kitpage.config.exception;
 import org.springframework.http.HttpStatus;
 
 public enum ExceptionCode {
-    USER_NOT_FOUND("10401", "user not found", HttpStatus.UNAUTHORIZED),
-    INVALID_JWT_SIGNATURE("10401", "invalid jwt signature.", HttpStatus.UNAUTHORIZED),
-    EXPIRED_JWT("10401", "expired jwt token.", HttpStatus.UNAUTHORIZED),
-    NOT_SUPPORTED_JWT("10401", "JWT token not supported.", HttpStatus.UNAUTHORIZED),
-    INVALID_JWT("10401", "JWT token is invalid", HttpStatus.UNAUTHORIZED),
-    METHOD_NOT_ALLOWED("10400", "http method not allowed", HttpStatus.METHOD_NOT_ALLOWED),
+    USER_NOT_FOUND("10001", "user not found", HttpStatus.UNAUTHORIZED),
+    INVALID_JWT_SIGNATURE("10002", "invalid jwt signature.", HttpStatus.UNAUTHORIZED),
+    EXPIRED_JWT("10003", "expired jwt token.", HttpStatus.UNAUTHORIZED),
+    NOT_SUPPORTED_JWT("10004", "JWT token not supported.", HttpStatus.UNAUTHORIZED),
+    INVALID_JWT("10005", "JWT token is invalid", HttpStatus.UNAUTHORIZED),
+    METHOD_NOT_ALLOWED("10006", "http method not allowed", HttpStatus.METHOD_NOT_ALLOWED),
 
-    INVALID_REQUEST_PRAMETER("10400", "invalid request parameter", HttpStatus.BAD_REQUEST),
-    CANNOT_FIND_ITEM_THAT_MATCH_THE_PARAM("10400", "There are no items that match the parameters.", HttpStatus.BAD_REQUEST),
+    INVALID_REQUEST_PRAMETER("10101", "invalid request parameter", HttpStatus.BAD_REQUEST),
+    CANNOT_FIND_ITEM_THAT_MATCH_THE_PARAM("10102", "There are no items that match the parameters.", HttpStatus.BAD_REQUEST),
 
-    DIFFERENT_APP_KIT("10403", "The kit is not available in kit-page", HttpStatus.FORBIDDEN),
-    CANNOT_FIND_MATCHED_ITEM(HttpStatus.GONE),
-    CANNOT_FIND_MATCHED_KIHNO_ITEM("10403", "There are no items in kihno that match the parameters.", HttpStatus.FORBIDDEN),
+    DIFFERENT_APP_KIT("10103", "The kit is not available in kit-page", HttpStatus.FORBIDDEN),
+    CANNOT_FIND_MATCHED_ITEM("10104", "There are no items that mate the parameters", HttpStatus.GONE),
+    CANNOT_FIND_MATCHED_KIHNO_ITEM("10105", "There are no items in kihno that match the parameters.", HttpStatus.FORBIDDEN),
+
+    NON_DOWNLOADABLE_TOKEN("10106", "Downloads are not possible with this token", HttpStatus.FORBIDDEN),
 
     INTERNAL_SERVER_ERROR("10500", "server error", HttpStatus.INTERNAL_SERVER_ERROR),
-    KITTOR_EXTERNAL_SERVER_ERROR("10501", "kittor external server error", HttpStatus.INTERNAL_SERVER_ERROR)
+    KITTOR_EXTERNAL_SERVER_ERROR("10501", "kittor external server error", HttpStatus.INTERNAL_SERVER_ERROR),
+
+    YOUTUBE_UPLOAD_ERROR("10601", "youtube upload error")
     ;
 
     // add error code -> update

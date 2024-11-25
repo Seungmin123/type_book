@@ -36,9 +36,11 @@ public class Video extends BaseTimeEntity {
 	@Column(name = "content_id", nullable = false)
 	private String contentId;
 
-	@Column(name = "artist")
-	private String artist;
+	@Setter
+	@Column(name = "duration")
+	private String duration;
 
+	@Setter
 	@Column(name = "title")
 	private String title;
 
@@ -58,10 +60,10 @@ public class Video extends BaseTimeEntity {
 	private String videoId;
 
 	@Builder
-	public Video(String contentId, String artist, String title, String streamUrl,
+	public Video(String contentId, String duration, String title, String streamUrl,
 		Long coverImageUid, VideoCode videoCode, Long pageUid) {
 		this.contentId = contentId;
-		this.artist = artist;
+		this.duration = duration;
 		this.title = title;
 		this.streamUrl = streamUrl;
 		this.coverImageUid = coverImageUid;

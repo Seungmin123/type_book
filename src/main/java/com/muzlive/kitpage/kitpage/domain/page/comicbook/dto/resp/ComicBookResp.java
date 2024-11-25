@@ -27,6 +27,8 @@ public class ComicBookResp {
 
 	private List<String> genreList;
 
+	private Long totalSize;
+
 	private KitStatus kitStatus;
 
 	public ComicBookResp(Page page) {
@@ -34,6 +36,7 @@ public class ComicBookResp {
 		this.coverImageUid = page.getCoverImageUid();
 		this.title = page.getTitle();
 		this.subtitle = page.getSubTitle();
+		this.totalSize = 0L;
 		if(CollectionUtils.isEmpty(page.getComicBooks())) {
 			this.writer = "";
 			this.illustrator = "";

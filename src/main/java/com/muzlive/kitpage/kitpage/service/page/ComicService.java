@@ -1,8 +1,13 @@
 package com.muzlive.kitpage.kitpage.service.page;
 
+import static com.muzlive.kitpage.kitpage.domain.page.QPage.page;
+import static com.muzlive.kitpage.kitpage.domain.page.comicbook.QComicBook.comicBook;
+import static com.muzlive.kitpage.kitpage.domain.page.comicbook.QComicBookDetail.comicBookDetail;
+import static com.muzlive.kitpage.kitpage.domain.user.QImage.image;
 import static com.muzlive.kitpage.kitpage.domain.user.QInstallLog.installLog;
 import static com.muzlive.kitpage.kitpage.domain.user.QKit.kit;
 
+import com.luciad.imageio.webp.WebPWriteParam;
 import com.muzlive.kitpage.kitpage.config.exception.CommonException;
 import com.muzlive.kitpage.kitpage.config.exception.ExceptionCode;
 import com.muzlive.kitpage.kitpage.domain.page.Content;
@@ -22,28 +27,45 @@ import com.muzlive.kitpage.kitpage.domain.page.comicbook.repository.ComicBookRep
 import com.muzlive.kitpage.kitpage.domain.page.comicbook.repository.VideoRepository;
 import com.muzlive.kitpage.kitpage.domain.page.dto.req.UploadComicBookDetailReq;
 import com.muzlive.kitpage.kitpage.domain.page.dto.req.UploadComicBookReq;
+import com.muzlive.kitpage.kitpage.domain.page.repository.PageRepository;
 import com.muzlive.kitpage.kitpage.domain.user.Image;
+import com.muzlive.kitpage.kitpage.domain.user.Kit;
 import com.muzlive.kitpage.kitpage.domain.user.repository.ImageRepository;
+import com.muzlive.kitpage.kitpage.domain.user.repository.KitRepository;
 import com.muzlive.kitpage.kitpage.service.aws.S3Service;
 import com.muzlive.kitpage.kitpage.utils.constants.ApplicationConstants;
 import com.muzlive.kitpage.kitpage.utils.enums.ImageCode;
 import com.muzlive.kitpage.kitpage.utils.enums.KitStatus;
+import com.muzlive.kitpage.kitpage.utils.enums.Region;
 import com.querydsl.core.Tuple;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import java.awt.Graphics2D;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import javax.imageio.IIOImage;
+import javax.imageio.ImageIO;
+import javax.imageio.ImageWriteParam;
+import javax.imageio.ImageWriter;
+import javax.imageio.stream.MemoryCacheImageOutputStream;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.multipart.MultipartFile;
 
+@Slf4j
 @RequiredArgsConstructor
 @Service
 public class ComicService {
@@ -52,9 +74,13 @@ public class ComicService {
 
 	private final PageService pageService;
 
-	private final UserService userService;
+	private final FileService fileService;
 
 	private final S3Service s3Service;
+
+	private final KitRepository kitRepository;
+
+	private final PageRepository pageRepository;
 
 	private final ImageRepository imageRepository;
 
@@ -88,7 +114,7 @@ public class ComicService {
 	}
 
 	@Transactional
-	public void insertComicBook(String contentId, UploadComicBookReq uploadComicBookReq) throws Exception {
+	public ComicBook insertComicBook(String contentId, UploadComicBookReq uploadComicBookReq) throws Exception {
 		// S3 Cover Image Upload
 		String saveFileName = UUID.randomUUID() + "." + FilenameUtils.getExtension(uploadComicBookReq.getCoverImage().getOriginalFilename());
 		String coverImagePath = contentId + "/" + ApplicationConstants.IMAGE + "/" + saveFileName;
@@ -100,13 +126,15 @@ public class ComicService {
 		imageRepository.save(image);
 
 		// Page, ComicBook DB Insert
-		comicBookRepository.save(
+		return comicBookRepository.save(
 			ComicBook.builder()
 				.pageUid(uploadComicBookReq.getPageUid())
 				.coverImageUid(image.getImageUid())
 				.writer(uploadComicBookReq.getWriter())
 				.illustrator(uploadComicBookReq.getIllustrator())
 				.volume(uploadComicBookReq.getVolume())
+				.volumeUnit(uploadComicBookReq.getVolumeUnit() == null ? "%d권" : uploadComicBookReq.getVolumeUnit())
+				.pageUnit(uploadComicBookReq.getPageUnit() == null ? "%d쪽" : uploadComicBookReq.getPageUnit())
 				.build()
 		);
 	}
@@ -119,59 +147,44 @@ public class ComicService {
 		String episode = Objects.nonNull(uploadComicBookDetailReq.getEpisode()) ? uploadComicBookDetailReq.getEpisode() : "";
 		int page = this.findComicBookMaxPage(comicBook.getComicBookUid());
 
+		List<ComicBookDetail> comicBookDetails = new ArrayList<>();
 		for(MultipartFile multipartFile : uploadComicBookDetailReq.getImages()) {
-			// S3 Cover Image Upload
-			String saveFileName = UUID.randomUUID() + "." + FilenameUtils.getExtension(multipartFile.getOriginalFilename());
-			String coverImagePath = comicBook.getPage().getContentId() + "/" + ApplicationConstants.IMAGE + "/" + saveFileName;
-			s3Service.uploadFile(coverImagePath, multipartFile);
-
-			// Image DB Insert
-			Image image = Image.of(coverImagePath, ImageCode.COMIC_IMAGE, multipartFile);
-			image.setSaveFileName(saveFileName);
-			imageRepository.save(image);
-
-			comicBookDetailRepository.save(ComicBookDetail.builder()
+			comicBookDetails.add(ComicBookDetail.builder()
 				.comicBookUid(comicBook.getComicBookUid())
 				.episode(episode)
 				.page(page++)
-				.imageUid(image.getImageUid())
+				.imageUid(fileService.uploadConvertFile(comicBook.getPage().getContentId(), multipartFile, ImageCode.COMIC_IMAGE))
 				.build());
+		}
+
+		if(!CollectionUtils.isEmpty(comicBookDetails)) {
+			comicBookDetailRepository.saveAll(comicBookDetails);
 		}
 	}
 
-	public ComicBookContentResp getComicBookContent(String contentId, Long pageUid, String deviceId) throws Exception {
-		Content content = pageService.findContentByContentId(contentId);
 
-		ComicBookContentResp comicBookContentResp = new ComicBookContentResp(content);
+	public ComicBookContentResp getComicBookContent(String deviceId, String contentId, Region region) throws Exception {
+		List<Page> pages = pageRepository.findAllWithChild(contentId, region).orElse(new ArrayList<>());
+		if(CollectionUtils.isEmpty(pages)) throw new CommonException(ExceptionCode.CANNOT_FIND_MATCHED_ITEM);
+		ComicBookContentResp comicBookContentResp = new ComicBookContentResp(pages.get(0).getContent());
 
-		List<Page> pages = content.getPages();
-
-		// Kit Status, 태그한 키트|
-		List<Tuple> tuples = userService.getInstallLogs(contentId, deviceId);
 		List<ComicBookResp> comicBookResps = new ArrayList<>();
 		for (Page pageItem : pages) {
 			ComicBookResp comicBookResp = new ComicBookResp(pageItem);
-			comicBookResp.setKitStatus(this.getInstallStatus(pageItem.getPageUid(), tuples));
-
-			if(pageItem.getPageUid().equals(pageUid)) {
-				comicBookContentResp.setTaggedComicBook(comicBookResp);
-			}
-
-			comicBookResps.add(comicBookResp);
+			comicBookResp.setKitStatus(this.getInstallStatus(pageItem.getPageUid(), deviceId));
 
 			// 총 용량, Volume 수정하면 좋을 것 같음
-			List<ComicBook> comicBooks = pageItem.getComicBooks();
+			List<ComicBook> comicBooks = comicBookRepository.findAllByPageUid(pageItem.getPageUid()).orElse(new ArrayList<>());
 			if(!CollectionUtils.isEmpty(comicBooks)) {
 				comicBookContentResp.setTotalVolume(comicBookContentResp.getTotalVolume() + comicBooks.size());
 
-				for(ComicBook comicBook : comicBooks) {
-					List<ComicBookDetail> comicBookDetails = comicBook.getComicBookDetails();
-					if(!CollectionUtils.isEmpty(comicBookDetails)) {
-						Long imageSize = comicBookDetails.stream().mapToLong(v -> v.getImage().getImageSize()).sum();
-						comicBookContentResp.setTotalSize(comicBookContentResp.getTotalSize() + imageSize);
-					}
-				}
+				long totalSize = comicBooks.stream()
+					.mapToLong(this::getComicBookImageSize)
+					.sum();
+				comicBookResp.setTotalSize(totalSize);
 			}
+
+			comicBookResps.add(comicBookResp);
 
 		}
 		comicBookContentResp.setComicBookResps(comicBookResps);
@@ -179,18 +192,47 @@ public class ComicService {
 		return comicBookContentResp;
 	}
 
-	public List<ComicBookDetailResp> getRelatedComicDetailBookList(String contentId, Long pageUid, String deviceId) throws Exception {
+	public Page findPageWithComicBooksBySerialNumber(String serialNumber) throws Exception {
+		return pageRepository.findWithChildBySerialNumber(serialNumber).orElseThrow(() -> new CommonException(ExceptionCode.CANNOT_FIND_MATCHED_ITEM));
+	}
+
+	public Long getImageSizeByPageUid(Long pageUid) throws Exception {
+		return Optional.ofNullable(
+			queryFactory
+				.select(image.imageSize.sum())
+				.from(image)
+				.innerJoin(comicBookDetail).on(comicBookDetail.imageUid.eq(image.imageUid))
+				.innerJoin(comicBook).on(comicBook.comicBookUid.eq(comicBookDetail.comicBookUid))
+				.innerJoin(page).on(page.pageUid.eq(comicBook.pageUid))
+				.where(page.pageUid.eq(pageUid))
+				.fetchFirst()
+		).orElse(0L);
+	}
+
+	public Long getImageSizeByComicBookUid(Long comicBookUid) throws Exception {
+		return Optional.ofNullable(
+			queryFactory
+				.select(image.imageSize.sum())
+				.from(image)
+				.innerJoin(comicBookDetail).on(comicBookDetail.imageUid.eq(image.imageUid))
+				.innerJoin(comicBook).on(comicBook.comicBookUid.eq(comicBookDetail.comicBookUid))
+				.where(comicBook.comicBookUid.eq(comicBookUid))
+			.fetchFirst()
+		).orElse(0L);
+	}
+
+	public Long getComicBookImageSize(ComicBook comicBook) {
+		List<ComicBookDetail> comicBookDetails = comicBook.getComicBookDetails();
+		if(!CollectionUtils.isEmpty(comicBookDetails)) {
+			return comicBookDetails.stream().mapToLong(v -> v.getImage().getImageSize()).sum();
+		}
+
+		return 0L;
+	}
+
+	public List<ComicBookDetailResp> getRelatedComicDetailBookList(String deviceId, String contentId, Region region) throws Exception {
 		List<ComicBookDetailResp> comicBookDetailResps = new ArrayList<>();
-
-		Page page = pageService.findPageById(pageUid);
-		List<Page> pages = pageService.findByContentId(page.getContentId());
-		List<Tuple> tuples = userService.getInstallLogs(page.getContentId(), deviceId);
-
-		/*
-		* Content content = pageService.findContentByContentId(contentId);
-		List<Page> pages = content.getPages();
-		List<Tuple> tuples = userService.getInstallLogs(contentId, deviceId);
-		* */
+		List<Page> pages = pageService.findByContentId(contentId, region);
 
 		for (Page pageItem : pages) {
 			ComicBookDetailResp comicBookDetailResp = new ComicBookDetailResp(pageItem);
@@ -198,9 +240,9 @@ public class ComicService {
 			List<VideoResp> videoResps = new ArrayList<>();
 			List<ComicBookEpisodeResp> comicBookEpisodeResps = new ArrayList<>();
 
-			if (this.getInstallStatus(pageItem.getPageUid(), tuples).equals(KitStatus.AVAILABLE)) {
-				videoResps = this.findVideoByPageUid(pageUid).stream().map(VideoResp::new).collect(Collectors.toList());
-				comicBookEpisodeResps = this.getEpisodeResps(pageItem);
+			if (this.getInstallStatus(pageItem.getPageUid(), deviceId).equals(KitStatus.AVAILABLE)) {
+				videoResps = this.findVideoByPageUid(pageItem.getPageUid()).stream().map(VideoResp::new).collect(Collectors.toList());
+				comicBookEpisodeResps = this.getEpisodeResps(pageItem.getPageUid());
 			}
 
 			comicBookDetailResp.setVideos(videoResps);
@@ -212,9 +254,10 @@ public class ComicService {
 		return comicBookDetailResps;
 	}
 
-	public List<ComicBookEpisodeResp> getEpisodeResps(Page page) throws Exception {
+	public List<ComicBookEpisodeResp> getEpisodeResps(Long pageUid) throws Exception {
 		List<ComicBookEpisodeResp> comicBookEpisodeResps = new ArrayList<>();
-		for(ComicBook comicBook : page.getComicBooks()) {
+		List<ComicBook> comicBooks = comicBookRepository.findAllByPageUid(pageUid).orElse(new ArrayList<>());
+		for(ComicBook comicBook : comicBooks) {
 			ComicBookEpisodeResp comicBookEpisodeResp = new ComicBookEpisodeResp(comicBook, ApplicationConstants.COMIC_BOOK_UNIT_1);
 
 			// 최근 업데이트 날짜 확인을 위해 for 루프 여기서 실행
@@ -259,5 +302,16 @@ public class ComicService {
 		return KitStatus.NEVER_USE;
 	}
 
+	public KitStatus getInstallStatus(Long pageUid, String deviceId) throws Exception {
+		return kitRepository.findFirstByPageUidAndDeviceIdOrderByCreatedAtDesc(pageUid, deviceId)
+			.map(k -> {
+				if(k.getModifiedAt().plusDays(1).isBefore(LocalDateTime.now())) {
+					return KitStatus.EXPIRED;
+				} else {
+					return KitStatus.AVAILABLE;
+				}
+			})
+			.orElse(KitStatus.NEVER_USE);
+	}
 
 }

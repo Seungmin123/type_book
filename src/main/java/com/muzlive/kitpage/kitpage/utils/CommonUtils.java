@@ -1,8 +1,11 @@
 package com.muzlive.kitpage.kitpage.utils;
 
+import com.muzlive.kitpage.kitpage.utils.enums.Region;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.Duration;
+import java.util.Locale;
 import java.util.Random;
 import javax.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -61,6 +64,38 @@ public class CommonUtils {
 		}
 		buffer.flush();
 		return buffer.toByteArray();
+	}
+
+	public Region getCustomRegion(Locale locale) {
+		switch (locale.getLanguage()) {
+			case "ko":
+			case "kr":
+				return Region.KOR;
+			case "jp":
+			case "ja":
+				return Region.JPN;
+			default:
+				return Region.ENG;
+		}
+	}
+
+	public String convertDurationToString(Duration duration) throws Exception {
+		long hours = duration.toHours();
+		long minutes = duration.toMinutesPart();
+		long seconds = duration.toSecondsPart();
+
+		StringBuilder formattedDuration = new StringBuilder();
+		if (hours > 0) {
+			formattedDuration.append(hours).append(":");
+		}
+
+		// 분이 없는 경우 00으로 표시, 한 자리일 경우 앞에 0 추가
+		formattedDuration.append(String.format("%02d:", minutes));
+
+		// 초는 한 자리일 경우 앞에 0 추가
+		formattedDuration.append(String.format("%02d", seconds));
+
+		return formattedDuration.toString();
 	}
 
 }

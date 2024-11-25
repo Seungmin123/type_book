@@ -17,6 +17,7 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
+import javax.persistence.OrderBy;
 import javax.persistence.PostLoad;
 import javax.persistence.PrePersist;
 import javax.persistence.PreUpdate;
@@ -56,6 +57,12 @@ public class ComicBook extends BaseTimeEntity {
 	@Column(name = "volume")
 	private Integer volume;
 
+	@Column(name = "volume_unit")
+	private String volumeUnit;
+
+	@Column(name = "page_unit")
+	private String pageUnit;
+
 	@Column(name = "genre")
 	private String genre;
 
@@ -67,6 +74,7 @@ public class ComicBook extends BaseTimeEntity {
 	private Page page;
 
 	@OneToMany(mappedBy = "comicBook")
+	@OrderBy("page ASC")
 	private List<ComicBookDetail> comicBookDetails;
 
 	@PrePersist
@@ -83,11 +91,13 @@ public class ComicBook extends BaseTimeEntity {
 	}
 
 	@Builder
-	public ComicBook(Long pageUid, Long coverImageUid, String writer, String illustrator, Integer volume) {
+	public ComicBook(Long pageUid, Long coverImageUid, String writer, String illustrator, Integer volume, String volumeUnit, String pageUnit) {
 		this.pageUid = pageUid;
 		this.coverImageUid = coverImageUid;
 		this.writer = writer;
 		this.illustrator = illustrator;
 		this.volume = volume;
+		this.volumeUnit = volumeUnit;
+		this.pageUnit = pageUnit;
 	}
 }
