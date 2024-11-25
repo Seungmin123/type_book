@@ -19,7 +19,9 @@ public class ComicBookEpisodeResp {
 
 	private Integer volume;
 
-	private String unit;
+	private String volumeUnit;
+
+	private String pageUnit;
 
 	private Integer pageSize;
 
@@ -32,7 +34,8 @@ public class ComicBookEpisodeResp {
 		this.comicBookUid = comicBook.getComicBookUid();
 		this.coverImageUid = comicBook.getCoverImageUid();
 		this.volume = comicBook.getVolume();
-		this.unit = unit;
+		this.volumeUnit = comicBook.getVolumeUnit();
+		this.pageUnit = comicBook.getPageUnit();
 	}
 
 }

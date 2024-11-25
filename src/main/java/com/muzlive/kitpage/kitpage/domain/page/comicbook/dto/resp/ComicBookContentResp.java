@@ -19,13 +19,9 @@ public class ComicBookContentResp {
 
 	private String category;
 
-	private Long totalSize;
-
 	private Integer totalVolume;
 
 	private List<ComicBookResp> comicBookResps;
-
-	private ComicBookResp taggedComicBook;
 
 	public ComicBookContentResp(Content content) {
 		this.contentId = content.getContentId();
@@ -33,7 +29,6 @@ public class ComicBookContentResp {
 		this.contentTitle = content.getTitle();
 		this.contentInfoText = content.getInfoText();
 		this.category = content.getContentType().getName();
-		this.totalSize = 0L;
 		this.totalVolume = 0;
 	}
 

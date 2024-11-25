@@ -15,8 +15,10 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.JoinColumns;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
+import javax.persistence.OrderBy;
 import javax.persistence.Table;
 import lombok.Builder;
 import lombok.Getter;
@@ -67,10 +69,14 @@ public class Page extends BaseTimeEntity {
 	private Region region;
 
 	@OneToMany(mappedBy = "page")
+	@OrderBy("comicBookUid ASC")
 	private List<ComicBook> comicBooks;
 
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "content_id", referencedColumnName = "content_id", insertable = false, updatable = false)
+	@ManyToOne(fetch = FetchType.EAGER)
+	@JoinColumns({
+		@JoinColumn(name = "content_id", referencedColumnName = "content_id", insertable = false, updatable = false),
+		@JoinColumn(name = "region", referencedColumnName = "region", insertable = false, updatable = false)
+	})
 	private Content content;
 
 	@Builder

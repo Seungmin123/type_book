@@ -7,7 +7,22 @@ import lombok.Getter;
 @Getter
 public enum Region {
 
-	KOR("KOR");
+	KOR("KOR", "KOR"),
+	ENG("ENG", "ENG"),
+	USA("ENG", "USA"),
+	JPN("JPN", "JPN");
 
 	private String code;
+
+	private String name;
+
+	public static Region getRegionByName(String name) {
+		for(Region item : Region.values()) {
+			if(item.getName().equals(name)){
+				return item;
+			}
+		}
+
+		return Region.KOR;
+	}
 }

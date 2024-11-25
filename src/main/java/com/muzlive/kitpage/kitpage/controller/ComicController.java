@@ -13,11 +13,14 @@ import com.muzlive.kitpage.kitpage.domain.page.comicbook.dto.resp.VideoResp;
 import com.muzlive.kitpage.kitpage.domain.user.KitLog;
 import com.muzlive.kitpage.kitpage.service.page.ComicService;
 import com.muzlive.kitpage.kitpage.service.page.PageService;
+import com.muzlive.kitpage.kitpage.utils.CommonUtils;
+import com.muzlive.kitpage.kitpage.utils.enums.Region;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
@@ -36,16 +39,32 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class ComicController {
 
+	private final CommonUtils commonUtils;
+
 	private final JwtTokenProvider jwtTokenProvider;
 
 	private final PageService pageService;
 
 	private final ComicService comicService;
 
+	// N+1
 	@Operation(summary = "ComicBook 리스트 조회")
 	@GetMapping("/list")
-	public CommonResp<ComicBookContentResp> getComicBookListByContentId(@Valid @ModelAttribute ComicBookContentReq comicBookContentReq, HttpServletRequest request) throws Exception {
-		return new CommonResp<>(comicService.getComicBookContent(comicBookContentReq.getContentId(), comicBookContentReq.getPageUid(), comicBookContentReq.getDeviceId()));
+	public CommonResp<ComicBookContentResp> getComicBookListByContentId(@Valid @ModelAttribute ComicBookContentReq comicBookContentReq, HttpServletRequest httpServletRequest) throws Exception {
+		return new CommonResp<>(comicService.getComicBookContent(
+			jwtTokenProvider.getDeviceIdByToken(jwtTokenProvider.resolveToken(httpServletRequest)),
+			comicBookContentReq.getContentId(),
+			Region.getRegionByName(comicBookContentReq.getRegion())));
+	}
+
+	// N+1
+	@Operation(summary = "ComicBook 컨텐츠 상세 정보 리스트 조회")
+	@GetMapping("/detail/list")
+	public CommonResp<List<ComicBookDetailResp>> getComicBookContents(@Valid @ModelAttribute ComicBookContentReq comicBookContentReq, HttpServletRequest httpServletRequest) throws Exception {
+		return new CommonResp<>(comicService.getRelatedComicDetailBookList(
+			jwtTokenProvider.getDeviceIdByToken(jwtTokenProvider.resolveToken(httpServletRequest)),
+			comicBookContentReq.getContentId(),
+			Region.getRegionByName(comicBookContentReq.getRegion())));
 	}
 
 	@Operation(summary = "ComicBook 컨텐츠 상세 정보 조회")
@@ -53,16 +72,10 @@ public class ComicController {
 	public CommonResp<ComicBookDetailResp> getComicBookContent(@Valid @PathVariable Long pageUid) throws Exception {
 		Page page = pageService.findPageById(pageUid);
 		ComicBookDetailResp comicBookDetailResp = new ComicBookDetailResp(page);
-		comicBookDetailResp.setDetails(comicService.getEpisodeResps(page));
+		comicBookDetailResp.setDetails(comicService.getEpisodeResps(page.getPageUid()));
 		comicBookDetailResp.setVideos(comicService.findVideoByPageUid(pageUid).stream().map(VideoResp::new).collect(Collectors.toList()));
 
 		return new CommonResp<>(comicBookDetailResp);
-	}
-
-	@Operation(summary = "ComicBook 컨텐츠 상세 정보 리스트 조회")
-	@GetMapping("/detail/list")
-	public CommonResp<List<ComicBookDetailResp>> getComicBookContents(@Valid @ModelAttribute ComicBookContentReq comicBookContentReq) throws Exception {
-		return new CommonResp<>(comicService.getRelatedComicDetailBookList(comicBookContentReq.getContentId(), comicBookContentReq.getPageUid(), comicBookContentReq.getDeviceId()));
 	}
 
 	// TODO get Music Info

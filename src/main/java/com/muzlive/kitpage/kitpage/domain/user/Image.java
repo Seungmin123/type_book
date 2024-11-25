@@ -39,12 +39,15 @@ public class Image extends BaseTimeEntity {
 	@Column(name = "image_path", nullable = false)
 	private String imagePath;
 
+	@Setter
 	@Column(name = "image_size")
 	private Long imageSize;
 
+	@Setter
 	@Column(name = "width")
 	private Integer width;
 
+	@Setter
 	@Column(name = "height")
 	private Integer height;
 
@@ -59,6 +62,7 @@ public class Image extends BaseTimeEntity {
 	@Column(name = "image_code", nullable = false)
 	private ImageCode imageCode;
 
+	@Setter
 	@Column(name = "md5", nullable = false)
 	private String md5;
 

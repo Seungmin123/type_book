@@ -28,7 +28,7 @@ public class WebConfig implements WebMvcConfigurer {
     @Bean
     public LocaleResolver localeResolver() {
         AcceptHeaderLocaleResolver sessionLocaleResolver = new AcceptHeaderLocaleResolver();
-        sessionLocaleResolver.setDefaultLocale(Locale.JAPANESE); // 기본 언어 설정
+        sessionLocaleResolver.setDefaultLocale(Locale.KOREA); // 기본 언어 설정
         return sessionLocaleResolver;
     }
 

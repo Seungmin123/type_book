@@ -45,13 +45,17 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.util.Locale;
 import java.util.Set;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -93,51 +97,66 @@ public class UserController {
 				.build());
 
 		// Member 정보 저장
-		Member member = userService.findByDeviceId(accessTokenReq.getDeviceId());
-		member.setDeviceId(accessTokenReq.getDeviceId());
-		member.setModelName(accessTokenReq.getModelName());
-		member.setIpAddress(commonUtils.getIp(httpServletRequest));
-
-		userService.upsertMember(member);
+		userService.upsertMemberLog(accessTokenReq.getDeviceId(), accessTokenReq.getModelName(), commonUtils.getIp(httpServletRequest));
 
 		return new CommonResp<>(token);
 	}
 
 	@Operation(summary = "체크 태그 API", description = "키노 서버를 통한 체크 태그 API")
 	@PostMapping("/checkTag")
-	public CommonResp<CheckTagResp> connect(@Valid @RequestBody CheckTagReq checkTagReq, HttpServletRequest httpServletRequest) throws Exception {
-		// Token DeviceID / Request DeviceID 검사
-		/*String validateToken = jwtTokenProvider.resolveToken(httpServletRequest);
-		if(!jwtTokenProvider.getDeviceIdByToken(validateToken).equals(checkTagReq.getDeviceId()))
-			throw new CommonException(ExceptionCode.INVALID_JWT);*/
-
+	public CommonResp<CheckTagResp> checkTag(@Valid @RequestBody CheckTagReq checkTagReq, HttpServletRequest httpServletRequest) throws Exception {
 		String requestSerialNumber = (checkTagReq.getSerialNumber().length() > 8) ? checkTagReq.getSerialNumber().substring(0, 8) : checkTagReq.getSerialNumber();
 		String paramSerialNumber = (checkTagReq.getSerialNumber().length() < 10) ? checkTagReq.getSerialNumber() + commonUtils.makeRandomHexString() : checkTagReq.getSerialNumber();
 
+		String jwt = jwtTokenProvider.resolveToken(httpServletRequest);
+		String deviceId = jwtTokenProvider.getDeviceIdByToken(jwt);
+		// TODO Contents 확장 시 여기부터 분기 처리
+		Page page = comicService.findPageWithComicBooksBySerialNumber(requestSerialNumber);
+
 		KihnoKitCheckReq kihnoKitCheckReq = KihnoKitCheckReq.builder()
-			.deviceId(checkTagReq.getDeviceId())
+			.deviceId(deviceId)
 			.kitId(paramSerialNumber)
-			.countryCode(checkTagReq.getRegion().getCode())
+			.countryCode(page.getRegion().getCode())
 			.build();
 
-		Kit kit = userService.checkTag(checkTagReq.getDeviceId(), requestSerialNumber, kihnoV2TransferSerivce.kihnoKitCheck(kihnoKitCheckReq).getKihnoKitUid());
+		userService.checkTag(requestSerialNumber, kihnoV2TransferSerivce.kihnoKitCheck(kihnoKitCheckReq).getKihnoKitUid());
 
-		Set<String> roles = jwtTokenProvider.getRolesByToken(jwtTokenProvider.resolveToken(httpServletRequest));
+		Set<String> roles = jwtTokenProvider.getRolesByToken(jwt);
 		roles.add(UserRole.HALF_LINKER.getKey());
 		// token
-		String token = jwtTokenProvider.createAccessToken(checkTagReq.getDeviceId(), checkTagReq.getSerialNumber(), roles);
+		String token = jwtTokenProvider.createAccessToken(deviceId, requestSerialNumber, roles);
 		userService.insertTokenLog(
 			TokenLog.builder()
 				.token(token)
-				.deviceId(checkTagReq.getDeviceId())
+				.deviceId(deviceId)
 				.serialNumber(requestSerialNumber)
 				.tokenType(TokenType.CHECK_TAG)
 				.build());
 
-		Page page = pageService.findPageById(kit.getPageUid());
-
 		CheckTagResp checkTagResp = new CheckTagResp(page, token);
+
+		long totalSize = comicService.getImageSizeByPageUid(page.getPageUid());
+		checkTagResp.setTotalSize(totalSize);
+
 		return new CommonResp<>(checkTagResp);
+	}
+
+	@Operation(summary = "인스톨 완료 API")
+	@PostMapping("/install/complete")
+	public CommonResp<Void> installComplete(HttpServletRequest httpServletRequest) throws Exception {
+		String jwt = jwtTokenProvider.resolveToken(httpServletRequest);
+		Kit kit = userService.findBySerialNumber(jwtTokenProvider.getSerialNumberByToken(jwt));
+		kit.setDeviceId(jwtTokenProvider.getDeviceIdByToken(jwt));
+		userService.upsertKit(kit);
+		return new CommonResp<>();
+	}
+
+	@Operation(summary = "키트 태그 기록 초기화 API")
+	@PutMapping("/clear")
+	public CommonResp<Void> clearTagHistory(HttpServletRequest httpServletRequest) throws Exception {
+		String jwt = jwtTokenProvider.resolveToken(httpServletRequest);
+		userService.clearDeviceIdHistory(jwtTokenProvider.getDeviceIdByToken(jwt));
+		return new CommonResp<>();
 	}
 
 	@Operation(summary = "회원가입 API")
@@ -152,7 +171,7 @@ public class UserController {
 
 		Member member = userService.findByDeviceId(jwtTokenProvider.getDeviceIdByToken(jwt));
 		member.setKittorToken(resp.getAccessToken());
-		userService.upsertMember(member);
+		userService.saveMemberAndLog(member);
 
 		Set<String> roles = jwtTokenProvider.getRolesByToken(jwt);
 		roles.add(UserRole.LINKER.getKey());
@@ -180,7 +199,7 @@ public class UserController {
 
 		Member member = userService.findByDeviceId(jwtTokenProvider.getDeviceIdByToken(jwt));
 		member.setKittorToken(resp.getAccessToken());
-		userService.upsertMember(member);
+		userService.saveMemberAndLog(member);
 
 		Set<String> roles = jwtTokenProvider.getRolesByToken(jwt);
 		roles.add(UserRole.LINKER.getKey());
@@ -240,14 +259,6 @@ public class UserController {
 		return new CommonResp<>(pageService.getVersionInfo(versionInfoReq));
 	}
 
-	@Operation(summary = "인스톨 완료 API")
-	@PostMapping("/install/complete")
-	public CommonResp<Void> installComplete(@Valid @RequestBody InstallNoticeReq installNoticeReq) throws Exception {
-		KitLog kitLog = userService.findLatestKitLog(installNoticeReq.getDeviceId(), installNoticeReq.getSerialNumber().substring(0, 8));
-		userService.insertInstallLog(new InstallLog(kitLog));
-		return new CommonResp<>();
-	}
-
 	@Operation(summary = "키트 점검 API")
 	@GetMapping("/checkStatus")
 	public CommonResp<KitStatusResp> checkKitStatus(@ModelAttribute @Valid KitStatusReq kitStatusReq) throws Exception {
@@ -264,9 +275,7 @@ public class UserController {
 		kitStatusResp.setCreatedAt(page.getCreatedAt());
 
 		kitStatusResp.setIsInstalled(
-				comicService.getInstallStatus(
-					page.getPageUid(),
-					userService.getInstallLogs(page.getContentId(), kitStatusReq.getDeviceId()))
+			comicService.getInstallStatus(page.getPageUid(), kitStatusReq.getDeviceId())
 				.equals(KitStatus.AVAILABLE));
 
 		return new CommonResp<>(kitStatusResp);

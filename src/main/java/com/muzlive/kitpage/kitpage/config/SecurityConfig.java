@@ -55,12 +55,12 @@ public class SecurityConfig {
 			// check tag 이전 필요한 API
 			.antMatchers("/v1/user/checkTag", "/v1/user/login", "/v1/user/join", // Token 발급
 				"/v1/user/send/verification-code", "/v1/user/password/reset", "/v1/user/password/change", // User 비밀번호 관련
-				"/v1/user/mic/processed", "/v1/user/mic", "/v1/user/version", // 체크 태그, 버전 정보
-				"/v1/page/list/**", "/v1/page/download/image/**", "/v1/comic", "/v1/comic/detail/**") // 초기 리스트, 재 태그 필요 시 필요한 화면 구성용
-			.hasAnyRole("GUEST", "HALF_LINKER", "LINKER")
+				"/v1/user/mic/processed", "/v1/user/mic", "/v1/user/version", "/v1/user/clear", // 체크 태그, 버전 정보, 초기화
+				"/v1/page/list/**", "/v1/comic/list", "/v1/comic/detail/**") // 초기 리스트, 재 태그 필요 시 필요한 화면 구성용
+			.hasAnyRole("GUEST", "HALF_LINKER", "LINKER", "ENGINEER")
 			// API
 			.antMatchers("/v1/**")
-			.hasAnyRole("HALF_LINKER", "LINKER")
+			.hasAnyRole("HALF_LINKER", "LINKER", "ENGINEER")
 			.anyRequest().authenticated()
 			.and()
 			.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)

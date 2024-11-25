@@ -16,6 +16,7 @@ import com.muzlive.kitpage.kitpage.domain.page.comicbook.Video;
 import com.muzlive.kitpage.kitpage.domain.page.comicbook.repository.ComicBookRepository;
 import com.muzlive.kitpage.kitpage.domain.page.comicbook.repository.MusicRepository;
 import com.muzlive.kitpage.kitpage.domain.page.comicbook.repository.VideoRepository;
+import com.muzlive.kitpage.kitpage.domain.page.dto.req.CreateContentReq;
 import com.muzlive.kitpage.kitpage.domain.page.dto.req.CreatePageReq;
 import com.muzlive.kitpage.kitpage.domain.page.dto.req.UploadMusicReq;
 import com.muzlive.kitpage.kitpage.domain.page.dto.req.UploadVideoReq;
@@ -27,22 +28,33 @@ import com.muzlive.kitpage.kitpage.domain.user.dto.req.VersionInfoReq;
 import com.muzlive.kitpage.kitpage.domain.user.dto.resp.VersionInfoResp;
 import com.muzlive.kitpage.kitpage.domain.user.repository.ImageRepository;
 import com.muzlive.kitpage.kitpage.service.aws.S3Service;
+import com.muzlive.kitpage.kitpage.utils.CommonUtils;
 import com.muzlive.kitpage.kitpage.utils.constants.ApplicationConstants;
 import com.muzlive.kitpage.kitpage.utils.enums.ImageCode;
+import com.muzlive.kitpage.kitpage.utils.enums.Region;
 import com.muzlive.kitpage.kitpage.utils.enums.VideoCode;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import io.micrometer.core.instrument.util.StringUtils;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
+import javax.imageio.ImageIO;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
+@Slf4j
 @RequiredArgsConstructor
 @Service
 public class PageService {
@@ -50,6 +62,8 @@ public class PageService {
 	private final JPAQueryFactory queryFactory;
 
 	private final S3Service s3Service;
+
+	private final FileService fileService;
 
 	private final ContentRepository contentRepository;
 
@@ -63,13 +77,15 @@ public class PageService {
 
 	private final VideoRepository videoRepository;
 
-	public Content findContentByContentId(String contentId) throws Exception {
-		return contentRepository.findByContentId(contentId)
+	private final CommonUtils commonUtils;
+
+	public Content findContentByContentId(String contentId, Region region) throws Exception {
+		return contentRepository.findByContentIdAndRegion(contentId, region)
 			.orElseThrow(() -> new CommonException(ExceptionCode.CANNOT_FIND_MATCHED_ITEM));
 	}
 
-	public List<Page> findByContentId(String contentId) throws Exception {
-		return pageRepository.findAllByContentId(contentId)
+	public List<Page> findByContentId(String contentId, Region region) throws Exception {
+		return pageRepository.findAllByContentIdAndRegion(contentId, region)
 			.orElseThrow(() -> new CommonException(ExceptionCode.CANNOT_FIND_MATCHED_ITEM));
 	}
 
@@ -103,13 +119,24 @@ public class PageService {
 		return pages;
 	}
 
+	public boolean existsByImageUidAndSerialNumber(Long imageUid, String serialNumber) throws Exception {
+		return queryFactory
+			.selectOne()
+			.from(kit)
+				.innerJoin(comicBook).on(comicBook.pageUid.eq(kit.pageUid))
+				.innerJoin(comicBookDetail).on(comicBookDetail.comicBookUid.eq(comicBook.comicBookUid))
+			.where(kit.serialNumber.eq(serialNumber)
+				.and(comicBookDetail.imageUid.eq(imageUid)))
+			.fetchFirst() != null;
+	}
+
 	@Transactional
 	public Video upsertVideo(Video video) throws Exception {
 		return videoRepository.save(video);
 	}
 
 	@Transactional
-	public void createPage(CreatePageReq createPageReq) throws Exception {
+	public Page createPage(CreatePageReq createPageReq) throws Exception {
 		String contentId = createPageReq.getContentId();
 
 		if(StringUtils.isEmpty(contentId)) {
@@ -130,7 +157,7 @@ public class PageService {
 		image.setSaveFileName(saveFileName);
 		imageRepository.save(image);
 
-		pageRepository.save(
+		return pageRepository.save(
 			Page.builder()
 			.contentId(contentId)
 			.contentType(createPageReq.getContentType())
@@ -140,6 +167,18 @@ public class PageService {
 			.infoText(createPageReq.getInfoText())
 			.company(createPageReq.getCompany())
 			.region(createPageReq.getRegion())
+			.build());
+	}
+
+	@Transactional
+	public void createContent(CreateContentReq createContentReq) throws Exception {
+		contentRepository.save(Content.builder()
+				.contentId(createContentReq.getContentId())
+				.contentType(createContentReq.getContentType())
+				.title(createContentReq.getTitle())
+				.infoText(createContentReq.getInfoText())
+				.coverImageUid(fileService.uploadConvertFile(createContentReq.getContentId(), createContentReq.getImage(), ImageCode.CONTENT_COVER_IMAGE))
+				.region(createContentReq.getRegion())
 			.build());
 	}
 
@@ -189,7 +228,7 @@ public class PageService {
 			.orElseThrow(() -> new CommonException(ExceptionCode.CANNOT_FIND_MATCHED_ITEM));
 
 		String streamUrl = uploadVideoReq.getStreamUrl();
-		VideoCode videoCode = VideoCode.STREAM;
+		VideoCode videoCode = VideoCode.YOUTUBE;
 
 		if(Objects.nonNull(uploadVideoReq.getFile())) {
 			// S3 Cover Image Upload
@@ -203,10 +242,11 @@ public class PageService {
 
 		Video video = Video.builder()
 			.contentId(uploadVideoReq.getContentId())
-			.artist(uploadVideoReq.getArtist())
-			.title(uploadVideoReq.getTitle())
+			.duration(uploadVideoReq.getDuration() == null ? "" : uploadVideoReq.getDuration())
+			.title(uploadVideoReq.getTitle() == null ? "" : uploadVideoReq.getTitle())
 			.streamUrl(streamUrl)
 			.videoCode(videoCode)
+			.pageUid(uploadVideoReq.getPageUid())
 			.build();
 
 		if(Objects.nonNull(uploadVideoReq.getImage())) {
@@ -226,6 +266,39 @@ public class PageService {
 		videoRepository.save(video);
 
 		return video;
+	}
+
+	public byte[] downloadFileFromUrl(String fileUrl) throws Exception {
+		URL url = new URL(fileUrl);
+		URLConnection connection = url.openConnection();
+		try (InputStream inputStream = connection.getInputStream()) {
+			return commonUtils.inputStreamToByteArray(inputStream);
+		} catch(Exception e) {
+			log.error(e.getMessage());
+			return null;
+		}
+	}
+
+	public Long uploadYoutubeThumbnail(String contentId, String url) throws Exception {
+		byte[] thumbnail = this.downloadFileFromUrl(url);
+
+		String saveFileName = UUID.randomUUID() + "." + FilenameUtils.getExtension(url);
+		String coverImagePath = contentId + "/" + ApplicationConstants.VIDEO + "/" + saveFileName;
+		s3Service.uploadFile(coverImagePath, thumbnail);
+
+		BufferedImage bufferedImage = ImageIO.read(new ByteArrayInputStream(thumbnail));
+		Image image = Image.builder()
+			.imagePath(coverImagePath)
+			.imageCode(ImageCode.VIDEO_COVER_IMAGE)
+			.imageSize(thumbnail.length == 0 ? 0 : (long) thumbnail.length)
+			.width(bufferedImage.getWidth())
+			.height(bufferedImage.getHeight())
+			.originalFileName("")
+			.saveFileName(saveFileName)
+			.md5(DigestUtils.md5Hex(thumbnail))
+			.build();
+
+		return imageRepository.save(image).getImageUid();
 	}
 
 	public VersionInfoResp getVersionInfo(VersionInfoReq versionInfoReq) throws Exception {

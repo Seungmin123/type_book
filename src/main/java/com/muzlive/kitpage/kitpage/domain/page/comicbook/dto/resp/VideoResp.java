@@ -11,7 +11,7 @@ public class VideoResp {
 
 	private String title;
 
-	private String artist;
+	private String duration;
 
 	private String streamUrl;
 
@@ -23,7 +23,7 @@ public class VideoResp {
 
 	public VideoResp(Video video){
 		this.title = video.getTitle();
-		this.artist = video.getArtist();
+		this.duration = video.getDuration();
 		this.streamUrl = video.getStreamUrl();
 		this.coverImageUid = video.getCoverImageUid();
 		this.videoCode = video.getVideoCode();
