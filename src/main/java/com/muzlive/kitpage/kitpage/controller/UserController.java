@@ -35,6 +35,7 @@ import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.KittorUserReq
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.SendVerificationReq;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.resp.KittorTokenResp;
 import com.muzlive.kitpage.kitpage.utils.CommonUtils;
+import com.muzlive.kitpage.kitpage.utils.constants.ApplicationConstants;
 import com.muzlive.kitpage.kitpage.utils.enums.KitStatus;
 import com.muzlive.kitpage.kitpage.utils.enums.PageContentType;
 import com.muzlive.kitpage.kitpage.utils.enums.TokenType;
@@ -116,7 +117,7 @@ public class UserController {
 		KihnoKitCheckReq kihnoKitCheckReq = KihnoKitCheckReq.builder()
 			.deviceId(deviceId)
 			.kitId(paramSerialNumber)
-			.countryCode(page.getRegion().getCode())
+			.countryCode(page == null ? ApplicationConstants.KOR_COUNTRY_CODE : page.getRegion().getCode())
 			.build();
 
 		userService.checkTag(requestSerialNumber, kihnoV2TransferSerivce.kihnoKitCheck(kihnoKitCheckReq).getKihnoKitUid());
