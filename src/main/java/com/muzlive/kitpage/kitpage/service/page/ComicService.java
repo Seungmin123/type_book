@@ -193,7 +193,7 @@ public class ComicService {
 	}
 
 	public Page findPageWithComicBooksBySerialNumber(String serialNumber) throws Exception {
-		return pageRepository.findWithChildBySerialNumber(serialNumber).orElseThrow(() -> new CommonException(ExceptionCode.CANNOT_FIND_MATCHED_ITEM));
+		return pageRepository.findWithChildBySerialNumber(serialNumber).orElse(null);
 	}
 
 	public Long getImageSizeByPageUid(Long pageUid) throws Exception {
