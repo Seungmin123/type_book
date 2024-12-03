@@ -144,7 +144,7 @@ public class PageService {
 				.map(page -> page.getPageUid() != null ? page.getPageUid() + 1L : 1L)
 				.orElse(1L);
 
-			contentId = createPageReq.getContentType() + "_" + String.format("%08d", nextPageUid);
+			contentId = ApplicationConstants.PAGE_APP_ID_SEPARATOR + "_" + createPageReq.getContentType() + "_" + String.format("%08d", nextPageUid);
 		}
 
 		// S3 Cover Image Upload

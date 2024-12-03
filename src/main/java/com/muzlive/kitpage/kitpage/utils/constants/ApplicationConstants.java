@@ -2,6 +2,8 @@ package com.muzlive.kitpage.kitpage.utils.constants;
 
 public class ApplicationConstants {
 
+	public static final String PAGE_APP_ID_SEPARATOR = "KP";
+
 	public static final String PAGE = "PAGE";
 
 	public static final String COMIC = "COMIC";
