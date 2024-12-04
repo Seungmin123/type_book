@@ -12,15 +12,15 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface PageRepository extends JpaRepository<Page, Long> {
 
-	Optional<List<Page>> findAllByContentIdAndRegion(String contentId, Region region);
+	Optional<List<Page>> findAllByContentId(String contentId);
 
 	Optional<Page> findFirstByOrderByPageUidDesc();
 
 	@EntityGraph(attributePaths = {"comicBooks"})
 	@Query("SELECT DISTINCT p "
 		+ "FROM Page p "
-		+ "WHERE p.contentId = :contentId AND p.region = :region")
-	Optional<List<Page>> findAllWithChild(String contentId, Region region);
+		+ "WHERE p.contentId = :contentId")
+	Optional<List<Page>> findAllWithChild(String contentId);
 
 	@EntityGraph(attributePaths = {"comicBooks"})
 	@Query("SELECT DISTINCT p "

@@ -14,9 +14,6 @@ public class AccessTokenReq {
 	@JsonProperty("deviceId")
 	private String deviceId;
 
-	@JsonProperty("region")
-	private String region;
-
 	@NotNull
 	@JsonProperty("modelName")
 	private String modelName;

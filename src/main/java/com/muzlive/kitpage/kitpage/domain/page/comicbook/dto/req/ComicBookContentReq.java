@@ -13,8 +13,4 @@ public class ComicBookContentReq {
 	@JsonProperty("contentId")
 	private String contentId;
 
-	@NotNull
-	@JsonProperty("region")
-	private String region;
-
 }
