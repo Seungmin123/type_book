@@ -84,8 +84,8 @@ public class PageService {
 			.orElseThrow(() -> new CommonException(ExceptionCode.CANNOT_FIND_MATCHED_ITEM));
 	}
 
-	public List<Page> findByContentId(String contentId, Region region) throws Exception {
-		return pageRepository.findAllByContentIdAndRegion(contentId, region)
+	public List<Page> findByContentId(String contentId) throws Exception {
+		return pageRepository.findAllByContentId(contentId)
 			.orElseThrow(() -> new CommonException(ExceptionCode.CANNOT_FIND_MATCHED_ITEM));
 	}
 

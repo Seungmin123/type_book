@@ -163,8 +163,8 @@ public class ComicService {
 	}
 
 
-	public ComicBookContentResp getComicBookContent(String deviceId, String contentId, Region region) throws Exception {
-		List<Page> pages = pageRepository.findAllWithChild(contentId, region).orElse(new ArrayList<>());
+	public ComicBookContentResp getComicBookContent(String deviceId, String contentId) throws Exception {
+		List<Page> pages = pageRepository.findAllWithChild(contentId).orElse(new ArrayList<>());
 		if(CollectionUtils.isEmpty(pages)) throw new CommonException(ExceptionCode.CANNOT_FIND_MATCHED_ITEM);
 		ComicBookContentResp comicBookContentResp = new ComicBookContentResp(pages.get(0).getContent());
 
@@ -230,9 +230,9 @@ public class ComicService {
 		return 0L;
 	}
 
-	public List<ComicBookDetailResp> getRelatedComicDetailBookList(String deviceId, String contentId, Region region) throws Exception {
+	public List<ComicBookDetailResp> getRelatedComicDetailBookList(String deviceId, String contentId) throws Exception {
 		List<ComicBookDetailResp> comicBookDetailResps = new ArrayList<>();
-		List<Page> pages = pageService.findByContentId(contentId, region);
+		List<Page> pages = pageService.findByContentId(contentId);
 
 		for (Page pageItem : pages) {
 			ComicBookDetailResp comicBookDetailResp = new ComicBookDetailResp(pageItem);
