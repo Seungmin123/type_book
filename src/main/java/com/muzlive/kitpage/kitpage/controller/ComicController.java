@@ -53,8 +53,7 @@ public class ComicController {
 	public CommonResp<ComicBookContentResp> getComicBookListByContentId(@Valid @ModelAttribute ComicBookContentReq comicBookContentReq, HttpServletRequest httpServletRequest) throws Exception {
 		return new CommonResp<>(comicService.getComicBookContent(
 			jwtTokenProvider.getDeviceIdByToken(jwtTokenProvider.resolveToken(httpServletRequest)),
-			comicBookContentReq.getContentId(),
-			Region.getRegionByName(comicBookContentReq.getRegion())));
+			comicBookContentReq.getContentId()));
 	}
 
 	// N+1
@@ -63,8 +62,7 @@ public class ComicController {
 	public CommonResp<List<ComicBookDetailResp>> getComicBookContents(@Valid @ModelAttribute ComicBookContentReq comicBookContentReq, HttpServletRequest httpServletRequest) throws Exception {
 		return new CommonResp<>(comicService.getRelatedComicDetailBookList(
 			jwtTokenProvider.getDeviceIdByToken(jwtTokenProvider.resolveToken(httpServletRequest)),
-			comicBookContentReq.getContentId(),
-			Region.getRegionByName(comicBookContentReq.getRegion())));
+			comicBookContentReq.getContentId()));
 	}
 
 	@Operation(summary = "ComicBook 컨텐츠 상세 정보 조회")
