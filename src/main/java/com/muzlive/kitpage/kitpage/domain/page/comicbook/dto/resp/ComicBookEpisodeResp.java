@@ -3,6 +3,8 @@ package com.muzlive.kitpage.kitpage.domain.page.comicbook.dto.resp;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.muzlive.kitpage.kitpage.config.serializer.LocalDateTimeSerializer;
 import com.muzlive.kitpage.kitpage.domain.page.comicbook.ComicBook;
+import com.muzlive.kitpage.kitpage.utils.enums.ReadingDirection;
+
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,6 +27,8 @@ public class ComicBookEpisodeResp {
 
 	private Integer pageSize;
 
+	private ReadingDirection readingDirection;
+
 	private List<ComicBookImageResp> detailPages;
 
 	@JsonSerialize(using = LocalDateTimeSerializer.class)
@@ -36,6 +40,7 @@ public class ComicBookEpisodeResp {
 		this.volume = comicBook.getVolume();
 		this.volumeUnit = comicBook.getVolumeUnit();
 		this.pageUnit = comicBook.getPageUnit();
+		this.readingDirection = comicBook.getReadingDirection();
 	}
 
 }
