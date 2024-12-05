@@ -2,6 +2,7 @@ package com.muzlive.kitpage.kitpage.domain.page.comicbook;
 
 import com.muzlive.kitpage.kitpage.domain.common.BaseTimeEntity;
 import com.muzlive.kitpage.kitpage.domain.page.Page;
+import com.muzlive.kitpage.kitpage.utils.enums.ReadingDirection;
 import com.muzlive.kitpage.kitpage.utils.enums.Region;
 import java.util.Arrays;
 import java.util.List;
@@ -66,6 +67,10 @@ public class ComicBook extends BaseTimeEntity {
 	@Column(name = "genre")
 	private String genre;
 
+	@Enumerated(EnumType.STRING)
+	@Column(name = "reading_direction")
+	private ReadingDirection readingDirection;
+
 	@Transient
 	private List<String> genreList;
 
@@ -91,7 +96,7 @@ public class ComicBook extends BaseTimeEntity {
 	}
 
 	@Builder
-	public ComicBook(Long pageUid, Long coverImageUid, String writer, String illustrator, Integer volume, String volumeUnit, String pageUnit) {
+	public ComicBook(Long pageUid, Long coverImageUid, String writer, String illustrator, Integer volume, String volumeUnit, String pageUnit, ReadingDirection readingDirection) {
 		this.pageUid = pageUid;
 		this.coverImageUid = coverImageUid;
 		this.writer = writer;
@@ -99,5 +104,6 @@ public class ComicBook extends BaseTimeEntity {
 		this.volume = volume;
 		this.volumeUnit = volumeUnit;
 		this.pageUnit = pageUnit;
+		this.readingDirection = readingDirection;
 	}
 }
