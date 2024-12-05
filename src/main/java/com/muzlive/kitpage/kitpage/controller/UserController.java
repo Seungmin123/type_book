@@ -46,6 +46,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.time.LocalDateTime;
 import java.util.Locale;
 import java.util.Set;
 import javax.servlet.http.HttpServletRequest;
@@ -148,6 +149,7 @@ public class UserController {
 		String jwt = jwtTokenProvider.resolveToken(httpServletRequest);
 		Kit kit = userService.findBySerialNumber(jwtTokenProvider.getSerialNumberByToken(jwt));
 		kit.setDeviceId(jwtTokenProvider.getDeviceIdByToken(jwt));
+		kit.setModifiedAt(LocalDateTime.now());
 		userService.upsertKit(kit);
 		return new CommonResp<>();
 	}
