@@ -2,7 +2,6 @@ package com.muzlive.kitpage.kitpage.domain.page.dto.req;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.muzlive.kitpage.kitpage.utils.enums.PageContentType;
-import com.muzlive.kitpage.kitpage.utils.enums.PageGenre;
 import com.muzlive.kitpage.kitpage.utils.enums.Region;
 import javax.validation.constraints.NotNull;
 import lombok.Getter;

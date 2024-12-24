@@ -199,7 +199,6 @@ public class PageService {
 			.filePath(filePath)
 			.saveFileName(saveMusicName)
 			.originalFileName(uploadMusicReq.getFile().getOriginalFilename())
-			// TODO
 			.playTime("")
 			.build();
 
@@ -309,8 +308,6 @@ public class PageService {
 		if(!this.isVersionFormat(versionInfoReq.getCurrentVersion())
 			|| !this.isVersionFormat(versionInfoReq.getOsVersion()))
 			throw new CommonException(ExceptionCode.INVALID_REQUEST_PRAMETER);
-
-		VersionInfoResp versionInfoResp;
 
 		VersionInfo version = queryFactory
 			.selectFrom(versionInfo)

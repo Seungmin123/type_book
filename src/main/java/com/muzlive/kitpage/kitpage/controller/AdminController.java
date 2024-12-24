@@ -17,14 +17,12 @@ import com.muzlive.kitpage.kitpage.service.transfer.kihno.MuzTransferService;
 import com.muzlive.kitpage.kitpage.utils.CommonUtils;
 import com.muzlive.kitpage.kitpage.utils.enums.VideoCode;
 import java.time.Duration;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -82,7 +80,7 @@ public class AdminController {
 		Video video = pageService.insertVideo(uploadVideoReq);
 
 		if(video.getVideoCode().equals(VideoCode.S3)) {
-			Map videoEncodingInfo = muzTransferService.encodingVideo(video.getStreamUrl());
+			Map<String, Object> videoEncodingInfo = muzTransferService.encodingVideo(video.getStreamUrl());
 
 			if (videoEncodingInfo.containsKey("video_id")) {
 				video.setVideoId(String.valueOf(videoEncodingInfo.get("video_id")));
