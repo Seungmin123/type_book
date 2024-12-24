@@ -34,6 +34,7 @@ public class Kit extends BaseTimeEntity {
 	@Column(name = "device_id")
 	private String deviceId;
 
+	@Setter
 	@Column(name = "page_uid")
 	private Long pageUid;
 
