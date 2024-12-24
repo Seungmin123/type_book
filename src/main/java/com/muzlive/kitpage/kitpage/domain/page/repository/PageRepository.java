@@ -27,4 +27,6 @@ public interface PageRepository extends JpaRepository<Page, Long> {
 		+ "INNER JOIN Kit k ON k.pageUid = p.pageUid "
 		+ "WHERE k.serialNumber = :serialNumber")
 	Optional<Page> findWithChildBySerialNumber(String serialNumber);
+
+	Optional<Page> findByAlbumId(String albumId);
 }

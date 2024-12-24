@@ -16,6 +16,8 @@ public class CheckTagResp {
 
 	private String contentId;
 
+	private String albumId;
+
 	private Long coverImageUid;
 
 	private String title;
@@ -30,6 +32,7 @@ public class CheckTagResp {
 		this.token = token;
 		this.pageUid = page.getPageUid();
 		this.contentId = page.getContentId();
+		this.albumId = page.getAlbumId();
 		this.coverImageUid = page.getCoverImageUid();
 		this.title = page.getTitle();
 		this.writer = (Objects.nonNull(page.getComicBooks().get(0))) ? page.getComicBooks().get(0).getWriter() : "";

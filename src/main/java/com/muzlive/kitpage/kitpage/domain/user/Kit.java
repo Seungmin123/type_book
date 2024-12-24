@@ -41,4 +41,8 @@ public class Kit extends BaseTimeEntity {
 	@Column(name = "kihno_kit_uid")
 	private Long kihnoKitUid;
 
+	public Kit(String serialNumber, Long pageUid) {
+		this.serialNumber = serialNumber;
+		this.pageUid = pageUid;
+	} 
 }
