@@ -4,6 +4,7 @@ import com.muzlive.kitpage.kitpage.config.transfer.domain.MuzDomain;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
@@ -25,16 +26,16 @@ public class MuzTransferService {
 		this.webClient = builder.baseUrl(muzDomain.getDomain()).build();
 	}
 
-	public Map encodingVideo(String filePath) throws Exception {
+	public Map<String, Object> encodingVideo(String streamUrl) throws Exception {
 		LinkedMultiValueMap<String, String> multiValueMap = new LinkedMultiValueMap<>();
-		multiValueMap.add("path", filePath);
+		multiValueMap.add("path", streamUrl);
 		multiValueMap.add("bucket_name", BUCKET);
 
 		return webClient.get()
 			.uri(urlBuilder -> urlBuilder.path(VIDEO_ENCODING_URL).queryParams(multiValueMap).build())
 			.header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
 			.accept(MediaType.APPLICATION_JSON)
-			.retrieve().bodyToMono(Map.class)
+			.retrieve().bodyToMono(new ParameterizedTypeReference<Map<String, Object>>() {})
 			.doOnError(e -> log.error(e.getMessage()))
 			.block();
 	}

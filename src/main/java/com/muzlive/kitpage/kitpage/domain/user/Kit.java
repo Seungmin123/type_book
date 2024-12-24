@@ -1,12 +1,8 @@
 package com.muzlive.kitpage.kitpage.domain.user;
 
 import com.muzlive.kitpage.kitpage.domain.common.BaseTimeEntity;
-import com.muzlive.kitpage.kitpage.utils.enums.PageContentType;
-import com.muzlive.kitpage.kitpage.utils.enums.PageGenre;
-import com.muzlive.kitpage.kitpage.utils.enums.Region;
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -45,4 +41,8 @@ public class Kit extends BaseTimeEntity {
 	@Column(name = "kihno_kit_uid")
 	private Long kihnoKitUid;
 
+	public Kit(String serialNumber, Long pageUid) {
+		this.serialNumber = serialNumber;
+		this.pageUid = pageUid;
+	} 
 }

@@ -3,7 +3,6 @@ package com.muzlive.kitpage.kitpage.domain.page;
 import com.muzlive.kitpage.kitpage.domain.common.BaseTimeEntity;
 import com.muzlive.kitpage.kitpage.domain.page.comicbook.ComicBook;
 import com.muzlive.kitpage.kitpage.utils.enums.PageContentType;
-import com.muzlive.kitpage.kitpage.utils.enums.PageGenre;
 import com.muzlive.kitpage.kitpage.utils.enums.Region;
 import java.util.List;
 import javax.persistence.Column;
@@ -41,6 +40,9 @@ public class Page extends BaseTimeEntity {
 
 	@Column(name = "content_id", nullable = false, length = 100)
 	private String contentId;
+
+	@Column(name = "album_id")
+	private String albumId;
 
 	@Enumerated(EnumType.STRING)
 	@Column(name = "content_type", nullable = false)
@@ -80,10 +82,11 @@ public class Page extends BaseTimeEntity {
 	private Content content;
 
 	@Builder
-	public Page(String contentId, PageContentType contentType,
+	public Page(String contentId, String albumId, PageContentType contentType,
 		Long coverImageUid, String title, String subTitle, String infoText, String company,
 		Double rate, Region region) {
 		this.contentId = contentId;
+		this.albumId = albumId;
 		this.contentType = contentType;
 		this.coverImageUid = coverImageUid;
 		this.title = title;

@@ -1,7 +1,6 @@
 package com.muzlive.kitpage.kitpage.domain.page.repository;
 
 import com.muzlive.kitpage.kitpage.domain.page.Page;
-import com.muzlive.kitpage.kitpage.utils.enums.Region;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.EntityGraph;
@@ -28,4 +27,6 @@ public interface PageRepository extends JpaRepository<Page, Long> {
 		+ "INNER JOIN Kit k ON k.pageUid = p.pageUid "
 		+ "WHERE k.serialNumber = :serialNumber")
 	Optional<Page> findWithChildBySerialNumber(String serialNumber);
+
+	Optional<Page> findByAlbumId(String albumId);
 }

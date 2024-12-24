@@ -26,7 +26,7 @@ public class ExceptionAdvisor {
     private final WebhookTransfer webhookTransfer;
 
     @ExceptionHandler(value={BindException.class})
-    protected CommonResp handleMethodArgumentNotValid(HttpServletRequest req, BindException ex) {
+    protected CommonResp<?> handleMethodArgumentNotValid(HttpServletRequest req, BindException ex) {
         log.error("MethodArgumentNotValidException =========================================");
         FieldError fieldError = ex.getBindingResult().getFieldErrors()
                 .stream()
@@ -35,12 +35,12 @@ public class ExceptionAdvisor {
 
         log.error(fieldError.getField() + " : " + fieldError.getDefaultMessage());
 
-        return new CommonResp(HttpStatus.BAD_REQUEST, fieldError.getField() + " : " + fieldError.getDefaultMessage() , null);
+        return new CommonResp<>(HttpStatus.BAD_REQUEST, fieldError.getField() + " : " + fieldError.getDefaultMessage(), null);
     }
 
     // Zap 에러 핸들링
     @ExceptionHandler(ClientAbortException.class)
-    public CommonResp handleClientAbortException(ClientAbortException e) {
+    public CommonResp<?> handleClientAbortException(ClientAbortException e) {
         log.error("ClientAbortException =========================================");
         log.error(e.getMessage());
         return getResponseEntity(new CommonException());
@@ -48,12 +48,12 @@ public class ExceptionAdvisor {
 
     // Zap 에러 핸들링
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
-    public CommonResp handleHttpRequestMethodNotSupported(HttpRequestMethodNotSupportedException e) {
-        return new CommonResp(HttpStatus.METHOD_NOT_ALLOWED, e.getMessage(), null);
+    public CommonResp<?> handleHttpRequestMethodNotSupported(HttpRequestMethodNotSupportedException e) {
+        return new CommonResp<>(HttpStatus.METHOD_NOT_ALLOWED, e.getMessage(), null);
     }
 
     @ExceptionHandler(value = {Throwable.class})
-    protected CommonResp handleThrowableExceptions(HttpServletRequest req, Exception ex){
+    protected CommonResp<?> handleThrowableExceptions(HttpServletRequest req, Exception ex){
         try {
             if (ex instanceof CommonException) {
                 CommonException e = (CommonException) ex;
@@ -78,9 +78,9 @@ public class ExceptionAdvisor {
         return getResponseEntity(new CommonException());
     }
 
-    private CommonResp getResponseEntity(CommonException e) {
+    private CommonResp<?> getResponseEntity(CommonException e) {
         log.error(e.getMessage());
-        return new CommonResp(e.getStatus(), e.getMessage(), e.data);
+        return new CommonResp<Object>(e.getStatus(), e.getMessage(), e.data);
     }
 
     String makeSlackMessage(HttpServletRequest req, Exception ex) {

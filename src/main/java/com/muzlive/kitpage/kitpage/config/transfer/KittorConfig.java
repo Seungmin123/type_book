@@ -1,7 +1,5 @@
 package com.muzlive.kitpage.kitpage.config.transfer;
 
-import com.muzlive.kitpage.kitpage.config.transfer.domain.KihnoV1Domain;
-import com.muzlive.kitpage.kitpage.config.transfer.domain.KihnoV2Domain;
 import com.muzlive.kitpage.kitpage.config.transfer.domain.KittorDomain;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
