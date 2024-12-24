@@ -113,10 +113,6 @@ public class JwtTokenProvider {
         try {
             final Jws<Claims> claims = Jwts.parser().setSigningKey(secretKey).parseClaimsJws(accessToken);
 
-            final String deviceId = String.valueOf(claims.getBody().getSubject());
-            final String serialNumber = String.valueOf(claims.getBody().get("serialNumber"));
-            final String email = String.valueOf(claims.getBody().get("email"));
-
             return !claims.getBody().getExpiration().before(new Date());
 
         } catch (SecurityException | MalformedJwtException e) {
@@ -151,7 +147,9 @@ public class JwtTokenProvider {
 
     public Set<String> getRolesByToken(String accessToken) {
         final Jws<Claims> claims = Jwts.parser().setSigningKey(secretKey).parseClaimsJws(accessToken);
-        return new HashSet<>((List<String>) claims.getBody().get("roles"));
+        @SuppressWarnings("unchecked")
+        List<String> roles = (List<String>) claims.getBody().get("roles");
+        return new HashSet<>(roles);
     }
 
     //---------------------------------------------------------------------------------------------

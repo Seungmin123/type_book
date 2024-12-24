@@ -1,7 +1,5 @@
 package com.muzlive.kitpage.kitpage.config.jwt;
 
-import com.muzlive.kitpage.kitpage.domain.user.repository.KitRepository;
-import com.muzlive.kitpage.kitpage.domain.user.repository.MemberRepository;
 import com.muzlive.kitpage.kitpage.domain.user.repository.TokenLogRepository;
 import com.muzlive.kitpage.kitpage.utils.enums.TokenType;
 import com.muzlive.kitpage.kitpage.utils.enums.UserRole;
@@ -28,9 +26,6 @@ public class JwtFilter extends OncePerRequestFilter {
 
 	private final JwtTokenProvider tokenProvider;
 
-	private final MemberRepository memberRepository;
-
-	private final KitRepository kitRepository;
 
 	private final TokenLogRepository tokenLogRepository;
 
