@@ -1,16 +1,16 @@
-package com.muzlive.kitpage.kitpage.domain.user.dto.req;
+package com.muzlive.kitpage.kitpage.domain.page.dto.req;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import javax.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
-public class CheckTagReq {
+public class CreateKitReq {
 
-	@NotNull
+	@JsonProperty("appId")
+	private String appId;
+
 	@JsonProperty("serialNumber")
 	private String serialNumber;
-
 }

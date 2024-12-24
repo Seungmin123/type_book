@@ -1,21 +1,16 @@
 package com.muzlive.kitpage.kitpage.service.aws;
 
 import com.muzlive.kitpage.kitpage.config.aws.domain.CloudFrontDomain;
-import com.muzlive.kitpage.kitpage.config.encryptor.AesSecurityProvider;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.net.URLConnection;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.InvalidMediaTypeException;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.services.cloudfront.internal.utils.SigningUtils;
 import software.amazon.awssdk.services.cloudfront.model.CannedSignerRequest;
@@ -24,8 +19,6 @@ import software.amazon.awssdk.services.cloudfront.model.CannedSignerRequest;
 @RequiredArgsConstructor
 @Service
 public class CloudFrontService {
-
-	private final AesSecurityProvider aesSecurityProvider;
 
 	private final CloudFrontDomain cloudFrontDomain;
 

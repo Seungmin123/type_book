@@ -17,6 +17,7 @@ import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -46,21 +47,21 @@ public class KihnoV2TransferSerivce {
 
     // Kit Check
     public KihnoKitCheckResp kihnoKitCheck(KihnoKitCheckReq kihnoKitCheckReq) throws Exception {
-        Map kihnoCheckTagResp = webClient.post()
+        Map<String, Object> kihnoCheckTagResp = webClient.post()
                 .uri(KIT_CHECK_URL)
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                 .accept(MediaType.APPLICATION_JSON)
                 .body(Mono.just(kihnoKitCheckReq), KihnoKitCheckReq.class)
-                .retrieve().bodyToMono(Map.class)
+                .retrieve().bodyToMono(new ParameterizedTypeReference<Map<String, Object>>() {})
                 .timeout(Duration.ofMillis(15000))
                 .doOnError(e -> log.error(e.getMessage()))
-                .onErrorResume(e -> Mono.just(new HashMap()))
+                .onErrorResume(e -> Mono.just(new HashMap<String, Object>()))
                 .block();
 
         return this.validateKihnoData(kihnoCheckTagResp);
     }
 
-    private KihnoKitCheckResp validateKihnoData(Map kihnoCheckTagResp) throws Exception {
+    private KihnoKitCheckResp validateKihnoData(Map<String, Object> kihnoCheckTagResp) throws Exception {
         if(ObjectUtils.isEmpty(kihnoCheckTagResp.get(ApplicationConstants.DATA))) {
             throw new CommonException(ExceptionCode.CANNOT_FIND_MATCHED_KIHNO_ITEM);
         }
@@ -84,12 +85,12 @@ public class KihnoV2TransferSerivce {
     }
 
     public KihnoMicLocationResp getMicLocation(KihnoMicLocationReq kihnoMicLocationReq) throws Exception {
-        Map kihnoMicLocationResp = webClient.post()
+        Map<String, Object> kihnoMicLocationResp = webClient.post()
                 .uri(SELECT_MIC_URL)
                 .body(Mono.just(kihnoMicLocationReq), KihnoMicLocationReq.class)
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                 .accept(MediaType.APPLICATION_JSON)
-                .retrieve().bodyToMono(Map.class)
+                .retrieve().bodyToMono(new ParameterizedTypeReference<Map<String, Object>>() {})
                 .timeout(Duration.ofMillis(15000))
                 .doOnError(e -> {
                     log.info(e.getMessage());
@@ -112,12 +113,12 @@ public class KihnoV2TransferSerivce {
     }
 
     public KihnoMicProcessedResp checkMicProcessed(KihnoMicProcessedReq kihnoMicProcessedReq) throws Exception {
-        Map kihnoCheckMicProcessedResp = webClient.post()
+        Map<String, Object> kihnoCheckMicProcessedResp = webClient.post()
                 .uri(MIC_PROCESSED_URL)
                 .body(Mono.just(kihnoMicProcessedReq), KihnoMicProcessedReq.class)
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                 .accept(MediaType.APPLICATION_JSON)
-                .retrieve().bodyToMono(Map.class)
+                .retrieve().bodyToMono(new ParameterizedTypeReference<Map<String, Object>>() {})
                 .timeout(Duration.ofMillis(15000))
                 .doOnError(e -> {
                     log.info(e.getMessage());

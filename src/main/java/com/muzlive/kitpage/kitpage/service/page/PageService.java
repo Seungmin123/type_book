@@ -17,16 +17,19 @@ import com.muzlive.kitpage.kitpage.domain.page.comicbook.repository.ComicBookRep
 import com.muzlive.kitpage.kitpage.domain.page.comicbook.repository.MusicRepository;
 import com.muzlive.kitpage.kitpage.domain.page.comicbook.repository.VideoRepository;
 import com.muzlive.kitpage.kitpage.domain.page.dto.req.CreateContentReq;
+import com.muzlive.kitpage.kitpage.domain.page.dto.req.CreateKitReq;
 import com.muzlive.kitpage.kitpage.domain.page.dto.req.CreatePageReq;
 import com.muzlive.kitpage.kitpage.domain.page.dto.req.UploadMusicReq;
 import com.muzlive.kitpage.kitpage.domain.page.dto.req.UploadVideoReq;
 import com.muzlive.kitpage.kitpage.domain.page.repository.ContentRepository;
 import com.muzlive.kitpage.kitpage.domain.page.repository.PageRepository;
 import com.muzlive.kitpage.kitpage.domain.user.Image;
+import com.muzlive.kitpage.kitpage.domain.user.Kit;
 import com.muzlive.kitpage.kitpage.domain.user.VersionInfo;
 import com.muzlive.kitpage.kitpage.domain.user.dto.req.VersionInfoReq;
 import com.muzlive.kitpage.kitpage.domain.user.dto.resp.VersionInfoResp;
 import com.muzlive.kitpage.kitpage.domain.user.repository.ImageRepository;
+import com.muzlive.kitpage.kitpage.domain.user.repository.KitRepository;
 import com.muzlive.kitpage.kitpage.service.aws.S3Service;
 import com.muzlive.kitpage.kitpage.utils.CommonUtils;
 import com.muzlive.kitpage.kitpage.utils.constants.ApplicationConstants;
@@ -64,6 +67,8 @@ public class PageService {
 	private final S3Service s3Service;
 
 	private final FileService fileService;
+
+	private final KitRepository kitRepository;
 
 	private final ContentRepository contentRepository;
 
@@ -136,6 +141,22 @@ public class PageService {
 	}
 
 	@Transactional
+	public List<Kit> createKit(List<CreateKitReq> createKitReqs) throws Exception {
+		List<Kit> kits = new ArrayList<>();
+
+		for(CreateKitReq createKitReq : createKitReqs) {
+			Page page = pageRepository.findByAlbumId(createKitReq.getAppId()).orElseThrow(() -> new CommonException(ExceptionCode.CANNOT_FIND_MATCHED_ITEM));
+			kits.add(new Kit(createKitReq.getSerialNumber(), page.getPageUid()));
+		}
+		
+		if(!CollectionUtils.isEmpty(kits)) {
+			return kitRepository.saveAll(kits);
+		}
+
+		return null;
+	}
+
+	@Transactional
 	public Page createPage(CreatePageReq createPageReq) throws Exception {
 		String contentId = createPageReq.getContentId();
 
@@ -199,7 +220,6 @@ public class PageService {
 			.filePath(filePath)
 			.saveFileName(saveMusicName)
 			.originalFileName(uploadMusicReq.getFile().getOriginalFilename())
-			// TODO
 			.playTime("")
 			.build();
 
@@ -309,8 +329,6 @@ public class PageService {
 		if(!this.isVersionFormat(versionInfoReq.getCurrentVersion())
 			|| !this.isVersionFormat(versionInfoReq.getOsVersion()))
 			throw new CommonException(ExceptionCode.INVALID_REQUEST_PRAMETER);
-
-		VersionInfoResp versionInfoResp;
 
 		VersionInfo version = queryFactory
 			.selectFrom(versionInfo)
