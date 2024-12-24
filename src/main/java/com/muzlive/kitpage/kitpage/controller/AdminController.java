@@ -28,8 +28,10 @@ import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -137,6 +139,46 @@ public class AdminController {
 		}
 
 		pageService.createKit(kits);
+
+		return new CommonResp<>();
+	}
+
+	@PutMapping("/porting")
+	CommonResp<Void> updateKit(@RequestBody JsonNode createKitReqs) throws Exception {
+		ObjectMapper mapper = new ObjectMapper();
+		List<CreateKitReq> kits = new ArrayList<>();
+
+		if(createKitReqs.isArray()) {
+			kits = mapper.convertValue(createKitReqs, new TypeReference<List<CreateKitReq>>() {
+			});
+		} else if(createKitReqs.isObject()) {
+			CreateKitReq singleKit = mapper.convertValue(createKitReqs, CreateKitReq.class);
+			kits.add(singleKit);
+		} else {
+			throw new CommonException(ExceptionCode.INVALID_REQUEST_PRAMETER);
+		}
+
+		pageService.updateKit(kits);
+
+		return new CommonResp<>();
+	}
+
+	@DeleteMapping("/porting")
+	CommonResp<Void> deleteKit(@RequestBody JsonNode createKitReqs) throws Exception {
+		ObjectMapper mapper = new ObjectMapper();
+		List<CreateKitReq> kits = new ArrayList<>();
+
+		if(createKitReqs.isArray()) {
+			kits = mapper.convertValue(createKitReqs, new TypeReference<List<CreateKitReq>>() {
+			});
+		} else if(createKitReqs.isObject()) {
+			CreateKitReq singleKit = mapper.convertValue(createKitReqs, CreateKitReq.class);
+			kits.add(singleKit);
+		} else {
+			throw new CommonException(ExceptionCode.INVALID_REQUEST_PRAMETER);
+		}
+
+		pageService.deleteKit(kits);
 
 		return new CommonResp<>();
 	}
