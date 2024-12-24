@@ -157,6 +157,38 @@ public class PageService {
 	}
 
 	@Transactional
+	public List<Kit> updateKit(List<CreateKitReq> createKitReqs) throws Exception {
+		List<Kit> kits = new ArrayList<>();
+
+		for(CreateKitReq createKitReq : createKitReqs) {
+			Kit kit = kitRepository.findBySerialNumber(createKitReq.getSerialNumber()).orElseThrow(() -> new CommonException(ExceptionCode.CANNOT_FIND_MATCHED_ITEM));
+			Page page = pageRepository.findByAlbumId(createKitReq.getAppId()).orElseThrow(() -> new CommonException(ExceptionCode.CANNOT_FIND_MATCHED_ITEM));
+			kit.setPageUid(page.getPageUid());
+			kits.add(kit);
+		}
+
+		if(!CollectionUtils.isEmpty(kits)) {
+			return kitRepository.saveAll(kits);
+		}
+
+		return null;
+	}
+
+	@Transactional
+	public void deleteKit(List<CreateKitReq> createKitReqs) throws Exception {
+		List<Kit> kits = new ArrayList<>();
+
+		for(CreateKitReq createKitReq : createKitReqs) {
+			Kit kit = kitRepository.findBySerialNumber(createKitReq.getSerialNumber()).orElseThrow(() -> new CommonException(ExceptionCode.CANNOT_FIND_MATCHED_ITEM));
+			kits.add(kit);
+		}
+
+		if(!CollectionUtils.isEmpty(kits)) {
+			kitRepository.deleteAll(kits);
+		}
+	}
+
+	@Transactional
 	public Page createPage(CreatePageReq createPageReq) throws Exception {
 		String contentId = createPageReq.getContentId();
 
