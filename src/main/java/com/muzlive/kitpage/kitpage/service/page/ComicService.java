@@ -272,31 +272,17 @@ public class ComicService {
 		return comicBookEpisodeResps;
 	}
 
-	public KitStatus getInstallStatus(Long pageUid, List<Tuple> tuples) throws Exception {
-		for(Tuple tuple : tuples) {
-			if(tuple.get(installLog).getPageUid().equals(pageUid)) {
-				if(tuple.get(kit) == null // Install 이력은 있지만 현재 다른 키트에 태그된 상태
-					|| tuple.get(installLog).getCreatedAt().plusDays(1).isBefore(LocalDateTime.now())) {
-					return KitStatus.EXPIRED;
-				} else {
-					return KitStatus.AVAILABLE;
-				}
-			}
-		}
-
-		return KitStatus.NEVER_USE;
-	}
-
 	public KitStatus getInstallStatus(Long pageUid, String deviceId) throws Exception {
-		return kitRepository.findFirstByPageUidAndDeviceIdOrderByCreatedAtDesc(pageUid, deviceId)
-			.map(k -> {
-				if(k.getModifiedAt().plusDays(1).isBefore(LocalDateTime.now())) {
-					return KitStatus.EXPIRED;
-				} else {
-					return KitStatus.AVAILABLE;
-				}
-			})
-			.orElse(KitStatus.NEVER_USE);
+//		return kitRepository.findFirstByPageUidAndDeviceIdOrderByCreatedAtDesc(pageUid, deviceId)
+//			.map(k -> {
+//				if(k.getModifiedAt().plusDays(1).isBefore(LocalDateTime.now())) {
+//					return KitStatus.EXPIRED;
+//				} else {
+//					return KitStatus.AVAILABLE;
+//				}
+//			})
+//			.orElse(KitStatus.NEVER_USE);
+		return KitStatus.NEVER_USE;
 	}
 
 }
