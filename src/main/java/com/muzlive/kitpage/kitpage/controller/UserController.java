@@ -109,7 +109,7 @@ public class UserController {
 			.countryCode(page == null ? ApplicationConstants.KOR_COUNTRY_CODE : page.getRegion().getCode())
 			.build();
 
-		userService.checkTag(requestSerialNumber, kihnoV2TransferSerivce.kihnoKitCheck(kihnoKitCheckReq).getKihnoKitUid());
+		userService.checkTag(requestSerialNumber, deviceId, kihnoV2TransferSerivce.kihnoKitCheck(kihnoKitCheckReq).getKihnoKitUid());
 
 		Set<String> roles = jwtTokenProvider.getRolesByToken(jwt);
 		roles.add(UserRole.HALF_LINKER.getKey());
@@ -131,6 +131,7 @@ public class UserController {
 		return new CommonResp<>(checkTagResp);
 	}
 
+	@Deprecated
 	@Operation(summary = "인스톨 완료 API")
 	@PostMapping("/install/complete")
 	public CommonResp<Void> installComplete(HttpServletRequest httpServletRequest) throws Exception {
