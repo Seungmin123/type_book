@@ -24,6 +24,7 @@ import com.muzlive.kitpage.kitpage.utils.enums.Region;
 import com.querydsl.core.Tuple;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -102,9 +103,11 @@ public class UserService implements UserDetailsService {
 	}
 
 	@Transactional
-	public Kit checkTag(String serialNumber, Long kihnoKitUid) throws Exception {
+	public Kit checkTag(String serialNumber, String deviceId, Long kihnoKitUid) throws Exception {
 		Kit kit = kitRepository.findBySerialNumber(serialNumber).orElseThrow(() -> new CommonException(ExceptionCode.CANNOT_FIND_MATCHED_ITEM));
 		kit.setKihnoKitUid(kihnoKitUid);
+		kit.setDeviceId(deviceId);
+		kit.setModifiedAt(LocalDateTime.now());
 		return this.upsertKit(kit);
 	}
 
