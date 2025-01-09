@@ -11,7 +11,7 @@ public interface KitRepository extends JpaRepository<Kit, Long> {
 
 	Optional<Kit> findBySerialNumber(String serialNumber);
 
-	boolean existBySerialNumber(String serialNumber);
+	boolean existsBySerialNumber(String serialNumber);
 
 	Optional<Kit> findByDeviceIdAndSerialNumber(String deviceId, String serialNumber);
 
