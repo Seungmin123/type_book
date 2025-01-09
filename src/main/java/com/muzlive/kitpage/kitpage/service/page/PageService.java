@@ -145,7 +145,7 @@ public class PageService {
 		List<Kit> kits = new ArrayList<>();
 
 		for(CreateKitReq createKitReq : createKitReqs) {
-			if(kitRepository.existBySerialNumber(createKitReq.getSerialNumber())) throw new CommonException(ExceptionCode.ALREADY_EXIST_SERIAL_NUMBER_KIT);
+			if(kitRepository.existsBySerialNumber(createKitReq.getSerialNumber())) throw new CommonException(ExceptionCode.ALREADY_EXIST_SERIAL_NUMBER_KIT);
 
 			Page page = pageRepository.findByAlbumId(createKitReq.getAppId()).orElseThrow(() -> new CommonException(ExceptionCode.CANNOT_FIND_MATCHED_ITEM));
 
