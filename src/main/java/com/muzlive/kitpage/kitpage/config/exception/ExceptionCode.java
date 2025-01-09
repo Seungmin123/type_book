@@ -16,6 +16,7 @@ public enum ExceptionCode {
     DIFFERENT_APP_KIT("10103", "The kit is not available in kit-page", HttpStatus.FORBIDDEN),
     CANNOT_FIND_MATCHED_ITEM("10104", "There are no items that mate the parameters", HttpStatus.GONE),
     CANNOT_FIND_MATCHED_KIHNO_ITEM("10105", "There are no items in kihno that match the parameters.", HttpStatus.FORBIDDEN),
+    ALREADY_EXIST_SERIAL_NUMBER_KIT("10106", "There are already exist with request serial number", HttpStatus.BAD_REQUEST),
 
     NON_DOWNLOADABLE_TOKEN("10106", "Downloads are not possible with this token", HttpStatus.FORBIDDEN),
 
