@@ -134,6 +134,12 @@ public class HttpServletRequestWrapper extends javax.servlet.http.HttpServletReq
             parseGetParameters();
             return;
         }
+
+        if (super.getMethod().equalsIgnoreCase("DELETE")) {
+            parseGetParameters();
+            return;
+        }
+
         if (parsed) {
             return;
         } else {
