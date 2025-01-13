@@ -273,16 +273,16 @@ public class ComicService {
 	}
 
 	public KitStatus getInstallStatus(Long pageUid, String deviceId) throws Exception {
-//		return kitRepository.findFirstByPageUidAndDeviceIdOrderByCreatedAtDesc(pageUid, deviceId)
-//			.map(k -> {
-//				if(k.getModifiedAt().plusDays(1).isBefore(LocalDateTime.now())) {
-//					return KitStatus.EXPIRED;
-//				} else {
-//					return KitStatus.AVAILABLE;
-//				}
-//			})
-//			.orElse(KitStatus.NEVER_USE);
-		return KitStatus.NEVER_USE;
+		return kitRepository.findFirstByPageUidAndDeviceIdOrderByCreatedAtDesc(pageUid, deviceId)
+			.map(k -> {
+				if(k.getModifiedAt().plusDays(1).isBefore(LocalDateTime.now())) {
+					return KitStatus.EXPIRED;
+				} else {
+					return KitStatus.AVAILABLE;
+				}
+			})
+			.orElse(KitStatus.NEVER_USE);
+		//return KitStatus.NEVER_USE;
 	}
 
 }
