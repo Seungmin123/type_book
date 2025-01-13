@@ -34,6 +34,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RequiredArgsConstructor
@@ -164,22 +165,12 @@ public class AdminController {
 	}
 
 	@DeleteMapping("/porting")
-	CommonResp<Void> deleteKit(@RequestBody JsonNode createKitReqs) throws Exception {
-		ObjectMapper mapper = new ObjectMapper();
-		List<CreateKitReq> kits = new ArrayList<>();
-
-		if(createKitReqs.isArray()) {
-			kits = mapper.convertValue(createKitReqs, new TypeReference<List<CreateKitReq>>() {
-			});
-		} else if(createKitReqs.isObject()) {
-			CreateKitReq singleKit = mapper.convertValue(createKitReqs, CreateKitReq.class);
-			kits.add(singleKit);
-		} else {
-			throw new CommonException(ExceptionCode.INVALID_REQUEST_PRAMETER);
-		}
-
+	CommonResp<Void> deleteKit(
+		@RequestParam("appId") String appId,
+		@RequestParam("serialNumber") String serialNumber
+	) throws Exception {
+		List<CreateKitReq> kits = List.of(new CreateKitReq(appId, serialNumber));
 		pageService.deleteKit(kits);
-
 		return new CommonResp<>();
 	}
 }
