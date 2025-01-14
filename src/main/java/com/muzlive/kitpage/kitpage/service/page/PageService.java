@@ -48,6 +48,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.imageio.ImageIO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -361,6 +363,8 @@ public class PageService {
 		if(versionInfoReq.getCurrentVersion().endsWith("-dev") || versionInfoReq.getCurrentVersion().endsWith("-test"))
 			return new VersionInfoResp(false, false);
 
+		versionInfoReq.setCurrentVersion(this.extractVersionFormat(versionInfoReq.getCurrentVersion()));
+
 		if(!this.isVersionFormat(versionInfoReq.getCurrentVersion())
 			|| !this.isVersionFormat(versionInfoReq.getOsVersion()))
 			throw new CommonException(ExceptionCode.INVALID_REQUEST_PRAMETER);
@@ -387,5 +391,16 @@ public class PageService {
 	private boolean isVersionFormat(String version) {
 		String pattern = "^\\d+(\\.\\d+)?(\\.\\d+)?$";
 		return version.matches(pattern);
+	}
+
+	private String extractVersionFormat(String version) throws Exception {
+		// 정규식: x.x.x 또는 x.x 포맷
+		String versionPattern = "^\\d+(\\.\\d+)+";
+		Matcher matcher = Pattern.compile(versionPattern).matcher(version);
+
+		if (matcher.find()) {
+			return matcher.group();
+		}
+		throw new CommonException(ExceptionCode.INVALID_REQUEST_PRAMETER);
 	}
 }
