@@ -8,7 +8,8 @@ import lombok.Getter;
 public enum ReadingDirection {
 
 	LEFT("LEFT"),
-	RIGHT("RIGHT");
+	RIGHT("RIGHT"),
+	DOWN("DOWN");
 
 	private String code;
 }
