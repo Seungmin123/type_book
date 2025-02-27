@@ -1,10 +1,1 @@
-pluginManagement {
-    repositories {
-        gradlePluginPortal()
-    }
-}
 rootProject.name = 'kit-page'
-include 'src:main'
-findProject(':src:main')?.name = 'main'
-include 'src:querydsl'
-findProject(':src:querydsl')?.name = 'querydsl'
