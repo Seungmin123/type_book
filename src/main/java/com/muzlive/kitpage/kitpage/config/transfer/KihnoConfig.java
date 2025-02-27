@@ -17,7 +17,9 @@ public class KihnoConfig {
 
     private String v2Domain;
 
-    private String muzDomain;
+    private String videoEncodingServer;
+
+    private String snsServer;
 
     @Bean(name = "kihnoV1Domain")
     public KihnoV1Domain getKihnoV1Domain() {
@@ -31,6 +33,6 @@ public class KihnoConfig {
 
     @Bean(name = "muzDomain")
     public MuzDomain getMuzDomain() {
-        return new MuzDomain(this.muzDomain);
+        return new MuzDomain(this.videoEncodingServer, this.snsServer);
     }
 }
