@@ -120,6 +120,11 @@ querydsl {
 	querydslSourcesDir = querydslSrcDir
 }
 
+// querydsl QClass 파일 생성 위치를 지정
+tasks.withType(JavaCompile).configureEach {
+	options.getGeneratedSourceOutputDirectory().set(file(querydslSrcDir))
+}
+
 sourceSets {
 	main {
 		java {
