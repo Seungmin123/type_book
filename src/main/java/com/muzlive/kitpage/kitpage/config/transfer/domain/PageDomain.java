@@ -7,9 +7,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @AllArgsConstructor
-public class MuzDomain {
+public class PageDomain {
 
-    private String videoEncodingServer;
-
-    private String snsServer;
+    private String domain;
 }
