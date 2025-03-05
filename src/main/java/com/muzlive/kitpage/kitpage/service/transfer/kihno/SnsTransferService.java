@@ -124,7 +124,7 @@ public class SnsTransferService {
 	public String fetchVideoStreamUrl(VideoGetReq videoGetReq) {
 		SnsVideoReq snsVideoReq = new SnsVideoReq(
 			videoGetReq.getVideoId(), videoGetReq.getAlbumId()
-			, pageDomain + PAGE_VIDEO_VTT_URL
+			, pageDomain + PAGE_VIDEO_DETAIL_URL
 			, pageDomain + PAGE_VIDEO_VTT_URL);
 
 		// SNS 서버에서 POST + RequestParam 조합으로 받고 있음.
@@ -146,6 +146,7 @@ public class SnsTransferService {
 			.timeout(Duration.ofMillis(15000))
 			.doOnError(e -> log.error(e.getMessage()))
 			.map(SnsCommonResp::getData)
+			.defaultIfEmpty("")
 			.block();
 	}
 
@@ -166,6 +167,7 @@ public class SnsTransferService {
 			.timeout(Duration.ofMillis(15000))
 			.doOnError(e -> log.error(e.getMessage()))
 			.map(SnsCommonResp::getData)
+			.defaultIfEmpty("")
 			.block();
 	}
 
@@ -186,6 +188,7 @@ public class SnsTransferService {
 			.timeout(Duration.ofMillis(15000))
 			.doOnError(e -> log.error(e.getMessage()))
 			.map(SnsCommonResp::getData)
+			.defaultIfEmpty("")
 			.block();
 	}
 
