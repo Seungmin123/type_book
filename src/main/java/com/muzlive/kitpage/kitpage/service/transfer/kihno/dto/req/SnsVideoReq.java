@@ -24,4 +24,11 @@ public class SnsVideoReq {
 
 	@Hidden
 	private String vttUrl;
+
+	public SnsVideoReq(String videoId, String albumId, String detailUrl, String vttUrl) {
+		this.videoId = videoId;
+		this.albumId = albumId;
+		this.detailUrl = detailUrl;
+		this.vttUrl = vttUrl;
+	}
 }
