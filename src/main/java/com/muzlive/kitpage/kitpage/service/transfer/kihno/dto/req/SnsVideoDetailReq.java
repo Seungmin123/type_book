@@ -23,4 +23,15 @@ public class SnsVideoDetailReq {
 	@JsonProperty("file_type")
 	private String fileType;
 
+	public void setVideo_id(String videoId) {
+		this.videoId = videoId;
+	}
+
+	public void setQuality_id(String qualityId) {
+		this.qualityId = qualityId;
+	}
+
+	public void setFile_type(String fileType) {
+		this.fileType = fileType;
+	}
 }
