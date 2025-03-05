@@ -52,6 +52,9 @@ public class SecurityConfig {
 			// get token
 			.antMatchers("/v1/user/token", "/v1/page/view/**")
 			.permitAll()
+			// video detail, vtt back 호출 API
+			.antMatchers("/v1/video/public/**")
+			.permitAll()
 			// check tag 이전 필요한 API
 			.antMatchers("/v1/user/checkTag", "/v1/user/login", "/v1/user/join", // Token 발급
 				"/v1/user/send/verification-code", "/v1/user/password/reset", "/v1/user/password/change", // User 비밀번호 관련

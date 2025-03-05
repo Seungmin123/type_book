@@ -35,13 +35,13 @@ public class VideoController {
 	}
 
 	@Hidden
-	@GetMapping("/detail")
+	@GetMapping("/public/detail")
 	public ResponseEntity<InputStreamResource> getVideoDetail(@ModelAttribute SnsVideoDetailReq snsVideoDetailReq) throws Exception {
 		return snsTransferService.generateM3U8Response(snsTransferService.fetchVideoDetail(snsVideoDetailReq));
 	}
 
 	@Hidden
-	@GetMapping("/vtt")
+	@GetMapping("/public/vtt")
 	public ResponseEntity<InputStreamResource> getVideoVtt(@ModelAttribute SnsVideoVttReq snsVideoVttReq) throws Exception {
 		return snsTransferService.generateM3U8Response(snsTransferService.fetchVideoVtt(snsVideoVttReq));
 	}
