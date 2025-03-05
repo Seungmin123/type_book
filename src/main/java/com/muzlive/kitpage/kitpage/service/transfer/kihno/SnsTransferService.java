@@ -128,7 +128,7 @@ public class SnsTransferService {
 			.uri(GET_VIDEO_STREAM_URL)
 			.accept(MediaType.APPLICATION_JSON)
 			.headers(httpHeaders -> httpHeaders.addAll(this.makeBitMovinHeader()))
-			.body(snsVideoReq, SnsVideoReq.class)
+			.body(Mono.just(snsVideoReq), SnsVideoReq.class)
 			.retrieve()
 			.onStatus(
 				HttpStatus::isError, // 상태 코드가 4xx 또는 5xx일 때 처리
