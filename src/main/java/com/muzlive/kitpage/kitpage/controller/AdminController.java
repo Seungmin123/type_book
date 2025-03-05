@@ -17,16 +17,18 @@ import com.muzlive.kitpage.kitpage.domain.page.dto.req.UploadVideoReq;
 import com.muzlive.kitpage.kitpage.service.google.YoutubeService;
 import com.muzlive.kitpage.kitpage.service.page.ComicService;
 import com.muzlive.kitpage.kitpage.service.page.PageService;
-import com.muzlive.kitpage.kitpage.service.transfer.kihno.MuzTransferService;
+import com.muzlive.kitpage.kitpage.service.transfer.kihno.SnsTransferService;
+import com.muzlive.kitpage.kitpage.service.transfer.kihno.VideoEncodingTransferService;
+import com.muzlive.kitpage.kitpage.service.transfer.kihno.dto.req.SnsVideoInsertReq;
+import com.muzlive.kitpage.kitpage.service.transfer.kihno.dto.resp.SnsCommonListResp;
+import com.muzlive.kitpage.kitpage.service.transfer.kihno.dto.resp.SnsVideoAndFolderResp;
 import com.muzlive.kitpage.kitpage.utils.CommonUtils;
 import com.muzlive.kitpage.kitpage.utils.enums.VideoCode;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -46,7 +48,7 @@ public class AdminController {
 
 	private final ComicService comicService;
 
-	private final MuzTransferService muzTransferService;
+	private final SnsTransferService snsTransferService;
 
 	private final YoutubeService youtubeService;
 
@@ -83,35 +85,29 @@ public class AdminController {
 		return new CommonResp<>();
 	}
 
-	@Transactional
 	@PostMapping("/comic/video")
-	CommonResp<Void> uploadVideo(@Valid @ModelAttribute UploadVideoReq uploadVideoReq) throws Exception {
-		Video video = pageService.insertVideo(uploadVideoReq);
+	CommonResp<SnsVideoInsertReq> uploadVideo(@Valid @ModelAttribute UploadVideoReq uploadVideoReq) throws Exception {
+		if(uploadVideoReq.getVideoCode().equals(VideoCode.BITMOVIN)) {
+			Video video = pageService.insertVideo(uploadVideoReq, VideoCode.BITMOVIN);
 
-		if(video.getVideoCode().equals(VideoCode.S3)) {
-			Map<String, Object> videoEncodingInfo = muzTransferService.encodingVideo(video.getStreamUrl());
-
-			if (videoEncodingInfo.containsKey("video_id")) {
-				video.setVideoId(String.valueOf(videoEncodingInfo.get("video_id")));
-				pageService.upsertVideo(video);
+			SnsCommonListResp<SnsVideoAndFolderResp> videoEncodingInfo = snsTransferService.insertVideo(uploadVideoReq, video);
+			if(!CollectionUtils.isEmpty(videoEncodingInfo.getList())) {
+				videoEncodingInfo.getList().forEach(videoEncoding -> {
+					video.setVideoId(videoEncoding.getVideoId());
+					pageService.upsertVideo(video);
+				});
 			}
-		} else if (video.getVideoCode().equals(VideoCode.YOUTUBE)) {
+
+		} else if (uploadVideoReq.getVideoCode().equals(VideoCode.YOUTUBE)) {
+			Video video = pageService.insertVideo(uploadVideoReq, VideoCode.YOUTUBE);
+
 			List<com.google.api.services.youtube.model.Video> youtubeResp = youtubeService.getVideoDetail(video.getStreamUrl());
 			if(CollectionUtils.isEmpty(youtubeResp))
 				throw new CommonException(ExceptionCode.YOUTUBE_UPLOAD_ERROR);
 
 			String duration = commonUtils.convertDurationToString(Duration.parse(youtubeResp.get(0).getContentDetails().getDuration()));
 			String title = youtubeResp.get(0).getSnippet().getTitle();
-			String url = null;
-			if(youtubeResp.get(0).getSnippet().getThumbnails().getStandard() != null) {
-				url = youtubeResp.get(0).getSnippet().getThumbnails().getStandard().getUrl();
-			} else if(youtubeResp.get(0).getSnippet().getThumbnails().getHigh() != null) {
-				url = youtubeResp.get(0).getSnippet().getThumbnails().getHigh().getUrl();
-			} else if(youtubeResp.get(0).getSnippet().getThumbnails().getMedium() != null) {
-				url = youtubeResp.get(0).getSnippet().getThumbnails().getMedium().getUrl();
-			} else {
-				url = youtubeResp.get(0).getSnippet().getThumbnails().getDefault().getUrl();
-			}
+			String url = youtubeService.getYoutubeThumbnailUrl(youtubeResp);
 
 			Long imageUid = pageService.uploadYoutubeThumbnail(video.getContentId(), url);
 

@@ -36,4 +36,21 @@ public class YoutubeService {
 		return response.getItems();
 	}
 
+	public String getYoutubeThumbnailUrl(List<com.google.api.services.youtube.model.Video> youtubeResp) {
+
+		String url = null;
+
+		if(youtubeResp.get(0).getSnippet().getThumbnails().getStandard() != null) {
+			url = youtubeResp.get(0).getSnippet().getThumbnails().getStandard().getUrl();
+		} else if(youtubeResp.get(0).getSnippet().getThumbnails().getHigh() != null) {
+			url = youtubeResp.get(0).getSnippet().getThumbnails().getHigh().getUrl();
+		} else if(youtubeResp.get(0).getSnippet().getThumbnails().getMedium() != null) {
+			url = youtubeResp.get(0).getSnippet().getThumbnails().getMedium().getUrl();
+		} else {
+			url = youtubeResp.get(0).getSnippet().getThumbnails().getDefault().getUrl();
+		}
+
+		return url;
+	}
+
 }

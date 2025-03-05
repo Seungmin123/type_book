@@ -55,6 +55,15 @@ public class SpringDocConfig {
             .build();
     }
 
+    @Bean
+    public GroupedOpenApi createVideoApi(){
+        return GroupedOpenApi.builder()
+            .group("Video")
+            .pathsToMatch("/v1/video/**")
+            .addOpenApiCustomiser(swaggerKitCustomApi)
+            .build();
+    }
+
     private Info apiInfo() {
         return new Info()
                 //.title("Spring-doc 1.7 Interface Document")

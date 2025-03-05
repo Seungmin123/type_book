@@ -1,6 +1,7 @@
 package com.muzlive.kitpage.kitpage.domain.page.dto.req;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.muzlive.kitpage.kitpage.utils.enums.VideoCode;
 import javax.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
@@ -35,5 +36,23 @@ public class UploadVideoReq {
 
 	@JsonProperty("streamUrl")
 	private String streamUrl;
+
+	@JsonProperty("videoId")
+	private String videoId;
+
+	@JsonProperty("videoFilePath")
+	private String videoFilePath;
+
+	@JsonProperty("videoThumbnailPath")
+	private String videoThumbnailPath;
+
+	@JsonProperty("subTitlePath")
+	private String subTitlePath;
+
+	@JsonProperty("languageCode")
+	private String languageCode;
+
+	@JsonProperty("videoCode")
+	private VideoCode videoCode;
 
 }

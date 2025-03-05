@@ -1,6 +1,8 @@
 package com.muzlive.kitpage.kitpage.service.transfer.kihno;
 
 import com.muzlive.kitpage.kitpage.config.transfer.domain.MuzDomain;
+import com.muzlive.kitpage.kitpage.domain.page.comicbook.Video;
+import com.muzlive.kitpage.kitpage.domain.page.dto.req.UploadVideoReq;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -13,7 +15,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 
 @Slf4j
 @Service
-public class MuzTransferService {
+public class VideoEncodingTransferService {
 
 	@Value("${spring.aws.s3.bucket}")
 	private String BUCKET;
@@ -22,8 +24,8 @@ public class MuzTransferService {
 
 	private WebClient webClient;
 
-	public MuzTransferService(WebClient.Builder builder, MuzDomain muzDomain) {
-		this.webClient = builder.baseUrl(muzDomain.getDomain()).build();
+	public VideoEncodingTransferService(WebClient.Builder builder, MuzDomain muzDomain) {
+		this.webClient = builder.baseUrl(muzDomain.getVideoEncodingServer()).build();
 	}
 
 	public Map<String, Object> encodingVideo(String streamUrl) throws Exception {
