@@ -30,9 +30,9 @@ public class VideoController {
 	private final SnsTransferService snsTransferService;
 
 	@Operation(summary = "Bitmovin M3U8 마스터 플레이리스트 URL 조회 API")
-	@GetMapping
-	public CommonResp<String> getVideo(@ModelAttribute VideoGetReq videoGetReq) throws Exception {
-		return new CommonResp<>(snsTransferService.fetchVideoStreamUrl(videoGetReq));
+	@GetMapping("/public/get")
+	public ResponseEntity<InputStreamResource> getVideo(@ModelAttribute VideoGetReq videoGetReq) throws Exception {
+		return snsTransferService.generateM3U8Response(snsTransferService.fetchVideoStreamUrl(videoGetReq));
 	}
 
 	@Hidden
