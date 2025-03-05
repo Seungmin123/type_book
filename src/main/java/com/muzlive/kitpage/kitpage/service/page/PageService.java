@@ -279,10 +279,7 @@ public class PageService {
 
 	@Transactional
 	public Video insertVideo(UploadVideoReq uploadVideoReq, VideoCode videoCode) {
-
-		comicBookRepository.findByPageContentId(uploadVideoReq.getContentId())
-			.orElseThrow(() -> new CommonException(ExceptionCode.CANNOT_FIND_MATCHED_ITEM));
-
+		Page page = pageRepository.findById(uploadVideoReq.getPageUid()).orElseThrow(() -> new CommonException(ExceptionCode.CANNOT_FIND_MATCHED_ITEM));
 		String streamUrl = Objects.nonNull(uploadVideoReq.getVideoFilePath()) ? uploadVideoReq.getVideoFilePath() : uploadVideoReq.getStreamUrl();
 
 		return this.upsertVideo(Video.builder()
@@ -292,7 +289,10 @@ public class PageService {
 			.title(uploadVideoReq.getTitle() == null ? "" : uploadVideoReq.getTitle())
 			.streamUrl(streamUrl)
 			.videoCode(videoCode)
+			.pageUid(page.getPageUid())
+			.page(page)
 			.build());
+
 	}
 
 	public byte[] downloadFileFromUrl(String fileUrl) throws Exception {

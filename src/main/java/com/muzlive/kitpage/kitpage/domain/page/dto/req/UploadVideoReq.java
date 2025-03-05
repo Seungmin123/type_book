@@ -55,4 +55,7 @@ public class UploadVideoReq {
 	@JsonProperty("videoCode")
 	private VideoCode videoCode;
 
+	@JsonProperty("landScapeYn")
+	private String landScapeYn = "Y";
+
 }
