@@ -138,7 +138,7 @@ public class PageService {
 	}
 
 	@Transactional
-	public Video upsertVideo(Video video) throws Exception {
+	public Video upsertVideo(Video video) {
 		return videoRepository.save(video);
 	}
 
@@ -277,52 +277,22 @@ public class PageService {
 		musicRepository.save(music);
 	}
 
-	public Video insertVideo(UploadVideoReq uploadVideoReq) throws Exception {
-
-		String filePath = null;
+	@Transactional
+	public Video insertVideo(UploadVideoReq uploadVideoReq, VideoCode videoCode) {
 
 		comicBookRepository.findByPageContentId(uploadVideoReq.getContentId())
 			.orElseThrow(() -> new CommonException(ExceptionCode.CANNOT_FIND_MATCHED_ITEM));
 
-		String streamUrl = uploadVideoReq.getStreamUrl();
-		VideoCode videoCode = VideoCode.YOUTUBE;
+		String streamUrl = Objects.nonNull(uploadVideoReq.getVideoFilePath()) ? uploadVideoReq.getVideoFilePath() : uploadVideoReq.getStreamUrl();
 
-		if(Objects.nonNull(uploadVideoReq.getFile())) {
-			// S3 Cover Image Upload
-			String saveFileName = UUID.randomUUID() + "." + FilenameUtils.getExtension(uploadVideoReq.getFile().getOriginalFilename());
-			filePath = uploadVideoReq.getContentId() + "/" + ApplicationConstants.VIDEO + "/" + saveFileName;
-			s3Service.uploadDecryptFile(filePath, uploadVideoReq.getFile());
-
-			streamUrl = filePath;
-			videoCode = VideoCode.S3;
-		}
-
-		Video video = Video.builder()
+		return this.upsertVideo(Video.builder()
 			.contentId(uploadVideoReq.getContentId())
+			.pageUid(uploadVideoReq.getPageUid())
 			.duration(uploadVideoReq.getDuration() == null ? "" : uploadVideoReq.getDuration())
 			.title(uploadVideoReq.getTitle() == null ? "" : uploadVideoReq.getTitle())
 			.streamUrl(streamUrl)
 			.videoCode(videoCode)
-			.pageUid(uploadVideoReq.getPageUid())
-			.build();
-
-		if(Objects.nonNull(uploadVideoReq.getImage())) {
-			// S3 Cover Image Upload
-			String saveFileName = UUID.randomUUID() + "." + FilenameUtils.getExtension(uploadVideoReq.getImage().getOriginalFilename());
-			String coverImagePath = uploadVideoReq.getContentId() + "/" + ApplicationConstants.VIDEO + "/" + saveFileName;
-			s3Service.uploadFile(coverImagePath, uploadVideoReq.getImage());
-
-			// Image DB Insert
-			Image image = Image.of(coverImagePath, ImageCode.VIDEO_COVER_IMAGE, uploadVideoReq.getImage());
-			image.setSaveFileName(saveFileName);
-			imageRepository.save(image);
-
-			video.setCoverImageUid(image.getImageUid());
-		}
-
-		videoRepository.save(video);
-
-		return video;
+			.build());
 	}
 
 	public byte[] downloadFileFromUrl(String fileUrl) throws Exception {

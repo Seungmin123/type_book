@@ -1,6 +1,8 @@
 package com.muzlive.kitpage.kitpage.domain.page.comicbook;
 
 import com.muzlive.kitpage.kitpage.domain.common.BaseTimeEntity;
+import com.muzlive.kitpage.kitpage.domain.page.Page;
+import com.muzlive.kitpage.kitpage.domain.user.Image;
 import com.muzlive.kitpage.kitpage.utils.enums.VideoCode;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -9,6 +11,8 @@ import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import lombok.Builder;
 import lombok.Getter;
@@ -58,6 +62,14 @@ public class Video extends BaseTimeEntity {
 	@Setter
 	@Column(name = "video_id")
 	private String videoId;
+
+	@OneToOne
+	@JoinColumn(name = "page_uid", insertable = false, updatable = false)
+	private Page page;
+
+	@OneToOne
+	@JoinColumn(name = "cover_image_uid", insertable = false, updatable = false)
+	private Image image;
 
 	@Builder
 	public Video(String contentId, String duration, String title, String streamUrl,
