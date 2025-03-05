@@ -15,14 +15,13 @@ public class SnsVideoReq {
 	@JsonProperty("album_id")
 	private String albumId;
 
-	@Hidden
 	@JsonProperty("token")
 	private String token = "kit-page";
 
-	@Hidden
+	@JsonProperty("detail_url")
 	private String detailUrl;
-
 	@Hidden
+	@JsonProperty("vtt_url")
 	private String vttUrl;
 
 	public SnsVideoReq(String videoId, String albumId, String detailUrl, String vttUrl) {
