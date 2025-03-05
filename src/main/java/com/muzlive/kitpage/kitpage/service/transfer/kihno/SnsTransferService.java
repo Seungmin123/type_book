@@ -53,6 +53,10 @@ public class SnsTransferService {
 
 	private final String GET_VIDEO_VTT = "/video/v1/vtt";
 
+	private final String PAGE_VIDEO_DETAIL_URL = "/v1/video/public/detail";
+
+	private final String PAGE_VIDEO_VTT_URL = "/v1/video/public/vtt";
+
 	private WebClient webClient;
 
 	public SnsTransferService(WebClient.Builder builder, MuzDomain muzDomain) {
@@ -117,6 +121,9 @@ public class SnsTransferService {
 	}
 
 	public String fetchVideoStreamUrl(SnsVideoReq snsVideoReq) {
+		snsVideoReq.setDetailUrl(pageDomain + PAGE_VIDEO_DETAIL_URL);
+		snsVideoReq.setVttUrl(pageDomain + PAGE_VIDEO_VTT_URL);
+
 		return webClient.post()
 			.uri(GET_VIDEO_STREAM_URL)
 			.accept(MediaType.APPLICATION_JSON)
