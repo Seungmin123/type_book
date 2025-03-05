@@ -20,4 +20,12 @@ public class SnsVideoVttReq {
 	@JsonProperty("country_code")
 	private String countryCode;
 
+	public void setVideo_id(String videoId) {
+		this.videoId = videoId;
+	}
+
+	public void setCountry_code(String countryCode) {
+		this.countryCode = countryCode;
+	}
+
 }
