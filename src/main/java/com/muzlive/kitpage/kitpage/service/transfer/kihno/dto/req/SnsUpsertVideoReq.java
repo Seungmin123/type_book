@@ -60,10 +60,11 @@ public class SnsUpsertVideoReq {
 	@JsonProperty("only_vtt")
 	private Boolean onlyVtt;
 
-	public SnsUpsertVideoReq(String videoFilePath, String videoThumbnailPath, String videoTitle, Integer duration) {
+	public SnsUpsertVideoReq(String videoFilePath, String videoThumbnailPath, String videoTitle, Integer duration, String landScapeYn) {
 		this.videoFilePath = videoFilePath;
 		this.videoThumbnailPath = videoThumbnailPath;
 		this.videoTitle = videoTitle;
 		this.duration = duration;
+		this.landScapeYn = landScapeYn;
 	}
 }

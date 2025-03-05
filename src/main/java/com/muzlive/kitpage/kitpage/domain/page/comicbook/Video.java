@@ -73,7 +73,7 @@ public class Video extends BaseTimeEntity {
 
 	@Builder
 	public Video(String contentId, String duration, String title, String streamUrl,
-		Long coverImageUid, VideoCode videoCode, Long pageUid) {
+		Long coverImageUid, VideoCode videoCode, Long pageUid, Page page) {
 		this.contentId = contentId;
 		this.duration = duration;
 		this.title = title;
@@ -81,5 +81,6 @@ public class Video extends BaseTimeEntity {
 		this.coverImageUid = coverImageUid;
 		this.videoCode = videoCode;
 		this.pageUid = pageUid;
+		this.page = page;
 	}
 }

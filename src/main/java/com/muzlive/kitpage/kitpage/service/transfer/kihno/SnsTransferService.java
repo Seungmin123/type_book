@@ -66,7 +66,10 @@ public class SnsTransferService {
 
 	public SnsCommonListResp<SnsVideoAndFolderResp> insertVideo(UploadVideoReq uploadVideoReq, Video video) throws Exception {
 		SnsSubTitle snsSubTitle = new SnsSubTitle(uploadVideoReq.getSubTitlePath(), uploadVideoReq.getLanguageCode());
-		SnsUpsertVideoReq snsUpsertVideoReq = new SnsUpsertVideoReq(uploadVideoReq.getVideoFilePath(), uploadVideoReq.getVideoThumbnailPath(), uploadVideoReq.getTitle(), Integer.valueOf(uploadVideoReq.getDuration()));
+		SnsUpsertVideoReq snsUpsertVideoReq = new SnsUpsertVideoReq(
+			uploadVideoReq.getVideoFilePath(), uploadVideoReq.getVideoThumbnailPath()
+			, uploadVideoReq.getTitle(), Integer.valueOf(uploadVideoReq.getDuration())
+			, uploadVideoReq.getLandScapeYn());
 		snsUpsertVideoReq.setSubTitleList(List.of(snsSubTitle));
 		SnsVideoInsertReq snsVideoInsertReq = new SnsVideoInsertReq("INSERT", video.getPage().getAlbumId(), BUCKET);
 		snsVideoInsertReq.setVideoList(List.of(snsUpsertVideoReq));
@@ -88,13 +91,16 @@ public class SnsTransferService {
 			.bodyToMono(new ParameterizedTypeReference<SnsCommonResp<SnsCommonListResp<SnsVideoAndFolderResp>>>() {})
 			.timeout(Duration.ofMillis(15000))
 			.doOnError(e -> log.error(e.getMessage()))
-			.map(SnsCommonResp::getData)
+			.flatMap(resp -> Mono.justOrEmpty(resp.getData()))
 			.block();
 	}
 
 	public SnsCommonListResp<SnsVideoAndFolderResp> updateVideo(UploadVideoReq uploadVideoReq, Video video) throws Exception {
 		SnsSubTitle snsSubTitle = new SnsSubTitle(uploadVideoReq.getSubTitlePath(), uploadVideoReq.getLanguageCode());
-		SnsUpsertVideoReq snsUpsertVideoReq = new SnsUpsertVideoReq(uploadVideoReq.getVideoFilePath(), uploadVideoReq.getVideoThumbnailPath(), uploadVideoReq.getTitle(), Integer.valueOf(uploadVideoReq.getDuration()));
+		SnsUpsertVideoReq snsUpsertVideoReq = new SnsUpsertVideoReq(
+			uploadVideoReq.getVideoFilePath(), uploadVideoReq.getVideoThumbnailPath()
+			, uploadVideoReq.getTitle(), Integer.valueOf(uploadVideoReq.getDuration())
+			, uploadVideoReq.getLandScapeYn());
 		snsUpsertVideoReq.setSubTitleList(List.of(snsSubTitle));
 		snsUpsertVideoReq.setVideoId(uploadVideoReq.getVideoId());
 		SnsVideoInsertReq snsVideoInsertReq = new SnsVideoInsertReq("UPDATE", video.getPage().getAlbumId(), BUCKET);
@@ -117,7 +123,7 @@ public class SnsTransferService {
 			.bodyToMono(new ParameterizedTypeReference<SnsCommonResp<SnsCommonListResp<SnsVideoAndFolderResp>>>() {})
 			.timeout(Duration.ofMillis(15000))
 			.doOnError(e -> log.error(e.getMessage()))
-			.map(SnsCommonResp::getData)
+			.flatMap(resp -> Mono.justOrEmpty(resp.getData()))
 			.block();
 	}
 
@@ -145,8 +151,7 @@ public class SnsTransferService {
 			.bodyToMono(new ParameterizedTypeReference<SnsCommonResp<String>>() {})
 			.timeout(Duration.ofMillis(15000))
 			.doOnError(e -> log.error(e.getMessage()))
-			.map(SnsCommonResp::getData)
-			.defaultIfEmpty("")
+			.flatMap(resp -> Mono.justOrEmpty(resp.getData()))
 			.block();
 	}
 
@@ -166,7 +171,7 @@ public class SnsTransferService {
 			.bodyToMono(new ParameterizedTypeReference<SnsCommonResp<String>>() {})
 			.timeout(Duration.ofMillis(15000))
 			.doOnError(e -> log.error(e.getMessage()))
-			.map(SnsCommonResp::getData)
+			.flatMap(resp -> Mono.justOrEmpty(resp.getData()))
 			.defaultIfEmpty("")
 			.block();
 	}
@@ -187,7 +192,7 @@ public class SnsTransferService {
 			.bodyToMono(new ParameterizedTypeReference<SnsCommonResp<String>>() {})
 			.timeout(Duration.ofMillis(15000))
 			.doOnError(e -> log.error(e.getMessage()))
-			.map(SnsCommonResp::getData)
+			.flatMap(resp -> Mono.justOrEmpty(resp.getData()))
 			.defaultIfEmpty("")
 			.block();
 	}
