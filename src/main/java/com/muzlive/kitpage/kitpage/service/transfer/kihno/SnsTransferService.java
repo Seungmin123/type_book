@@ -127,11 +127,12 @@ public class SnsTransferService {
 			, pageDomain + PAGE_VIDEO_VTT_URL
 			, pageDomain + PAGE_VIDEO_VTT_URL);
 
+		// SNS 서버에서 POST + RequestParam 조합으로 받고 있음.
 		return webClient.post()
-			.uri(GET_VIDEO_STREAM_URL)
+			.uri(uriBuilder -> this.buildUriWithParams(uriBuilder, GET_VIDEO_STREAM_URL, snsVideoReq))
 			.accept(MediaType.APPLICATION_JSON)
 			.headers(httpHeaders -> httpHeaders.addAll(this.makeBitMovinHeader()))
-			.body(Mono.just(snsVideoReq), SnsVideoReq.class)
+			//.body(Mono.just(snsVideoReq), SnsVideoReq.class)
 			.retrieve()
 			.onStatus(
 				HttpStatus::isError, // 상태 코드가 4xx 또는 5xx일 때 처리
