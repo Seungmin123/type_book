@@ -1,6 +1,7 @@
 package com.muzlive.kitpage.kitpage.controller;
 
 import com.muzlive.kitpage.kitpage.domain.common.dto.resp.CommonResp;
+import com.muzlive.kitpage.kitpage.domain.page.dto.req.VideoGetReq;
 import com.muzlive.kitpage.kitpage.service.transfer.kihno.SnsTransferService;
 import com.muzlive.kitpage.kitpage.service.transfer.kihno.dto.req.SnsVideoDetailReq;
 import com.muzlive.kitpage.kitpage.service.transfer.kihno.dto.req.SnsVideoReq;
@@ -30,8 +31,8 @@ public class VideoController {
 
 	@Operation(summary = "Bitmovin M3U8 마스터 플레이리스트 URL 조회 API")
 	@GetMapping
-	public CommonResp<String> getVideo(@ModelAttribute SnsVideoReq snsVideoReq) throws Exception {
-		return new CommonResp<>(snsTransferService.fetchVideoStreamUrl(snsVideoReq));
+	public CommonResp<String> getVideo(@ModelAttribute VideoGetReq videoGetReq) throws Exception {
+		return new CommonResp<>(snsTransferService.fetchVideoStreamUrl(videoGetReq));
 	}
 
 	@Hidden

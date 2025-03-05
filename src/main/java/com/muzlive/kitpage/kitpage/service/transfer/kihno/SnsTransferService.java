@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.muzlive.kitpage.kitpage.config.transfer.domain.MuzDomain;
 import com.muzlive.kitpage.kitpage.domain.page.comicbook.Video;
 import com.muzlive.kitpage.kitpage.domain.page.dto.req.UploadVideoReq;
+import com.muzlive.kitpage.kitpage.domain.page.dto.req.VideoGetReq;
 import com.muzlive.kitpage.kitpage.service.transfer.kihno.dto.req.SnsSubTitle;
 import com.muzlive.kitpage.kitpage.service.transfer.kihno.dto.req.SnsVideoDetailReq;
 import com.muzlive.kitpage.kitpage.service.transfer.kihno.dto.req.SnsVideoInsertReq;
@@ -120,9 +121,11 @@ public class SnsTransferService {
 			.block();
 	}
 
-	public String fetchVideoStreamUrl(SnsVideoReq snsVideoReq) {
-		snsVideoReq.setDetailUrl(pageDomain + PAGE_VIDEO_DETAIL_URL);
-		snsVideoReq.setVttUrl(pageDomain + PAGE_VIDEO_VTT_URL);
+	public String fetchVideoStreamUrl(VideoGetReq videoGetReq) {
+		SnsVideoReq snsVideoReq = new SnsVideoReq(
+			videoGetReq.getVideoId(), videoGetReq.getAlbumId()
+			, pageDomain + PAGE_VIDEO_VTT_URL
+			, pageDomain + PAGE_VIDEO_VTT_URL);
 
 		return webClient.post()
 			.uri(GET_VIDEO_STREAM_URL)
