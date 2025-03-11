@@ -13,6 +13,8 @@ public class ComicBookDetailResp {
 
 	private String contentId;
 
+	private String albumId;
+
 	private List<ComicBookEpisodeResp> details;
 
 	private List<VideoResp> videos;
@@ -22,6 +24,7 @@ public class ComicBookDetailResp {
 	public ComicBookDetailResp(Page page) {
 		this.pageUid = page.getPageUid();
 		this.contentId = page.getContentId();
+		this.albumId = page.getAlbumId();
 		this.infoText = page.getInfoText();
 	}
 
