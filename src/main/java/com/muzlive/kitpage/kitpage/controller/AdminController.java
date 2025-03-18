@@ -22,13 +22,16 @@ import com.muzlive.kitpage.kitpage.service.transfer.kihno.VideoEncodingTransferS
 import com.muzlive.kitpage.kitpage.service.transfer.kihno.dto.req.SnsVideoInsertReq;
 import com.muzlive.kitpage.kitpage.service.transfer.kihno.dto.resp.SnsCommonListResp;
 import com.muzlive.kitpage.kitpage.service.transfer.kihno.dto.resp.SnsVideoAndFolderResp;
+import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.resp.KittorTokenResp;
 import com.muzlive.kitpage.kitpage.utils.CommonUtils;
 import com.muzlive.kitpage.kitpage.utils.enums.VideoCode;
+import io.swagger.v3.oas.annotations.Hidden;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.io.FilenameUtils;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -91,9 +94,11 @@ public class AdminController {
 			Video video = pageService.insertVideo(uploadVideoReq, VideoCode.BITMOVIN);
 
 			SnsCommonListResp<SnsVideoAndFolderResp> videoEncodingInfo = snsTransferService.insertVideo(uploadVideoReq, video);
+			Long coverImageUid = pageService.uploadThumbnail(uploadVideoReq.getContentId(), uploadVideoReq.getVideoThumbnailPath());
 			if(!CollectionUtils.isEmpty(videoEncodingInfo.getList())) {
 				videoEncodingInfo.getList().forEach(videoEncoding -> {
 					video.setVideoId(videoEncoding.getVideoId());
+					video.setCoverImageUid(coverImageUid);
 					pageService.upsertVideo(video);
 				});
 			}
@@ -168,5 +173,17 @@ public class AdminController {
 		List<CreateKitReq> kits = List.of(new CreateKitReq(appId, serialNumber));
 		pageService.deleteKit(kits);
 		return new CommonResp<>();
+	}
+
+	@Hidden
+	@PostMapping("/image")
+	CommonResp<Long> uploadImage(CreateContentReq createContentReq) throws Exception {
+		return new CommonResp<>(
+			pageService.saveImage(
+				createContentReq.getContentId()
+				, FilenameUtils.getExtension(createContentReq.getImage().getOriginalFilename())
+				, createContentReq.getImage().getBytes()
+			)
+		);
 	}
 }
