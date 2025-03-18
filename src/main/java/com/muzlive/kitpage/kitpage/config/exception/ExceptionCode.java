@@ -23,7 +23,8 @@ public enum ExceptionCode {
     INTERNAL_SERVER_ERROR("10500", "server error", HttpStatus.INTERNAL_SERVER_ERROR),
     KITTOR_EXTERNAL_SERVER_ERROR("10501", "kittor external server error", HttpStatus.INTERNAL_SERVER_ERROR),
 
-    YOUTUBE_UPLOAD_ERROR("10601", "youtube upload error")
+    YOUTUBE_UPLOAD_ERROR("10601", "youtube upload error"),
+    THUMBNAIL_UPLOAD_ERROR("10602", "thumbnail upload error", HttpStatus.INTERNAL_SERVER_ERROR)
     ;
 
     // add error code -> update

@@ -295,6 +295,20 @@ public class PageService {
 
 	}
 
+	public Long uploadThumbnail(String contentId, String s3Key) throws Exception {
+		try (InputStream inputStream = s3Service.downloadFile(s3Key)) {
+			return saveImage(contentId, FilenameUtils.getExtension(s3Key), commonUtils.inputStreamToByteArray(inputStream));
+		} catch(Exception e) {
+			log.error(e.getMessage());
+			throw new CommonException(ExceptionCode.THUMBNAIL_UPLOAD_ERROR);
+		}
+	}
+
+	public Long uploadYoutubeThumbnail(String contentId, String url) throws Exception {
+		byte[] thumbnail = this.downloadFileFromUrl(url);
+		return this.saveImage(contentId, FilenameUtils.getExtension(url), thumbnail);
+	}
+
 	public byte[] downloadFileFromUrl(String fileUrl) throws Exception {
 		URL url = new URL(fileUrl);
 		URLConnection connection = url.openConnection();
@@ -306,26 +320,24 @@ public class PageService {
 		}
 	}
 
-	public Long uploadYoutubeThumbnail(String contentId, String url) throws Exception {
-		byte[] thumbnail = this.downloadFileFromUrl(url);
-
-		String saveFileName = UUID.randomUUID() + "." + FilenameUtils.getExtension(url);
+	public Long saveImage(String contentId, String ext, byte[] image) throws Exception {
+		String saveFileName = UUID.randomUUID() + "." + ext;
 		String coverImagePath = contentId + "/" + ApplicationConstants.VIDEO + "/" + saveFileName;
-		s3Service.uploadFile(coverImagePath, thumbnail);
+		s3Service.uploadFile(coverImagePath, image);
 
-		BufferedImage bufferedImage = ImageIO.read(new ByteArrayInputStream(thumbnail));
-		Image image = Image.builder()
+		BufferedImage bufferedImage = ImageIO.read(new ByteArrayInputStream(image));
+		return imageRepository.save(
+			Image.builder()
 			.imagePath(coverImagePath)
 			.imageCode(ImageCode.VIDEO_COVER_IMAGE)
-			.imageSize(thumbnail.length == 0 ? 0 : (long) thumbnail.length)
+			.imageSize(image.length == 0 ? 0 : (long) image.length)
 			.width(bufferedImage.getWidth())
 			.height(bufferedImage.getHeight())
 			.originalFileName("")
 			.saveFileName(saveFileName)
-			.md5(DigestUtils.md5Hex(thumbnail))
-			.build();
-
-		return imageRepository.save(image).getImageUid();
+			.md5(DigestUtils.md5Hex(image))
+			.build()
+		).getImageUid();
 	}
 
 	public VersionInfoResp getVersionInfo(VersionInfoReq versionInfoReq) throws Exception {
