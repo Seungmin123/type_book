@@ -9,6 +9,7 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -58,7 +59,7 @@ public class Content extends BaseTimeEntity implements Serializable {
 	@Column(name = "region")
 	private Region region;
 
-	@OneToMany(mappedBy = "content")
+	@OneToMany(mappedBy = "content", fetch = FetchType.EAGER)
 	@OrderBy("pageUid ASC")
 	private List<Page> pages;
 

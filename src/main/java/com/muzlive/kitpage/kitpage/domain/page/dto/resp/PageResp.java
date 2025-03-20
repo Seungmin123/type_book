@@ -22,7 +22,7 @@ public class PageResp {
 	private String illustrator;
 
 	public PageResp(Page page) {
-		this.coverImageUid = page.getCoverImageUid();
+		this.coverImageUid = page.getContent().getCoverImageUid();
 		this.pageUid = page.getPageUid();
 		this.contentType = page.getContentType();
 		this.title = page.getTitle();
