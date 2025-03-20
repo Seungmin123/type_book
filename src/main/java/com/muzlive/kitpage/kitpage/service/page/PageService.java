@@ -1,5 +1,6 @@
 package com.muzlive.kitpage.kitpage.service.page;
 
+import static com.muzlive.kitpage.kitpage.domain.page.QContent.content;
 import static com.muzlive.kitpage.kitpage.domain.page.QPage.page;
 import static com.muzlive.kitpage.kitpage.domain.page.comicbook.QComicBook.comicBook;
 import static com.muzlive.kitpage.kitpage.domain.page.comicbook.QComicBookDetail.comicBookDetail;
@@ -124,6 +125,21 @@ public class PageService {
 		if(CollectionUtils.isEmpty(pages)) pages = new ArrayList<>();
 
 		return pages;
+	}
+
+	public List<Content> findContentsByDeviceId(String deviceId) throws Exception {
+		List<Content> contents = queryFactory
+			.selectFrom(content)
+				.innerJoin(page).on(page.contentId.eq(content.contentId).and(page.region.eq(content.region)))
+				.innerJoin(kit).on(kit.pageUid.eq(page.pageUid))
+			.where(kit.deviceId.eq(deviceId))
+			.distinct()
+			.fetch();
+
+		if(CollectionUtils.isEmpty(contents)) contents = new ArrayList<>();
+
+		return contents;
+
 	}
 
 	public boolean existsByImageUidAndSerialNumber(Long imageUid, String serialNumber) throws Exception {

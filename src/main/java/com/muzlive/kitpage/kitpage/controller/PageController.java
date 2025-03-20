@@ -5,7 +5,9 @@ import com.muzlive.kitpage.kitpage.config.exception.CommonException;
 import com.muzlive.kitpage.kitpage.config.exception.ExceptionCode;
 import com.muzlive.kitpage.kitpage.config.jwt.JwtTokenProvider;
 import com.muzlive.kitpage.kitpage.domain.common.dto.resp.CommonResp;
+import com.muzlive.kitpage.kitpage.domain.page.Content;
 import com.muzlive.kitpage.kitpage.domain.page.Page;
+import com.muzlive.kitpage.kitpage.domain.page.dto.resp.ContentResp;
 import com.muzlive.kitpage.kitpage.domain.page.dto.resp.PageResp;
 import com.muzlive.kitpage.kitpage.domain.user.Image;
 import com.muzlive.kitpage.kitpage.service.aws.CloudFrontService;
@@ -48,25 +50,23 @@ public class PageController {
 
 	private final JwtTokenProvider jwtTokenProvider;
 
-	@Hidden
 	@Operation(summary = "앨범 목록 API", description = "Device Id 별 앨범 리스트")
 	@GetMapping("/list/{deviceId}")
-	public CommonResp<List<PageResp>> getInstallList(@PathVariable String deviceId) throws Exception {
-		List<Page> pages = pageService.findByDeviceId(deviceId);
+	public CommonResp<List<ContentResp>> getInstallList(@PathVariable String deviceId) throws Exception {
+		List<Content> contens = pageService.findContentsByDeviceId(deviceId);
 
-		List<PageResp> pageResps = new ArrayList<>();
-		for(Page page : pages) {
-			if(CollectionUtils.isEmpty(page.getComicBooks()))
+		List<ContentResp> contentResps = new ArrayList<>();
+		for(Content content : contens) {
+			if(CollectionUtils.isEmpty(content.getPages()) || CollectionUtils.isEmpty(content.getPages().get(0).getComicBooks()))
 				continue;
 
-			PageResp pageResp = new PageResp(page);
-			pageResp.setWriter(page.getComicBooks().get(0).getWriter());
-			pageResp.setIllustrator(page.getComicBooks().get(0).getIllustrator());
+			ContentResp contentResp = new ContentResp(content);
+			contentResp.setWriter(content.getPages().get(0).getComicBooks().get(0).getWriter());
 
-			pageResps.add(pageResp);
+			contentResps.add(contentResp);
 		}
 
-		return new CommonResp<>(pageResps);
+		return new CommonResp<>(contentResps);
 	}
 
 	@Operation(summary = "이미지 다운로드 API - Decrypted", description = "imageUid 를 통해 Image 파일 다운로드")
