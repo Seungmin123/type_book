@@ -37,9 +37,9 @@ public class ComicBookEpisodeResp {
 		this.comicBookUid = comicBook.getComicBookUid();
 		this.coverImageUid = comicBook.getCoverImageUid();
 		this.volume = comicBook.getVolume();
-		this.volumeUnit = comicBook.getVolumeUnit();
-		this.pageUnit = comicBook.getPageUnit();
-		this.readingDirection = comicBook.getReadingDirection();
+		this.volumeUnit = comicBook.getPage().getContent().getVolumeUnit();
+		this.pageUnit = comicBook.getPage().getContent().getPageUnit();
+		this.readingDirection = comicBook.getPage().getContent().getReadingDirection();
 	}
 
 }

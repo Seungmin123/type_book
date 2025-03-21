@@ -19,20 +19,7 @@ public class UploadComicBookReq {
 	private MultipartFile coverImage;
 
 	@NotNull
-	@JsonProperty("writer")
-	private String writer;
-
-	@JsonProperty("illustrator")
-	private String illustrator;
-
-	@NotNull
 	@JsonProperty("volume")
 	private Integer volume;
-
-	@JsonProperty("volumeUnit")
-	private String volumeUnit;
-
-	@JsonProperty("pageUnit")
-	private String pageUnit;
 
 }

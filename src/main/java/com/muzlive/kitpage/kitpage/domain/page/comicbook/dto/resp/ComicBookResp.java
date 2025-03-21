@@ -36,14 +36,14 @@ public class ComicBookResp {
 		this.title = page.getTitle();
 		this.subtitle = page.getSubTitle();
 		this.totalSize = 0L;
-		if(CollectionUtils.isEmpty(page.getComicBooks())) {
+		if(page.getContent() == null) {
 			this.writer = "";
 			this.illustrator = "";
 			this.genreList = new ArrayList<>();
 		}else {
-			this.writer = page.getComicBooks().get(0).getWriter();
-			this.illustrator = page.getComicBooks().get(0).getIllustrator();
-			this.genreList = page.getComicBooks().get(0).getGenreList();
+			this.writer = page.getContent().getWriter();
+			this.illustrator = page.getContent().getIllustrator();
+			this.genreList = page.getContent().getGenreList();
 		}
 	}
 }

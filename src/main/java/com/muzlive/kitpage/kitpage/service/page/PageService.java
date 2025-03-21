@@ -130,7 +130,7 @@ public class PageService {
 	public List<Content> findContentsByDeviceId(String deviceId) throws Exception {
 		List<Content> contents = queryFactory
 			.selectFrom(content)
-				.innerJoin(page).on(page.contentId.eq(content.contentId).and(page.region.eq(content.region)))
+				.innerJoin(page).on(page.contentId.eq(content.contentId))
 				.innerJoin(kit).on(kit.pageUid.eq(page.pageUid))
 			.where(kit.deviceId.eq(deviceId))
 			.distinct()
@@ -234,13 +234,10 @@ public class PageService {
 		return pageRepository.save(
 			Page.builder()
 			.contentId(contentId)
-			.contentType(createPageReq.getContentType())
 			.coverImageUid(image.getImageUid())
 			.title(createPageReq.getTitle())
 			.subTitle(createPageReq.getSubtitle())
 			.infoText(createPageReq.getInfoText())
-			.company(createPageReq.getCompany())
-			.region(createPageReq.getRegion())
 			.build());
 	}
 
@@ -249,7 +246,13 @@ public class PageService {
 		contentRepository.save(Content.builder()
 				.contentId(createContentReq.getContentId())
 				.contentType(createContentReq.getContentType())
+				.company(createContentReq.getCompany())
 				.title(createContentReq.getTitle())
+				.writer(createContentReq.getWriter())
+				.illustrator(createContentReq.getIllustrator())
+				.volumeUnit(createContentReq.getVolumeUnit() == null ? "%d권" : createContentReq.getVolumeUnit())
+				.pageUnit(createContentReq.getPageUnit() == null ? "%d쪽" : createContentReq.getPageUnit())
+				.readingDirection(createContentReq.getReadingDirection())
 				.infoText(createContentReq.getInfoText())
 				.coverImageUid(fileService.uploadConvertFile(createContentReq.getContentId(), createContentReq.getImage(), ImageCode.CONTENT_COVER_IMAGE))
 				.region(createContentReq.getRegion())
