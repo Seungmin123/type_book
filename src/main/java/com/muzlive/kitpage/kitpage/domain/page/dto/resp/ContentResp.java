@@ -24,6 +24,7 @@ public class ContentResp {
 		this.contentId = content.getContentId();
 		this.contentType = content.getContentType();
 		this.title = content.getTitle();
+		this.writer = content.getWriter();
 	}
 
 

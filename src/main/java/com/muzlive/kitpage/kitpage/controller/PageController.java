@@ -8,7 +8,6 @@ import com.muzlive.kitpage.kitpage.domain.common.dto.resp.CommonResp;
 import com.muzlive.kitpage.kitpage.domain.page.Content;
 import com.muzlive.kitpage.kitpage.domain.page.Page;
 import com.muzlive.kitpage.kitpage.domain.page.dto.resp.ContentResp;
-import com.muzlive.kitpage.kitpage.domain.page.dto.resp.PageResp;
 import com.muzlive.kitpage.kitpage.domain.user.Image;
 import com.muzlive.kitpage.kitpage.service.aws.CloudFrontService;
 import com.muzlive.kitpage.kitpage.service.page.PageService;
@@ -61,7 +60,6 @@ public class PageController {
 				continue;
 
 			ContentResp contentResp = new ContentResp(content);
-			contentResp.setWriter(content.getPages().get(0).getComicBooks().get(0).getWriter());
 
 			contentResps.add(contentResp);
 		}

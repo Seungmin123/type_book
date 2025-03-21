@@ -35,8 +35,8 @@ public class CheckTagResp {
 		this.albumId = page.getAlbumId();
 		this.coverImageUid = page.getCoverImageUid();
 		this.title = page.getTitle();
-		this.writer = (Objects.nonNull(page.getComicBooks().get(0))) ? page.getComicBooks().get(0).getWriter() : "";
-		this.region = page.getRegion();
+		this.writer = Objects.nonNull(page.getContent()) ? page.getContent().getWriter() : "";
+		this.region = Objects.nonNull(page.getContent()) ? page.getContent().getRegion() : null;
 	}
 
 }

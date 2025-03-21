@@ -139,7 +139,7 @@ public class UserService implements UserDetailsService {
 						.from(installLogSub)
 						.innerJoin(page).on(page.pageUid.eq(installLogSub.pageUid))
 						.where(installLogSub.deviceId.eq(deviceId)
-							.and(page.contentId.eq(contentId).and(page.region.eq(region))))
+							.and(page.contentId.eq(contentId)))
 						.groupBy(page.pageUid))))
 			.fetch();
 

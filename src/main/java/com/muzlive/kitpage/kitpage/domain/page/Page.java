@@ -44,10 +44,6 @@ public class Page extends BaseTimeEntity {
 	@Column(name = "album_id")
 	private String albumId;
 
-	@Enumerated(EnumType.STRING)
-	@Column(name = "content_type", nullable = false)
-	private PageContentType contentType;
-
 	@Column(name = "cover_image_uid")
 	private Long coverImageUid;
 
@@ -60,40 +56,28 @@ public class Page extends BaseTimeEntity {
 	@Column(name = "info_text")
 	private String infoText;
 
-	@Column(name = "company")
-	private String company;
-
 	@Column(name = "rate")
 	private Double rate;
 
-	@Enumerated(EnumType.STRING)
-	@Column(name = "region")
-	private Region region;
-
-	@OneToMany(mappedBy = "page")
+	@OneToMany(mappedBy = "page", fetch = FetchType.LAZY)
 	@OrderBy("comicBookUid ASC")
 	private List<ComicBook> comicBooks;
 
 	@ManyToOne(fetch = FetchType.EAGER)
 	@JoinColumns({
-		@JoinColumn(name = "content_id", referencedColumnName = "content_id", insertable = false, updatable = false),
-		@JoinColumn(name = "region", referencedColumnName = "region", insertable = false, updatable = false)
+		@JoinColumn(name = "content_id", referencedColumnName = "content_id", insertable = false, updatable = false)
 	})
 	private Content content;
 
 	@Builder
-	public Page(String contentId, String albumId, PageContentType contentType,
-		Long coverImageUid, String title, String subTitle, String infoText, String company,
-		Double rate, Region region) {
+	public Page(String contentId, String albumId, Long coverImageUid,
+		Double rate, String title, String subTitle, String infoText) {
 		this.contentId = contentId;
 		this.albumId = albumId;
-		this.contentType = contentType;
 		this.coverImageUid = coverImageUid;
 		this.title = title;
 		this.subTitle = subTitle;
 		this.infoText = infoText;
-		this.company = company;
 		this.rate = rate;
-		this.region = region;
 	}
 }

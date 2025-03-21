@@ -115,11 +115,7 @@ public class ComicService {
 			ComicBook.builder()
 				.pageUid(uploadComicBookReq.getPageUid())
 				.coverImageUid(image.getImageUid())
-				.writer(uploadComicBookReq.getWriter())
-				.illustrator(uploadComicBookReq.getIllustrator())
 				.volume(uploadComicBookReq.getVolume())
-				.volumeUnit(uploadComicBookReq.getVolumeUnit() == null ? "%d권" : uploadComicBookReq.getVolumeUnit())
-				.pageUnit(uploadComicBookReq.getPageUnit() == null ? "%d쪽" : uploadComicBookReq.getPageUnit())
 				.build()
 		);
 	}
@@ -225,10 +221,10 @@ public class ComicService {
 			List<VideoResp> videoResps = new ArrayList<>();
 			List<ComicBookEpisodeResp> comicBookEpisodeResps = new ArrayList<>();
 
-			if (this.getInstallStatus(pageItem.getPageUid(), deviceId).equals(KitStatus.AVAILABLE)) {
+			//if (this.getInstallStatus(pageItem.getPageUid(), deviceId).equals(KitStatus.AVAILABLE)) {
 				videoResps = this.findVideoByPageUid(pageItem.getPageUid()).stream().map(VideoResp::new).collect(Collectors.toList());
 				comicBookEpisodeResps = this.getEpisodeResps(pageItem.getPageUid());
-			}
+			//}
 
 			comicBookDetailResp.setVideos(videoResps);
 			comicBookDetailResp.setDetails(comicBookEpisodeResps);
@@ -239,6 +235,7 @@ public class ComicService {
 		return comicBookDetailResps;
 	}
 
+	// TODO N+1 Check
 	public List<ComicBookEpisodeResp> getEpisodeResps(Long pageUid) throws Exception {
 		List<ComicBookEpisodeResp> comicBookEpisodeResps = new ArrayList<>();
 		List<ComicBook> comicBooks = comicBookRepository.findAllByPageUid(pageUid).orElse(new ArrayList<>());

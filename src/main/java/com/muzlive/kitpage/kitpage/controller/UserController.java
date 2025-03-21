@@ -103,10 +103,11 @@ public class UserController {
 		// TODO Contents 확장 시 여기부터 분기 처리
 		Page page = comicService.findPageWithComicBooksBySerialNumber(requestSerialNumber);
 
+		// TODO N+1 Check
 		KihnoKitCheckReq kihnoKitCheckReq = KihnoKitCheckReq.builder()
 			.deviceId(deviceId)
 			.kitId(paramSerialNumber)
-			.countryCode(page == null ? ApplicationConstants.KOR_COUNTRY_CODE : page.getRegion().getCode())
+			.countryCode(page == null ? ApplicationConstants.KOR_COUNTRY_CODE : page.getContent().getRegion().getCode())
 			.build();
 
 		userService.checkTag(requestSerialNumber, deviceId, kihnoV2TransferSerivce.kihnoKitCheck(kihnoKitCheckReq).getKihnoKitUid());

@@ -46,30 +46,8 @@ public class ComicBook extends BaseTimeEntity {
 	@Column(name = "cover_image_uid")
 	private Long coverImageUid;
 
-	@Column(name = "writer")
-	private String writer;
-
-	@Column(name = "illustrator")
-	private String illustrator;
-
 	@Column(name = "volume")
 	private Integer volume;
-
-	@Column(name = "volume_unit")
-	private String volumeUnit;
-
-	@Column(name = "page_unit")
-	private String pageUnit;
-
-	@Column(name = "genre")
-	private String genre;
-
-	@Enumerated(EnumType.STRING)
-	@Column(name = "reading_direction")
-	private ReadingDirection readingDirection;
-
-	@Transient
-	private List<String> genreList;
 
 	@ManyToOne
 	@JoinColumn(name = "page_uid", insertable = false, updatable = false)
@@ -79,28 +57,10 @@ public class ComicBook extends BaseTimeEntity {
 	@OrderBy("page ASC")
 	private List<ComicBookDetail> comicBookDetails;
 
-	@PrePersist
-	@PreUpdate
-	public void convertListToString() {
-		if(genreList != null)
-			this.genre = String.join(",", genreList);
-	}
-
-	@PostLoad
-	public void convertStringToList() {
-		if(genre != null && !genre.isEmpty())
-			this.genreList = Arrays.asList(genre.split(","));
-	}
-
 	@Builder
-	public ComicBook(Long pageUid, Long coverImageUid, String writer, String illustrator, Integer volume, String volumeUnit, String pageUnit, ReadingDirection readingDirection) {
+	public ComicBook(Long pageUid, Long coverImageUid, Integer volume) {
 		this.pageUid = pageUid;
 		this.coverImageUid = coverImageUid;
-		this.writer = writer;
-		this.illustrator = illustrator;
 		this.volume = volume;
-		this.volumeUnit = volumeUnit;
-		this.pageUnit = pageUnit;
-		this.readingDirection = readingDirection;
 	}
 }

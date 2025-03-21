@@ -31,14 +31,6 @@ public class CreatePageReq {
 	@JsonProperty("infoText")
 	private String infoText;
 
-	@NotNull
-	@JsonProperty("company")
-	private String company;
-
-	@NotNull
-	@JsonProperty("region")
-	private Region region;
-
 	@JsonProperty("content_id")
 	private String contentId;
 
