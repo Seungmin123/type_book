@@ -304,7 +304,7 @@ public class PageService {
 		return this.upsertVideo(Video.builder()
 			.contentId(uploadVideoReq.getContentId())
 			.pageUid(uploadVideoReq.getPageUid())
-			.duration(uploadVideoReq.getDuration() == null ? "" : uploadVideoReq.getDuration())
+			.duration(uploadVideoReq.getDuration() == null ? "" : this.formatSeconds(Integer.parseInt(uploadVideoReq.getDuration())))
 			.title(uploadVideoReq.getTitle() == null ? "" : uploadVideoReq.getTitle())
 			.streamUrl(streamUrl)
 			.videoCode(videoCode)
@@ -312,6 +312,21 @@ public class PageService {
 			.page(page)
 			.build());
 
+	}
+
+	private String formatSeconds(int totalSeconds) {
+		int hours = totalSeconds / 3600;
+		int minutes = (totalSeconds % 3600) / 60;
+		int seconds = totalSeconds % 60;
+
+		String minuteStr = String.format("%02d", minutes);
+		String secondStr = String.format("%02d", seconds);
+
+		if (hours > 0) {
+			return String.format("%d:%s:%s", hours, minuteStr, secondStr);
+		} else {
+			return String.format("%s:%s", minuteStr, secondStr);
+		}
 	}
 
 	public Long uploadThumbnail(String contentId, String s3Key) throws Exception {
