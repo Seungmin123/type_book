@@ -27,21 +27,19 @@ services:
       - ./logs:/app/logs
       - ./dump:/app/dump
       - /source:/source
-    environment:
-      JAVA_OPTS: >
-        -Xms1024M -Xmx1536M
-        -XX:+UseG1GC
-        -XX:+UseStringDeduplication
-        -XX:+HeapDumpOnOutOfMemoryError
-        -XX:HeapDumpPath=/app/dump
-        -Dlog4j2.formatMsgNoLookups=true
-        -Dfile.encoding=UTF-8
-        -Duser.timezone=Asia/Seoul
-        -DLOG_HOME=/app/logs
-        -Dspring.profiles.active=dev
-        -Dspring.config.additional-location=/source/
     command: >
-      sh -c "java ${JAVA_OPTS} -jar app.jar"
+      java -Xms1024M -Xmx1536M
+           -XX:+UseG1GC
+           -XX:+UseStringDeduplication
+           -XX:+HeapDumpOnOutOfMemoryError
+           -XX:HeapDumpPath=/app/dump
+           -Dlog4j2.formatMsgNoLookups=true
+           -Dfile.encoding=UTF-8
+           -Duser.timezone=Asia/Seoul
+           -DLOG_HOME=/app/logs
+           -Dspring.profiles.active=dev
+           -Dspring.config.additional-location=/source/
+           -jar app.jar
     networks:
       - dev-net
 
