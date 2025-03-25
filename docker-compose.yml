@@ -28,7 +28,6 @@ services:
       - ./dump:/app/dump
       - /source:/source
     environment:
-      SPRING_PROFILES_ACTIVE: dev
       JAVA_OPTS: >
         -Xms2048M -Xmx2048M
         -XX:+UseG1GC
@@ -39,7 +38,8 @@ services:
         -Dfile.encoding=UTF-8
         -Duser.timezone=Asia/Seoul
         -DLOG_HOME=/app/logs
-    command: sh -c "java $JAVA_OPTS -jar app.jar --spring.profiles.active=$SPRING_PROFILES_ACTIVE"
+        -Dspring.profiles.active=dev
+    command: sh -c "java $JAVA_OPTS -jar app.jar"
     networks:
       - dev-net
 
