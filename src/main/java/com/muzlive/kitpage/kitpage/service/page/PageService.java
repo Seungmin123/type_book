@@ -17,6 +17,7 @@ import com.muzlive.kitpage.kitpage.domain.page.comicbook.Video;
 import com.muzlive.kitpage.kitpage.domain.page.comicbook.repository.ComicBookRepository;
 import com.muzlive.kitpage.kitpage.domain.page.comicbook.repository.MusicRepository;
 import com.muzlive.kitpage.kitpage.domain.page.comicbook.repository.VideoRepository;
+import com.muzlive.kitpage.kitpage.domain.page.dto.req.ContentListReq;
 import com.muzlive.kitpage.kitpage.domain.page.dto.req.CreateContentReq;
 import com.muzlive.kitpage.kitpage.domain.page.dto.req.CreateKitReq;
 import com.muzlive.kitpage.kitpage.domain.page.dto.req.CreatePageReq;
@@ -37,6 +38,8 @@ import com.muzlive.kitpage.kitpage.utils.constants.ApplicationConstants;
 import com.muzlive.kitpage.kitpage.utils.enums.ImageCode;
 import com.muzlive.kitpage.kitpage.utils.enums.Region;
 import com.muzlive.kitpage.kitpage.utils.enums.VideoCode;
+import com.querydsl.core.BooleanBuilder;
+import com.querydsl.core.Tuple;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import io.micrometer.core.instrument.util.StringUtils;
 import java.awt.image.BufferedImage;
@@ -51,6 +54,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import javax.imageio.ImageIO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -127,18 +131,34 @@ public class PageService {
 		return pages;
 	}
 
-	public List<Content> findContentsByDeviceId(String deviceId) throws Exception {
-		List<Content> contents = queryFactory
-			.selectFrom(content)
+	public List<Content> findContentList(ContentListReq contentListReq) throws Exception {
+		long contentUid = contentListReq.isDescending() ? Long.MAX_VALUE : Long.MIN_VALUE;
+
+		BooleanBuilder whereCondition = new BooleanBuilder();
+		whereCondition.and(kit.deviceId.eq(contentListReq.getDeviceId()));
+		whereCondition.and(contentListReq.isDescending()
+			? content.contentUid.lt(contentUid)
+			: content.contentUid.gt(contentUid)) ;
+
+		if(!StringUtils.isEmpty(contentListReq.getSearchValue())) {
+			whereCondition.and(content.title.contains(contentListReq.getSearchValue()));
+		}
+
+		List<Tuple> result = queryFactory
+			.select(content, kit.modifiedAt)
+			.from(content)
 				.innerJoin(page).on(page.contentId.eq(content.contentId))
 				.innerJoin(kit).on(kit.pageUid.eq(page.pageUid))
-			.where(kit.deviceId.eq(deviceId))
+			.where(whereCondition)
+			.orderBy(contentListReq.isDescending() ? kit.modifiedAt.desc() : kit.modifiedAt.asc())
+			.limit(contentListReq.getListSize())
 			.distinct()
 			.fetch();
 
-		if(CollectionUtils.isEmpty(contents)) contents = new ArrayList<>();
-
-		return contents;
+		return result.stream()
+			.map(tuple -> tuple.get(content))
+			.distinct()
+			.collect(Collectors.toList());
 
 	}
 
