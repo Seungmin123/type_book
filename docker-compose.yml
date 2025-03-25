@@ -39,7 +39,8 @@ services:
         -Duser.timezone=Asia/Seoul
         -DLOG_HOME=/app/logs
         -Dspring.profiles.active=dev
-    command: sh -c "java $JAVA_OPTS -jar app.jar"
+    command: >
+      sh -c 'java $JAVA_OPTS -jar app.jar'
     networks:
       - dev-net
 
