@@ -29,7 +29,7 @@ services:
       - /source:/source
     environment:
       JAVA_OPTS: >
-        -Xms2048M -Xmx2048M
+        -Xms1024M -Xmx1536M
         -XX:+UseG1GC
         -XX:+UseStringDeduplication
         -XX:+HeapDumpOnOutOfMemoryError
@@ -41,7 +41,7 @@ services:
         -Dspring.profiles.active=dev
         -Dspring.config.additional-location=/source/
     command: >
-      sh -c "java $JAVA_OPTS -jar app.jar"
+      sh -c "java ${JAVA_OPTS} -jar app.jar"
     networks:
       - dev-net
 
