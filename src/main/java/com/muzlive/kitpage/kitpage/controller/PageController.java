@@ -6,19 +6,19 @@ import com.muzlive.kitpage.kitpage.config.exception.ExceptionCode;
 import com.muzlive.kitpage.kitpage.config.jwt.JwtTokenProvider;
 import com.muzlive.kitpage.kitpage.domain.common.dto.resp.CommonResp;
 import com.muzlive.kitpage.kitpage.domain.page.Content;
-import com.muzlive.kitpage.kitpage.domain.page.Page;
+import com.muzlive.kitpage.kitpage.domain.page.dto.req.ContentListReq;
 import com.muzlive.kitpage.kitpage.domain.page.dto.resp.ContentResp;
 import com.muzlive.kitpage.kitpage.domain.user.Image;
 import com.muzlive.kitpage.kitpage.service.aws.CloudFrontService;
 import com.muzlive.kitpage.kitpage.service.page.PageService;
 import com.muzlive.kitpage.kitpage.utils.enums.UserRole;
-import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.io.ByteArrayInputStream;
 import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -49,20 +49,19 @@ public class PageController {
 
 	private final JwtTokenProvider jwtTokenProvider;
 
-	@Operation(summary = "앨범 목록 API", description = "Device Id 별 앨범 리스트")
-	@GetMapping("/list/{deviceId}")
-	public CommonResp<List<ContentResp>> getInstallList(@PathVariable String deviceId) throws Exception {
-		List<Content> contens = pageService.findContentsByDeviceId(deviceId);
+	@Operation(summary = "앨범 목록 API", description = "Device Id 별 앨범 리스트<br>"
+		+ "listSize - optional - default 20<br>"
+		+ "contentUid - optional - 스크롤 대비용<br>"
+		+ "descending - optional - default 'true' - 정렬 순서 변경<br>"
+		+ "searchValue - optional - 검색 대비용<br>")
+	@GetMapping("/list")
+	public CommonResp<List<ContentResp>> getInstallList(ContentListReq contentListReq, HttpServletRequest httpServletRequest) throws Exception {
+		String token = jwtTokenProvider.resolveToken(httpServletRequest);
+		contentListReq.setDeviceId(jwtTokenProvider.getDeviceIdByToken(token));
 
-		List<ContentResp> contentResps = new ArrayList<>();
-		for(Content content : contens) {
-			if(CollectionUtils.isEmpty(content.getPages()) || CollectionUtils.isEmpty(content.getPages().get(0).getComicBooks()))
-				continue;
-
-			ContentResp contentResp = new ContentResp(content);
-
-			contentResps.add(contentResp);
-		}
+		List<ContentResp> contentResps = pageService.findContentList(contentListReq).stream()
+			.map(ContentResp::new)
+			.collect(Collectors.toList());
 
 		return new CommonResp<>(contentResps);
 	}
