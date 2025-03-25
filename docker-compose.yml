@@ -39,6 +39,7 @@ services:
         -Duser.timezone=Asia/Seoul
         -DLOG_HOME=/app/logs
         -Dspring.profiles.active=dev
+        -Dspring.config.additional-location=/source/
     command: >
       sh -c 'java $JAVA_OPTS -jar app.jar'
     networks:
