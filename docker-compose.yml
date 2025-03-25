@@ -25,6 +25,9 @@ services:
       - "8081:8081"
     environment:
       SPRING_PROFILES_ACTIVE: dev
+    volumes:
+      - ./jar:/app
+      - /source:/source
     networks:
       - dev-net
 
