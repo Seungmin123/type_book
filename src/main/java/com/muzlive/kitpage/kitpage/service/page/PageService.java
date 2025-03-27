@@ -4,7 +4,6 @@ import static com.muzlive.kitpage.kitpage.domain.page.QContent.content;
 import static com.muzlive.kitpage.kitpage.domain.page.QPage.page;
 import static com.muzlive.kitpage.kitpage.domain.page.comicbook.QComicBook.comicBook;
 import static com.muzlive.kitpage.kitpage.domain.page.comicbook.QComicBookDetail.comicBookDetail;
-import static com.muzlive.kitpage.kitpage.domain.user.QImage.image;
 import static com.muzlive.kitpage.kitpage.domain.user.QKit.kit;
 import static com.muzlive.kitpage.kitpage.domain.user.QVersionInfo.versionInfo;
 
@@ -36,7 +35,6 @@ import com.muzlive.kitpage.kitpage.service.aws.S3Service;
 import com.muzlive.kitpage.kitpage.utils.CommonUtils;
 import com.muzlive.kitpage.kitpage.utils.constants.ApplicationConstants;
 import com.muzlive.kitpage.kitpage.utils.enums.ImageCode;
-import com.muzlive.kitpage.kitpage.utils.enums.Region;
 import com.muzlive.kitpage.kitpage.utils.enums.VideoCode;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.Tuple;
@@ -91,43 +89,12 @@ public class PageService {
 
 	private final CommonUtils commonUtils;
 
-	public Content findContentByContentId(String contentId, Region region) throws Exception {
-		return contentRepository.findByContentIdAndRegion(contentId, region)
-			.orElseThrow(() -> new CommonException(ExceptionCode.CANNOT_FIND_MATCHED_ITEM));
-	}
-
-	public List<Page> findByContentId(String contentId) throws Exception {
-		return pageRepository.findAllByContentId(contentId);
-	}
-
 	public Page findPageById(Long pageUid) throws Exception {
 		return pageRepository.findById(pageUid).orElseThrow(() -> new CommonException(ExceptionCode.CANNOT_FIND_MATCHED_ITEM));
 	}
 
 	public Image findImageById(Long imageUid) throws Exception {
 		return imageRepository.findById(imageUid).orElseThrow(() -> new CommonException(ExceptionCode.CANNOT_FIND_MATCHED_ITEM));
-	}
-
-	public List<Image> findByPageUid(Long pageUid) throws Exception {
-		return queryFactory.select(image)
-			.from(image)
-				.innerJoin(comicBook).on(comicBook.pageUid.eq(pageUid))
-				.innerJoin(comicBookDetail).on(comicBookDetail.comicBookUid.eq(comicBook.comicBookUid)
-					.and(comicBookDetail.imageUid.eq(image.imageUid)))
-			.orderBy(comicBook.volume.asc(), comicBookDetail.page.asc())
-			.fetch();
-	}
-
-	public List<Page> findByDeviceId(String deviceId) throws Exception {
-		List<Page> pages = queryFactory
-			.selectFrom(page)
-				.innerJoin(kit).on(kit.pageUid.eq(page.pageUid))
-			.where(kit.deviceId.eq(deviceId))
-			.fetch();
-
-		if(CollectionUtils.isEmpty(pages)) pages = new ArrayList<>();
-
-		return pages;
 	}
 
 	public List<Content> findContentList(ContentListReq contentListReq) throws Exception {

@@ -6,13 +6,11 @@ import com.muzlive.kitpage.kitpage.domain.page.Page;
 import com.muzlive.kitpage.kitpage.domain.page.comicbook.dto.req.ComicBookContentReq;
 import com.muzlive.kitpage.kitpage.domain.page.comicbook.dto.resp.ComicBookContentResp;
 import com.muzlive.kitpage.kitpage.domain.page.comicbook.dto.resp.ComicBookDetailResp;
-import com.muzlive.kitpage.kitpage.domain.page.comicbook.dto.resp.VideoResp;
 import com.muzlive.kitpage.kitpage.service.page.ComicService;
 import com.muzlive.kitpage.kitpage.service.page.PageService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
-import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -42,7 +40,6 @@ public class ComicController {
 			comicBookContentReq.getContentId()));
 	}
 
-	// N+1
 	@Operation(summary = "ComicBook 컨텐츠 상세 정보 리스트 조회")
 	@GetMapping("/detail/list")
 	public CommonResp<List<ComicBookDetailResp>> getComicBookContents(@Valid @ModelAttribute ComicBookContentReq comicBookContentReq, HttpServletRequest httpServletRequest) throws Exception {
