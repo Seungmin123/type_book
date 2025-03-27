@@ -16,4 +16,11 @@ public interface ComicBookRepository extends JpaRepository<ComicBook, Long> {
 	@EntityGraph(attributePaths = {"comicBookDetails", "comicBookDetails.image"})
 	@Query("SELECT DISTINCT cb FROM ComicBook cb WHERE cb.pageUid = :pageUid")
 	Optional<List<ComicBook>> findAllByPageUid(Long pageUid);
+
+	@Query("SELECT SUM(i.imageSize) "
+		+ "FROM ComicBook cb "
+		+ "JOIN cb.comicBookDetails cbd "
+		+ "JOIN cbd.image i "
+		+ "WHERE cb.page.pageUid = :pageUid")
+	Optional<Long> sumImageSizeByPageUid(Long pageUid);
 }

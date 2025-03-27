@@ -63,7 +63,7 @@ public class Page extends BaseTimeEntity {
 	@OrderBy("comicBookUid ASC")
 	private List<ComicBook> comicBooks;
 
-	@ManyToOne(fetch = FetchType.EAGER)
+	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumns({
 		@JoinColumn(name = "content_id", referencedColumnName = "content_id", insertable = false, updatable = false)
 	})
