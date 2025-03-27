@@ -11,7 +11,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface PageRepository extends JpaRepository<Page, Long> {
 
-	Optional<List<Page>> findAllByContentId(String contentId);
+	List<Page> findAllByContentId(String contentId);
 
 	Optional<Page> findFirstByOrderByPageUidDesc();
 

@@ -64,9 +64,7 @@ public class Page extends BaseTimeEntity {
 	private List<ComicBook> comicBooks;
 
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumns({
-		@JoinColumn(name = "content_id", referencedColumnName = "content_id", insertable = false, updatable = false)
-	})
+	@JoinColumn(name = "content_id", referencedColumnName = "content_id", insertable = false, updatable = false)
 	private Content content;
 
 	@Builder

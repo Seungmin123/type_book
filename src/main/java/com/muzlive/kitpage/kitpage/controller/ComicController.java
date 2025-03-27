@@ -34,7 +34,6 @@ public class ComicController {
 
 	private final ComicService comicService;
 
-	// N+1
 	@Operation(summary = "ComicBook 리스트 조회")
 	@GetMapping("/list")
 	public CommonResp<ComicBookContentResp> getComicBookListByContentId(@Valid @ModelAttribute ComicBookContentReq comicBookContentReq, HttpServletRequest httpServletRequest) throws Exception {
@@ -58,7 +57,7 @@ public class ComicController {
 		Page page = pageService.findPageById(pageUid);
 		ComicBookDetailResp comicBookDetailResp = new ComicBookDetailResp(page);
 		comicBookDetailResp.setDetails(comicService.getEpisodeResps(page.getPageUid()));
-		comicBookDetailResp.setVideos(comicService.findVideoByPageUid(pageUid).stream().map(VideoResp::new).collect(Collectors.toList()));
+		comicBookDetailResp.setVideos(comicService.findVideoByPageUid(pageUid));
 
 		return new CommonResp<>(comicBookDetailResp);
 	}

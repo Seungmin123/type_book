@@ -93,9 +93,8 @@ public class ComicService {
 		return page == null ? 0 : page;
 	}
 
-	public List<Video> findVideoByPageUid(Long pageUid) throws Exception {
-		List<Video> videos = videoRepository.findByPageUid(pageUid);
-		return CollectionUtils.isEmpty(videos) ? new ArrayList<>() : videos;
+	public List<VideoResp> findVideoByPageUid(Long pageUid) throws Exception {
+		return videoRepository.findByPageUid(pageUid).stream().map(VideoResp::new).collect(Collectors.toList());
 	}
 
 	@Transactional
@@ -215,13 +214,8 @@ public class ComicService {
 		for (Page pageItem : pages) {
 			ComicBookDetailResp comicBookDetailResp = new ComicBookDetailResp(pageItem);
 
-			List<VideoResp> videoResps = new ArrayList<>();
-			List<ComicBookEpisodeResp> comicBookEpisodeResps = new ArrayList<>();
-
-			//if (this.getInstallStatus(pageItem.getPageUid(), deviceId).equals(KitStatus.AVAILABLE)) {
-				videoResps = this.findVideoByPageUid(pageItem.getPageUid()).stream().map(VideoResp::new).collect(Collectors.toList());
-				comicBookEpisodeResps = this.getEpisodeResps(pageItem.getPageUid());
-			//}
+			List<VideoResp> videoResps = this.findVideoByPageUid(pageItem.getPageUid());
+			List<ComicBookEpisodeResp> comicBookEpisodeResps = this.getEpisodeResps(pageItem.getPageUid());
 
 			comicBookDetailResp.setVideos(videoResps);
 			comicBookDetailResp.setDetails(comicBookEpisodeResps);
@@ -232,7 +226,6 @@ public class ComicService {
 		return comicBookDetailResps;
 	}
 
-	// TODO N+1 Check
 	public List<ComicBookEpisodeResp> getEpisodeResps(Long pageUid) throws Exception {
 		List<ComicBookEpisodeResp> comicBookEpisodeResps = new ArrayList<>();
 		List<ComicBook> comicBooks = comicBookRepository.findAllByPageUid(pageUid).orElse(new ArrayList<>());
