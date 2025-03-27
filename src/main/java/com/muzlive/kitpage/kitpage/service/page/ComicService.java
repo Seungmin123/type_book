@@ -145,23 +145,20 @@ public class ComicService {
 
 
 	public ComicBookContentResp getComicBookContent(String deviceId, String contentId) throws Exception {
-		List<Page> pages = pageRepository.findAllWithChild(contentId).orElse(new ArrayList<>());
+		List<Page> pages = pageRepository.findAllWithComicBooks(contentId);
 		if(CollectionUtils.isEmpty(pages)) throw new CommonException(ExceptionCode.CANNOT_FIND_MATCHED_ITEM);
 		ComicBookContentResp comicBookContentResp = new ComicBookContentResp(pages.get(0).getContent());
 
 		List<ComicBookResp> comicBookResps = new ArrayList<>();
 		for (Page pageItem : pages) {
 			ComicBookResp comicBookResp = new ComicBookResp(pageItem);
-			comicBookResp.setKitStatus(this.getInstallStatus(pageItem.getPageUid(), deviceId));
+			comicBookResp.setKitStatus(KitStatus.NEVER_USE);
 
-			// 총 용량, Volume 수정하면 좋을 것 같음
-			List<ComicBook> comicBooks = comicBookRepository.findAllByPageUid(pageItem.getPageUid()).orElse(new ArrayList<>());
+			List<ComicBook> comicBooks = pageItem.getComicBooks();
 			if(!CollectionUtils.isEmpty(comicBooks)) {
 				comicBookContentResp.setTotalVolume(comicBookContentResp.getTotalVolume() + comicBooks.size());
 
-				long totalSize = comicBooks.stream()
-					.mapToLong(this::getComicBookImageSize)
-					.sum();
+				long totalSize = comicBookRepository.sumImageSizeByPageUid(pageItem.getPageUid()).orElse(0L);
 				comicBookResp.setTotalSize(totalSize);
 			}
 

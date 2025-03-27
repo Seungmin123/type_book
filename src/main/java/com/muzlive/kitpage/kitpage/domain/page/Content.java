@@ -90,7 +90,7 @@ public class Content extends BaseTimeEntity implements Serializable {
 	@Column(name = "reading_direction")
 	private ReadingDirection readingDirection;
 
-	@OneToMany(mappedBy = "content", fetch = FetchType.EAGER)
+	@OneToMany(mappedBy = "content", fetch = FetchType.LAZY)
 	@OrderBy("pageUid ASC")
 	private List<Page> pages;
 

@@ -15,11 +15,12 @@ public interface PageRepository extends JpaRepository<Page, Long> {
 
 	Optional<Page> findFirstByOrderByPageUidDesc();
 
-	@EntityGraph(attributePaths = {"comicBooks"})
 	@Query("SELECT DISTINCT p "
 		+ "FROM Page p "
+		+ "JOIN FETCH p.content "
+		+ "LEFT JOIN FETCH p.comicBooks "
 		+ "WHERE p.contentId = :contentId")
-	Optional<List<Page>> findAllWithChild(String contentId);
+	List<Page> findAllWithComicBooks(String contentId);
 
 	@EntityGraph(attributePaths = {"comicBooks"})
 	@Query("SELECT DISTINCT p "
