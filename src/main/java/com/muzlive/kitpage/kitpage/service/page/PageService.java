@@ -97,8 +97,7 @@ public class PageService {
 	}
 
 	public List<Page> findByContentId(String contentId) throws Exception {
-		return pageRepository.findAllByContentId(contentId)
-			.orElseThrow(() -> new CommonException(ExceptionCode.CANNOT_FIND_MATCHED_ITEM));
+		return pageRepository.findAllByContentId(contentId);
 	}
 
 	public Page findPageById(Long pageUid) throws Exception {
