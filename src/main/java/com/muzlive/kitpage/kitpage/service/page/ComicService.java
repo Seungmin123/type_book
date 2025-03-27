@@ -4,15 +4,12 @@ import static com.muzlive.kitpage.kitpage.domain.page.QPage.page;
 import static com.muzlive.kitpage.kitpage.domain.page.comicbook.QComicBook.comicBook;
 import static com.muzlive.kitpage.kitpage.domain.page.comicbook.QComicBookDetail.comicBookDetail;
 import static com.muzlive.kitpage.kitpage.domain.user.QImage.image;
-import static com.muzlive.kitpage.kitpage.domain.user.QInstallLog.installLog;
-import static com.muzlive.kitpage.kitpage.domain.user.QKit.kit;
 
 import com.muzlive.kitpage.kitpage.config.exception.CommonException;
 import com.muzlive.kitpage.kitpage.config.exception.ExceptionCode;
 import com.muzlive.kitpage.kitpage.domain.page.Page;
 import com.muzlive.kitpage.kitpage.domain.page.comicbook.ComicBook;
 import com.muzlive.kitpage.kitpage.domain.page.comicbook.ComicBookDetail;
-import com.muzlive.kitpage.kitpage.domain.page.comicbook.Video;
 import com.muzlive.kitpage.kitpage.domain.page.comicbook.dto.resp.ComicBookContentResp;
 import com.muzlive.kitpage.kitpage.domain.page.comicbook.dto.resp.ComicBookDetailResp;
 import com.muzlive.kitpage.kitpage.domain.page.comicbook.dto.resp.ComicBookEpisodeResp;
@@ -24,15 +21,14 @@ import com.muzlive.kitpage.kitpage.domain.page.comicbook.repository.ComicBookRep
 import com.muzlive.kitpage.kitpage.domain.page.comicbook.repository.VideoRepository;
 import com.muzlive.kitpage.kitpage.domain.page.dto.req.UploadComicBookDetailReq;
 import com.muzlive.kitpage.kitpage.domain.page.dto.req.UploadComicBookReq;
+import com.muzlive.kitpage.kitpage.domain.page.repository.ContentRepository;
 import com.muzlive.kitpage.kitpage.domain.page.repository.PageRepository;
 import com.muzlive.kitpage.kitpage.domain.user.Image;
 import com.muzlive.kitpage.kitpage.domain.user.repository.ImageRepository;
-import com.muzlive.kitpage.kitpage.domain.user.repository.KitRepository;
 import com.muzlive.kitpage.kitpage.service.aws.S3Service;
 import com.muzlive.kitpage.kitpage.utils.constants.ApplicationConstants;
 import com.muzlive.kitpage.kitpage.utils.enums.ImageCode;
 import com.muzlive.kitpage.kitpage.utils.enums.KitStatus;
-import com.querydsl.core.Tuple;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -57,13 +53,11 @@ public class ComicService {
 
 	private final JPAQueryFactory queryFactory;
 
-	private final PageService pageService;
-
 	private final FileService fileService;
 
 	private final S3Service s3Service;
 
-	private final KitRepository kitRepository;
+	private final ContentRepository contentRepository;
 
 	private final PageRepository pageRepository;
 
@@ -93,7 +87,7 @@ public class ComicService {
 		return page == null ? 0 : page;
 	}
 
-	public List<VideoResp> findVideoByPageUid(Long pageUid) throws Exception {
+	public List<VideoResp> findVideoByPageUid(Long pageUid) {
 		return videoRepository.findByPageUid(pageUid).stream().map(VideoResp::new).collect(Collectors.toList());
 	}
 
@@ -209,24 +203,25 @@ public class ComicService {
 
 	public List<ComicBookDetailResp> getRelatedComicDetailBookList(String deviceId, String contentId) throws Exception {
 		List<ComicBookDetailResp> comicBookDetailResps = new ArrayList<>();
-		List<Page> pages = pageService.findByContentId(contentId);
 
-		for (Page pageItem : pages) {
-			ComicBookDetailResp comicBookDetailResp = new ComicBookDetailResp(pageItem);
+		contentRepository.findByContentId(contentId).ifPresent(content -> {
+			for (Page pageItem : content.getPages()) {
+				ComicBookDetailResp comicBookDetailResp = new ComicBookDetailResp(pageItem);
 
-			List<VideoResp> videoResps = this.findVideoByPageUid(pageItem.getPageUid());
-			List<ComicBookEpisodeResp> comicBookEpisodeResps = this.getEpisodeResps(pageItem.getPageUid());
+				List<VideoResp> videoResps = this.findVideoByPageUid(pageItem.getPageUid());
+				List<ComicBookEpisodeResp> comicBookEpisodeResps = this.getEpisodeResps(pageItem.getPageUid());
 
-			comicBookDetailResp.setVideos(videoResps);
-			comicBookDetailResp.setDetails(comicBookEpisodeResps);
+				comicBookDetailResp.setVideos(videoResps);
+				comicBookDetailResp.setDetails(comicBookEpisodeResps);
 
-			comicBookDetailResps.add(comicBookDetailResp);
-		}
+				comicBookDetailResps.add(comicBookDetailResp);
+			}
+		});
 
 		return comicBookDetailResps;
 	}
 
-	public List<ComicBookEpisodeResp> getEpisodeResps(Long pageUid) throws Exception {
+	public List<ComicBookEpisodeResp> getEpisodeResps(Long pageUid) {
 		List<ComicBookEpisodeResp> comicBookEpisodeResps = new ArrayList<>();
 		List<ComicBook> comicBooks = comicBookRepository.findAllByPageUid(pageUid).orElse(new ArrayList<>());
 		for(ComicBook comicBook : comicBooks) {
