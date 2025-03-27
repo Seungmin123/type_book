@@ -9,9 +9,9 @@ COPY ${JAR_FILE} app.jar
 ENV SPRING_PROFILES_ACTIVE=prod
 ENV VERSION=0.0.1
 
-ENTRYPOINT sh -c '\
-  mkdir -p /app/dump && mkdir -p /app/logs && \
-  JAVA_OPTS="\
+ENTRYPOINT ["sh", "-c", "\
+  mkdir -p /app/dump /app/logs && \
+  java \
     -Xms1024M -Xmx2048M \
     -XX:+UseG1GC \
     -XX:+UseStringDeduplication \
@@ -24,7 +24,8 @@ ENTRYPOINT sh -c '\
     -javaagent:/opt/datadog-packages/datadog-apm-library-java/1.43.0/dd-java-agent.jar \
     -Ddd.logs.injection=true \
     -Ddd.service=KiT_Page \
-    -Ddd.env=${SPRING_PROFILES_ACTIVE} \
-    -Ddd.version=${VERSION} \
-    -Ddd.profiling.enabled=true" && \
-  java $JAVA_OPTS -jar app.jar --spring.profiles.active=${SPRING_PROFILES_ACTIVE}'
+    -Ddd.env=$SPRING_PROFILES_ACTIVE \
+    -Ddd.version=$VERSION \
+    -Ddd.profiling.enabled=true \
+    -jar app.jar \
+    --spring.profiles.active=$SPRING_PROFILES_ACTIVE"]
