@@ -137,7 +137,7 @@ public class ComicService {
 	}
 
 
-	public ComicBookContentResp getComicBookContent(String deviceId, String contentId) throws Exception {
+	public ComicBookContentResp getComicBookContent(String contentId) throws Exception {
 		List<Page> pages = pageRepository.findAllWithComicBooks(contentId);
 		if(CollectionUtils.isEmpty(pages)) throw new CommonException(ExceptionCode.CANNOT_FIND_MATCHED_ITEM);
 		ComicBookContentResp comicBookContentResp = new ComicBookContentResp(pages.get(0).getContent());
@@ -201,24 +201,23 @@ public class ComicService {
 		return 0L;
 	}
 
-	public List<ComicBookDetailResp> getRelatedComicDetailBookList(String deviceId, String contentId) throws Exception {
+	public List<ComicBookDetailResp> getRelatedComicDetailBookList(String contentId) throws Exception {
 		List<ComicBookDetailResp> comicBookDetailResps = new ArrayList<>();
 
 		contentRepository.findByContentId(contentId).ifPresent(content -> {
 			for (Page pageItem : content.getPages()) {
-				ComicBookDetailResp comicBookDetailResp = new ComicBookDetailResp(pageItem);
-
-				List<VideoResp> videoResps = this.findVideoByPageUid(pageItem.getPageUid());
-				List<ComicBookEpisodeResp> comicBookEpisodeResps = this.getEpisodeResps(pageItem.getPageUid());
-
-				comicBookDetailResp.setVideos(videoResps);
-				comicBookDetailResp.setDetails(comicBookEpisodeResps);
-
-				comicBookDetailResps.add(comicBookDetailResp);
+				comicBookDetailResps.add(this.getComicBookDetail(pageItem));
 			}
 		});
 
 		return comicBookDetailResps;
+	}
+
+	public ComicBookDetailResp getComicBookDetail(Page page) {
+		ComicBookDetailResp comicBookDetailResp = new ComicBookDetailResp(page);
+		comicBookDetailResp.setDetails(this.getEpisodeResps(page.getPageUid()));
+		comicBookDetailResp.setVideos(this.findVideoByPageUid(page.getPageUid()));
+		return comicBookDetailResp;
 	}
 
 	public List<ComicBookEpisodeResp> getEpisodeResps(Long pageUid) {

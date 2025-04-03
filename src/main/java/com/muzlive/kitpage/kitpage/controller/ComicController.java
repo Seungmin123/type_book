@@ -34,36 +34,21 @@ public class ComicController {
 
 	@Operation(summary = "ComicBook 리스트 조회")
 	@GetMapping("/list")
-	public CommonResp<ComicBookContentResp> getComicBookListByContentId(@Valid @ModelAttribute ComicBookContentReq comicBookContentReq, HttpServletRequest httpServletRequest) throws Exception {
-		return new CommonResp<>(comicService.getComicBookContent(
-			jwtTokenProvider.getDeviceIdByToken(jwtTokenProvider.resolveToken(httpServletRequest)),
-			comicBookContentReq.getContentId()));
+	public CommonResp<ComicBookContentResp> getComicBookListByContentId(@Valid @ModelAttribute ComicBookContentReq comicBookContentReq) throws Exception {
+		return new CommonResp<>(comicService.getComicBookContent(comicBookContentReq.getContentId()));
 	}
 
 	@Operation(summary = "ComicBook 컨텐츠 상세 정보 리스트 조회")
 	@GetMapping("/detail/list")
-	public CommonResp<List<ComicBookDetailResp>> getComicBookContents(@Valid @ModelAttribute ComicBookContentReq comicBookContentReq, HttpServletRequest httpServletRequest) throws Exception {
-		return new CommonResp<>(comicService.getRelatedComicDetailBookList(
-			jwtTokenProvider.getDeviceIdByToken(jwtTokenProvider.resolveToken(httpServletRequest)),
-			comicBookContentReq.getContentId()));
+	public CommonResp<List<ComicBookDetailResp>> getComicBookContents(@Valid @ModelAttribute ComicBookContentReq comicBookContentReq) throws Exception {
+		return new CommonResp<>(comicService.getRelatedComicDetailBookList(comicBookContentReq.getContentId()));
 	}
 
 	@Operation(summary = "ComicBook 컨텐츠 상세 정보 조회")
 	@GetMapping("/detail/{pageUid}")
 	public CommonResp<ComicBookDetailResp> getComicBookContent(@Valid @PathVariable Long pageUid) throws Exception {
 		Page page = pageService.findPageById(pageUid);
-		ComicBookDetailResp comicBookDetailResp = new ComicBookDetailResp(page);
-		comicBookDetailResp.setDetails(comicService.getEpisodeResps(page.getPageUid()));
-		comicBookDetailResp.setVideos(comicService.findVideoByPageUid(pageUid));
-
-		return new CommonResp<>(comicBookDetailResp);
+		return new CommonResp<>(comicService.getComicBookDetail(page));
 	}
 
-	public CommonResp<Void> getMusicInfo() throws Exception {
-		return new CommonResp<>();
-	}
-
-	public CommonResp<Void> getVideoInfo() throws Exception {
-		return new CommonResp<>();
-	}
 }
