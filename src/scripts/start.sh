@@ -25,7 +25,7 @@ fi
 DEPLOY_JAR=$DEPLOY_PATH/$JAR_NAME
 echo "> DEPLOY_JAR 배포"    >> /home/ec2-user/nonstop/logs/deploy.log
 ##############################################################nohup java -jar $DEPLOY_JAR >> /home/ec2-user/deploy.log 2>/home/ec2-user/deploy_err.log &
-nohup java -Dlog4j2.formatMsgNoLookups=true -Xms1024M -Xmx2048M -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/home/ec2-user/dump -javaagent:/opt/datadog-packages/datadog-apm-library-java/1.43.0/dd-java-agent.jar -Ddd.logs.injection=true -Ddd.service=KiT_Page -Ddd.env=prod -Ddd.version=$VERSION -Ddd.profiling.enabled=true -Duser.timezone=Asia/Seoul -DLOG_HOME=/home/nonstop/logs -Dspring.profiles.active=$IDLE_PROFILE -jar $DEPLOY_JAR > /dev/null 2>&1 &
+nohup java -Dlog4j2.formatMsgNoLookups=true -Xms1024M -Xmx2048M -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/home/ec2-user/dump -javaagent:/opt/datadog-packages/datadog-apm-library-java/1.43.0/dd-java-agent.jar -Ddd.logs.injection=true -Ddd.service=KiT_Page -Ddd.env=prod -Ddd.version=$VERSION -Ddd.profiling.enabled=true -Duser.timezone=Asia/Seoul -Dspring.profiles.active=$IDLE_PROFILE -jar $DEPLOY_JAR > /dev/null 2>&1 &
 #nohup java -Dlog4j2.formatMsgNoLookups=true -Dspring.profiles.active=$IDLE_PROFILE -jar $DEPLOY_JAR 1> /dev/null 2>&1 &
 
 echo "> $IDLE_PROFILE 10초 후 Health check 시작"
