@@ -123,6 +123,7 @@ public class UserService implements UserDetailsService {
 	public void clearDeviceIdHistory(String deviceId) throws Exception {
 		List<Kit> kits = kitRepository.findByDeviceId(deviceId).orElseThrow(() -> new CommonException(ExceptionCode.CANNOT_FIND_MATCHED_ITEM));
 		kits.forEach(k -> k.setDeviceId(""));
+		kitRepository.saveAll(kits);
 	}
 
 	public List<Tuple> getInstallLogs(String deviceId, String contentId, Region region) throws Exception {
