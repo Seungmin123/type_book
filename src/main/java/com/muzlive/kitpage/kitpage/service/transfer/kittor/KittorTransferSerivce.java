@@ -44,98 +44,114 @@ public class KittorTransferSerivce {
     }
 
     public KittorTokenResp userJoin(KittorUserReq kittorUserReq) throws Exception {
-        Result<KittorTokenResp> result = webClient.post()
+        return webClient.post()
             .uri(JOIN_URL)
             .accept(MediaType.APPLICATION_JSON)
             .body(Mono.just(kittorUserReq), KittorUserReq.class)
-            .retrieve().bodyToMono(new ParameterizedTypeReference<Result<KittorTokenResp>>() {})
+            .retrieve()
+            .onStatus(HttpStatus::is4xxClientError, response ->
+                Mono.error(new CommonException(HttpStatus.BAD_REQUEST, "Client error during join")))
+            .onStatus(HttpStatus::is5xxServerError, response ->
+                Mono.error(new CommonException(ExceptionCode.KITTOR_EXTERNAL_SERVER_ERROR, "Server error during join")))
+            .bodyToMono(new ParameterizedTypeReference<Result<KittorTokenResp>>() {})
             .timeout(Duration.ofMillis(15000))
-            .doOnError(e -> {
-                log.error(e.getMessage());
-            }).block();
-
-        if(result.getData() == null) {
-            if(result.getMessage() != null) {
-                throw new CommonException(HttpStatus.BAD_REQUEST, result.getMessage());
-            }else {
-                throw new CommonException(ExceptionCode.KITTOR_EXTERNAL_SERVER_ERROR);
-            }
-        }
-        return result.getData();
+            .doOnError(e -> log.error("회원가입 중 오류", e))
+            .flatMap(result ->
+                result == null || result.getData() == null
+                    ? Mono.error(new CommonException(HttpStatus.BAD_REQUEST, getErrorMessage(result)))
+                    : Mono.just(result.getData())
+            )
+            .block();
     }
 
     public KittorTokenResp userLogin(KittorUserReq kittorUserReq) throws Exception {
-        Result<KittorTokenResp> result = webClient.post()
+        return webClient.post()
             .uri(LOGIN_URL)
             .accept(MediaType.APPLICATION_JSON)
             .body(Mono.just(kittorUserReq), KittorUserReq.class)
-            .retrieve().bodyToMono(new ParameterizedTypeReference<Result<KittorTokenResp>>() {})
+            .retrieve()
+            .onStatus(HttpStatus::is4xxClientError, response ->
+                Mono.error(new CommonException(HttpStatus.BAD_REQUEST, "Client error during login")))
+            .onStatus(HttpStatus::is5xxServerError, response ->
+                Mono.error(new CommonException(ExceptionCode.KITTOR_EXTERNAL_SERVER_ERROR, "Server error during login")))
+            .bodyToMono(new ParameterizedTypeReference<Result<KittorTokenResp>>() {})
             .timeout(Duration.ofMillis(15000))
-            .doOnError(e -> {
-                log.error(e.getMessage());
-            }).block();
-
-        if(result.getData() == null) {
-            if(result.getMessage() != null) {
-                throw new CommonException(HttpStatus.BAD_REQUEST, result.getMessage());
-            }else {
-                throw new CommonException(ExceptionCode.KITTOR_EXTERNAL_SERVER_ERROR);
-            }
-        }
-        return result.getData();
+            .doOnError(e -> log.error("로그인 중 오류", e))
+            .flatMap(result ->
+                result == null || result.getData() == null
+                    ? Mono.error(new CommonException(HttpStatus.BAD_REQUEST, getErrorMessage(result)))
+                    : Mono.just(result.getData())
+            )
+            .block();
     }
 
     public Boolean sendVerificationCode(SendVerificationReq sendVerificationReq) throws Exception {
-        Result<KittorSimpleResult> result = webClient.post()
+        return webClient.post()
             .uri(SEND_VERIFICATION_URL)
             .accept(MediaType.APPLICATION_JSON)
             .body(Mono.just(sendVerificationReq), SendVerificationReq.class)
-            .retrieve().bodyToMono(new ParameterizedTypeReference<Result<KittorSimpleResult>>() {})
+            .retrieve()
+            .onStatus(HttpStatus::is4xxClientError, response ->
+                Mono.error(new CommonException(HttpStatus.BAD_REQUEST, "Client error during verification code")))
+            .onStatus(HttpStatus::is5xxServerError, response ->
+                Mono.error(new CommonException(ExceptionCode.KITTOR_EXTERNAL_SERVER_ERROR, "Server error during verification code")))
+            .bodyToMono(new ParameterizedTypeReference<Result<KittorSimpleResult>>() {})
             .timeout(Duration.ofMillis(15000))
-            .doOnError(e -> {
-                log.error(e.getMessage());
-            }).block();
-
-        if(result.getData() == null ||
-            result.getData().getResult() == null) {
-            if(result.getMessage() != null) {
-                throw new CommonException(HttpStatus.BAD_REQUEST, result.getMessage());
-            }else {
-                throw new CommonException(ExceptionCode.KITTOR_EXTERNAL_SERVER_ERROR);
-            }
-        }
-        return result.getData().getResult();
+            .doOnError(e -> log.error("인증코드 점검 중 오류", e))
+            .flatMap(result ->
+                result == null || result.getData() == null || result.getData().getResult() == null
+                    ? Mono.error(new CommonException(HttpStatus.BAD_REQUEST, getErrorMessage(result)))
+                    : Mono.just(result.getData().getResult())
+            )
+            .block();
     }
 
     public Boolean resetPassword(KittorResetPasswordReq kittorResetPasswordReq) throws Exception {
-        SimpleResult result = webClient.post()
+        return webClient.post()
             .uri(RESET_PASSWORD_URL)
             .accept(MediaType.APPLICATION_JSON)
             .body(Mono.just(kittorResetPasswordReq), KittorResetPasswordReq.class)
-            .retrieve().bodyToMono(new ParameterizedTypeReference<SimpleResult>() {})
+            .retrieve()
+            .onStatus(HttpStatus::is4xxClientError, response ->
+                Mono.error(new CommonException(HttpStatus.BAD_REQUEST, "Client error during reset password")))
+            .onStatus(HttpStatus::is5xxServerError, response ->
+                Mono.error(new CommonException(ExceptionCode.KITTOR_EXTERNAL_SERVER_ERROR, "Server error during reset password")))
+            .bodyToMono(new ParameterizedTypeReference<SimpleResult>() {})
             .timeout(Duration.ofMillis(15000))
-            .doOnError(e -> {
-                log.error(e.getMessage());
-            }).block();
-
-        if(result.getStatus() != 200) throw new CommonException(ExceptionCode.KITTOR_EXTERNAL_SERVER_ERROR);
-        return true;
+            .doOnError(e -> log.error("비밀번호 초기화 중 오류", e))
+            .flatMap(result ->
+                result == null || result.getStatus() != 200
+                    ? Mono.error(new CommonException(HttpStatus.BAD_REQUEST, getErrorMessage(result)))
+                    : Mono.just(true)
+            )
+            .block();
     }
 
     public Boolean changePassword(String accessToken, KittorChangePasswordReq kittorChangePasswordReq) throws Exception  {
-        SimpleResult result = webClient.post()
+        return webClient.post()
             .uri(CHANGE_PASSWORD_URL)
-            .headers(headers -> {headers.setBearerAuth(accessToken);})
+            .headers(h -> h.setBearerAuth(accessToken))
             .accept(MediaType.APPLICATION_JSON)
             .body(Mono.just(kittorChangePasswordReq), KittorChangePasswordReq.class)
-            .retrieve().bodyToMono(new ParameterizedTypeReference<SimpleResult>() {})
+            .retrieve()
+            .onStatus(HttpStatus::is4xxClientError, response ->
+                Mono.error(new CommonException(HttpStatus.BAD_REQUEST, "Client error during change password")))
+            .onStatus(HttpStatus::is5xxServerError, response ->
+                Mono.error(new CommonException(ExceptionCode.KITTOR_EXTERNAL_SERVER_ERROR, "Server error during change password")))
+            .bodyToMono(new ParameterizedTypeReference<SimpleResult>() {})
             .timeout(Duration.ofMillis(15000))
-            .doOnError(e -> {
-                log.error(e.getMessage());
-            }).block();
-
-        if(result.getStatus() != 200) throw new CommonException(ExceptionCode.KITTOR_EXTERNAL_SERVER_ERROR);
-        return true;
+            .doOnError(e -> log.error("비밀번호 변경 중 오류", e))
+            .flatMap(result ->
+                result == null || result.getStatus() != 200
+                    ? Mono.error(new CommonException(HttpStatus.BAD_REQUEST, getErrorMessage(result)))
+                    : Mono.just(true)
+            )
+            .block();
     }
 
+    private String getErrorMessage(SimpleResult result) {
+        return result != null && result.getMessage() != null
+            ? result.getMessage()
+            : "Unknown error from external kittor server";
+    }
 }
