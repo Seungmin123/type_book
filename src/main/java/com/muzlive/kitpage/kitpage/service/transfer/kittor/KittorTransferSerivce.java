@@ -6,9 +6,11 @@ import com.muzlive.kitpage.kitpage.config.transfer.domain.KittorDomain;
 import com.muzlive.kitpage.kitpage.domain.common.dto.resp.Result;
 import com.muzlive.kitpage.kitpage.domain.common.dto.resp.SimpleResult;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.KittorChangePasswordReq;
+import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.KittorOAuthLoginReq;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.KittorResetPasswordReq;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.KittorUserReq;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.SendVerificationReq;
+import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.resp.KittorOAuthLoginResp;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.resp.KittorSimpleResult;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.resp.KittorTokenResp;
 import java.time.Duration;
@@ -34,6 +36,11 @@ public class KittorTransferSerivce {
     private final String RESET_PASSWORD_URL = "/v1/web/reset/password";
 
     private final String CHANGE_PASSWORD_URL = "/v1/web/user/change/password";
+
+    // OAuth Callback
+    private final String OAUTH_CALLBACK_GOOGLE_URL = "/oauth/callback/google";
+
+    private final String OAUTH_CALLBACK_APPLE_URL = "/oauth/callback/apple";
 
     private WebClient webClient;
 
@@ -145,6 +152,48 @@ public class KittorTransferSerivce {
                 result == null || result.getStatus() != 200
                     ? Mono.error(new CommonException(HttpStatus.BAD_REQUEST, getErrorMessage(result)))
                     : Mono.just(true)
+            )
+            .block();
+    }
+
+    public KittorOAuthLoginResp oAuthGoogleLogin(KittorOAuthLoginReq kittorOAuthLoginReq) throws Exception {
+        return webClient.post()
+            .uri(OAUTH_CALLBACK_GOOGLE_URL)
+            .accept(MediaType.APPLICATION_JSON)
+            .body(Mono.just(kittorOAuthLoginReq), KittorOAuthLoginReq.class)
+            .retrieve()
+            .onStatus(HttpStatus::is4xxClientError, response ->
+                Mono.error(new CommonException(HttpStatus.BAD_REQUEST, "Client error during google login")))
+            .onStatus(HttpStatus::is5xxServerError, response ->
+                Mono.error(new CommonException(ExceptionCode.KITTOR_EXTERNAL_SERVER_ERROR, "Server error during google login")))
+            .bodyToMono(new ParameterizedTypeReference<Result<KittorOAuthLoginResp>>() {})
+            .timeout(Duration.ofMillis(15000))
+            .doOnError(e -> log.error("구글 로그인 중 오류", e))
+            .flatMap(result ->
+                result == null || result.getData() == null
+                    ? Mono.error(new CommonException(HttpStatus.BAD_REQUEST, getErrorMessage(result)))
+                    : Mono.just(result.getData())
+            )
+            .block();
+    }
+
+    public KittorOAuthLoginResp oAuthAppleLogin(KittorOAuthLoginReq kittorOAuthLoginReq) throws Exception {
+        return webClient.post()
+            .uri(OAUTH_CALLBACK_APPLE_URL)
+            .accept(MediaType.APPLICATION_JSON)
+            .body(Mono.just(kittorOAuthLoginReq), KittorOAuthLoginReq.class)
+            .retrieve()
+            .onStatus(HttpStatus::is4xxClientError, response ->
+                Mono.error(new CommonException(HttpStatus.BAD_REQUEST, "Client error during apple login")))
+            .onStatus(HttpStatus::is5xxServerError, response ->
+                Mono.error(new CommonException(ExceptionCode.KITTOR_EXTERNAL_SERVER_ERROR, "Server error during apple login")))
+            .bodyToMono(new ParameterizedTypeReference<Result<KittorOAuthLoginResp>>() {})
+            .timeout(Duration.ofMillis(15000))
+            .doOnError(e -> log.error("애플 로그인 중 오류", e))
+            .flatMap(result ->
+                result == null || result.getData() == null
+                    ? Mono.error(new CommonException(HttpStatus.BAD_REQUEST, getErrorMessage(result)))
+                    : Mono.just(result.getData())
             )
             .block();
     }

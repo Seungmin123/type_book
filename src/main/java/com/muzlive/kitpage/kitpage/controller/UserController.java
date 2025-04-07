@@ -1,6 +1,8 @@
 package com.muzlive.kitpage.kitpage.controller;
 
 import com.muzlive.kitpage.kitpage.config.encryptor.AesSecurityProvider;
+import com.muzlive.kitpage.kitpage.config.exception.CommonException;
+import com.muzlive.kitpage.kitpage.config.exception.ExceptionCode;
 import com.muzlive.kitpage.kitpage.config.jwt.JwtTokenProvider;
 import com.muzlive.kitpage.kitpage.domain.common.dto.resp.CommonResp;
 import com.muzlive.kitpage.kitpage.domain.page.Page;
@@ -26,9 +28,11 @@ import com.muzlive.kitpage.kitpage.service.transfer.kihno.dto.resp.KihnoMicLocat
 import com.muzlive.kitpage.kitpage.service.transfer.kihno.dto.resp.KihnoMicProcessedResp;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.KittorTransferSerivce;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.KittorChangePasswordReq;
+import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.KittorOAuthLoginReq;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.KittorResetPasswordReq;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.KittorUserReq;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.SendVerificationReq;
+import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.resp.KittorOAuthLoginResp;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.resp.KittorTokenResp;
 import com.muzlive.kitpage.kitpage.utils.CommonUtils;
 import com.muzlive.kitpage.kitpage.utils.constants.ApplicationConstants;
@@ -44,6 +48,7 @@ import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -129,6 +134,49 @@ public class UserController {
 		checkTagResp.setTotalSize(totalSize);
 
 		return new CommonResp<>(checkTagResp);
+	}
+
+	@Operation(summary = "마이크 Processed 체크", description = "마이크 Processed 체크")
+	@GetMapping("/mic/processed")
+	public CommonResp<KihnoMicProcessedResp> checkMicProcessed(@ModelAttribute @Valid MicLocationReq micLocationReq) throws Exception {
+		return new CommonResp<>(kihnoV2TransferSerivce.checkMicProcessed(new KihnoMicProcessedReq(micLocationReq)));
+	}
+
+	@Operation(summary = "마이크 위치 조회 API", description = "마이크 위치 조회 API")
+	@GetMapping("/mic")
+	public CommonResp<KihnoMicLocationResp> getMicLocation(@ModelAttribute @Valid MicLocationReq micLocationReq) throws Exception {
+		return new CommonResp<>(kihnoV2TransferSerivce.getMicLocation(new KihnoMicLocationReq(micLocationReq)));
+	}
+
+	@Operation(summary = "버전 정보 조회 API", description = "버전 정보 조회 API<br>" +
+		"currentVersion:String | required | 현재 앱 버전(x.x.x)<br>" +
+		"platform:String | required | AOS 또는 IOS<br>" +
+		"osVersion:String | required | os 버전(x.x)")
+	@GetMapping("/version")
+	public CommonResp<VersionInfoResp> getVersion(@ModelAttribute @Valid VersionInfoReq versionInfoReq) throws Exception {
+		return new CommonResp<>(pageService.getVersionInfo(versionInfoReq));
+	}
+
+	@Operation(summary = "키트 점검 API")
+	@GetMapping("/checkStatus")
+	public CommonResp<KitStatusResp> checkKitStatus(@ModelAttribute @Valid KitStatusReq kitStatusReq) throws Exception {
+		KitStatusResp kitStatusResp = new KitStatusResp();
+		String serialNumber = kitStatusReq.getSerialNumber().length() > 8 ? kitStatusReq.getSerialNumber().substring(0, 8) : kitStatusReq.getSerialNumber();
+
+		// CS ID
+		kitStatusResp.setCsId(aesSecurityProvider.encrypt(serialNumber));
+
+		Page page = userService.getPageBySerialNumber(serialNumber);
+		kitStatusResp.setTitle(page.getTitle());
+		kitStatusResp.setSubTitle(page.getSubTitle());
+		kitStatusResp.setCoverImageUid(page.getCoverImageUid());
+		kitStatusResp.setCreatedAt(page.getCreatedAt());
+
+		kitStatusResp.setIsInstalled(
+			comicService.getInstallStatus(page.getPageUid(), kitStatusReq.getDeviceId())
+				.equals(KitStatus.AVAILABLE));
+
+		return new CommonResp<>(kitStatusResp);
 	}
 
 	@Deprecated
@@ -230,47 +278,29 @@ public class UserController {
 		return new CommonResp<>(kittorTransferSerivce.changePassword(member.getKittorToken(), kittorChangePasswordReq));
 	}
 
-	@Operation(summary = "마이크 Processed 체크", description = "마이크 Processed 체크")
-	@GetMapping("/mic/processed")
-	public CommonResp<KihnoMicProcessedResp> checkMicProcessed(@ModelAttribute @Valid MicLocationReq micLocationReq) throws Exception {
-		return new CommonResp<>(kihnoV2TransferSerivce.checkMicProcessed(new KihnoMicProcessedReq(micLocationReq)));
-	}
+	@Operation(summary = "OAuth 로그인 콜백 API", description = "OAuth 로그인 후 토큰을 이용한 콜백 호출용 API")
+	@PostMapping("/oauth/callback/{provider}")
+	public CommonResp<KittorOAuthLoginResp> oAuthCallback(
+		@PathVariable String provider,
+		@Valid @RequestBody KittorOAuthLoginReq kittorChangePasswordReq,
+		HttpServletRequest request
+	) throws Exception {
 
-	@Operation(summary = "마이크 위치 조회 API", description = "마이크 위치 조회 API")
-	@GetMapping("/mic")
-	public CommonResp<KihnoMicLocationResp> getMicLocation(@ModelAttribute @Valid MicLocationReq micLocationReq) throws Exception {
-		return new CommonResp<>(kihnoV2TransferSerivce.getMicLocation(new KihnoMicLocationReq(micLocationReq)));
-	}
+		kittorChangePasswordReq.setDevice(jwtTokenProvider.getDeviceIdByToken(jwtTokenProvider.resolveToken(request)));
+		KittorOAuthLoginResp kittorOAuthLoginResp;
 
-	@Operation(summary = "버전 정보 조회 API", description = "버전 정보 조회 API<br>" +
-		"currentVersion:String | required | 현재 앱 버전(x.x.x)<br>" +
-		"platform:String | required | AOS 또는 IOS<br>" +
-		"osVersion:String | required | os 버전(x.x)")
-	@GetMapping("/version")
-	public CommonResp<VersionInfoResp> getVersion(@ModelAttribute @Valid VersionInfoReq versionInfoReq) throws Exception {
-		return new CommonResp<>(pageService.getVersionInfo(versionInfoReq));
-	}
+		switch (provider) {
+			case "google":
+				kittorOAuthLoginResp = kittorTransferSerivce.oAuthGoogleLogin(kittorChangePasswordReq);
+				break;
+			case "apple":
+				kittorOAuthLoginResp = kittorTransferSerivce.oAuthAppleLogin(kittorChangePasswordReq);
+				break;
+			default:
+				throw new CommonException(ExceptionCode.INVALID_REQUEST_PRAMETER);
+		}
 
-	@Operation(summary = "키트 점검 API")
-	@GetMapping("/checkStatus")
-	public CommonResp<KitStatusResp> checkKitStatus(@ModelAttribute @Valid KitStatusReq kitStatusReq) throws Exception {
-		KitStatusResp kitStatusResp = new KitStatusResp();
-		String serialNumber = kitStatusReq.getSerialNumber().length() > 8 ? kitStatusReq.getSerialNumber().substring(0, 8) : kitStatusReq.getSerialNumber();
-
-		// CS ID
-		kitStatusResp.setCsId(aesSecurityProvider.encrypt(serialNumber));
-
-		Page page = userService.getPageBySerialNumber(serialNumber);
-		kitStatusResp.setTitle(page.getTitle());
-		kitStatusResp.setSubTitle(page.getSubTitle());
-		kitStatusResp.setCoverImageUid(page.getCoverImageUid());
-		kitStatusResp.setCreatedAt(page.getCreatedAt());
-
-		kitStatusResp.setIsInstalled(
-			comicService.getInstallStatus(page.getPageUid(), kitStatusReq.getDeviceId())
-				.equals(KitStatus.AVAILABLE));
-
-		return new CommonResp<>(kitStatusResp);
+		return new CommonResp<>(kittorOAuthLoginResp);
 	}
 
 }
