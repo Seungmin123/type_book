@@ -2,6 +2,9 @@ package com.muzlive.kitpage.kitpage.config;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.muzlive.kitpage.kitpage.config.jwt.CurrentTokenArgumentResolver;
+import com.muzlive.kitpage.kitpage.config.jwt.JwtTokenProvider;
+import java.util.List;
 import java.util.Locale;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
@@ -9,6 +12,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.support.ReloadableResourceBundleMessageSource;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
+import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.multipart.MultipartResolver;
 import org.springframework.web.multipart.commons.CommonsMultipartResolver;
 import org.springframework.web.servlet.LocaleResolver;
@@ -18,6 +22,8 @@ import org.springframework.web.servlet.i18n.AcceptHeaderLocaleResolver;
 @RequiredArgsConstructor
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
+
+    private final JwtTokenProvider jwtTokenProvider;
 
     @Bean("jsonTo")
     public ObjectMapper setObjectmapper(){
@@ -44,5 +50,10 @@ public class WebConfig implements WebMvcConfigurer {
     @Bean
     public MultipartResolver multipartResolver() {
         return new CommonsMultipartResolver();
+    }
+
+    @Override
+    public void addArgumentResolvers(List<HandlerMethodArgumentResolver> resolvers) {
+        resolvers.add(new CurrentTokenArgumentResolver(jwtTokenProvider));
     }
 }
