@@ -3,6 +3,7 @@ package com.muzlive.kitpage.kitpage.controller;
 import com.muzlive.kitpage.kitpage.config.encryptor.AesSecurityProvider;
 import com.muzlive.kitpage.kitpage.config.exception.CommonException;
 import com.muzlive.kitpage.kitpage.config.exception.ExceptionCode;
+import com.muzlive.kitpage.kitpage.config.jwt.CurrentToken;
 import com.muzlive.kitpage.kitpage.config.jwt.JwtTokenProvider;
 import com.muzlive.kitpage.kitpage.domain.common.dto.resp.CommonResp;
 import com.muzlive.kitpage.kitpage.domain.page.Page;
@@ -34,6 +35,8 @@ import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.KittorUserReq
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.SendVerificationReq;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.resp.KittorOAuthLoginResp;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.resp.KittorTokenResp;
+import com.muzlive.kitpage.kitpage.usecase.CheckTagUseCase;
+import com.muzlive.kitpage.kitpage.usecase.command.CheckTagCommand;
 import com.muzlive.kitpage.kitpage.utils.CommonUtils;
 import com.muzlive.kitpage.kitpage.utils.constants.ApplicationConstants;
 import com.muzlive.kitpage.kitpage.utils.enums.KitStatus;
@@ -77,6 +80,8 @@ public class UserController {
 
 	private final AesSecurityProvider aesSecurityProvider;
 
+	private final CheckTagUseCase checkTagUseCase;
+
 	@Operation(summary = "Token 발급 API", description = "앱 실행 시 호출, 그 이후 Header Authorization 추가")
 	@PostMapping("/token")
 	public CommonResp<String> createToken(@Valid @RequestBody AccessTokenReq accessTokenReq, HttpServletRequest httpServletRequest) throws Exception {
@@ -99,41 +104,14 @@ public class UserController {
 
 	@Operation(summary = "체크 태그 API", description = "키노 서버를 통한 체크 태그 API")
 	@PostMapping("/checkTag")
-	public CommonResp<CheckTagResp> checkTag(@Valid @RequestBody CheckTagReq checkTagReq, HttpServletRequest httpServletRequest) throws Exception {
-		String requestSerialNumber = (checkTagReq.getSerialNumber().length() > 8) ? checkTagReq.getSerialNumber().substring(0, 8) : checkTagReq.getSerialNumber();
-		String paramSerialNumber = (checkTagReq.getSerialNumber().length() < 10) ? checkTagReq.getSerialNumber() + commonUtils.makeRandomHexString() : checkTagReq.getSerialNumber();
-
-		String jwt = jwtTokenProvider.resolveToken(httpServletRequest);
-		String deviceId = jwtTokenProvider.getDeviceIdByToken(jwt);
-		// TODO Contents 확장 시 여기부터 분기 처리
-		Page page = comicService.findPageWithComicBooksBySerialNumber(requestSerialNumber);
-
-		KihnoKitCheckReq kihnoKitCheckReq = KihnoKitCheckReq.builder()
-			.deviceId(deviceId)
-			.kitId(paramSerialNumber)
-			.countryCode(page == null ? ApplicationConstants.KOR_COUNTRY_CODE : page.getContent().getRegion().getCode())
-			.build();
-
-		userService.checkTag(requestSerialNumber, deviceId, kihnoV2TransferSerivce.kihnoKitCheck(kihnoKitCheckReq).getKihnoKitUid());
-
-		Set<String> roles = jwtTokenProvider.getRolesByToken(jwt);
-		roles.add(UserRole.HALF_LINKER.getKey());
-		// token
-		String token = jwtTokenProvider.createAccessToken(deviceId, requestSerialNumber, roles);
-		userService.insertTokenLog(
-			TokenLog.builder()
-				.token(token)
-				.deviceId(deviceId)
-				.serialNumber(requestSerialNumber)
-				.tokenType(TokenType.CHECK_TAG)
-				.build());
-
-		CheckTagResp checkTagResp = new CheckTagResp(page, token);
-
-		long totalSize = comicService.getImageSizeByPageUid(page.getPageUid());
-		checkTagResp.setTotalSize(totalSize);
-
-		return new CommonResp<>(checkTagResp);
+	public CommonResp<CheckTagResp> checkTag(@Valid @RequestBody CheckTagReq checkTagReq, @CurrentToken String jwt) throws Exception {
+		return new CommonResp<>(
+			checkTagUseCase.execute(
+				CheckTagCommand.builder()
+				.serialNumber(checkTagReq.getSerialNumber())
+				.jwt(jwt)
+				.build())
+		);
 	}
 
 	@Operation(summary = "마이크 Processed 체크", description = "마이크 Processed 체크")
@@ -187,7 +165,7 @@ public class UserController {
 		Kit kit = userService.findBySerialNumber(jwtTokenProvider.getSerialNumberByToken(jwt));
 		kit.setDeviceId(jwtTokenProvider.getDeviceIdByToken(jwt));
 		kit.setModifiedAt(LocalDateTime.now());
-		userService.upsertKit(kit);
+		userService.upsertKitAndLog(kit);
 		return new CommonResp<>();
 	}
 

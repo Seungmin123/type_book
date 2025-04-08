@@ -152,6 +152,14 @@ public class JwtTokenProvider {
         return new HashSet<>(roles);
     }
 
+    public Set<String> addRolesByToken(String accessToken, UserRole role) {
+        final Jws<Claims> claims = Jwts.parser().setSigningKey(secretKey).parseClaimsJws(accessToken);
+        @SuppressWarnings("unchecked")
+        List<String> roles = (List<String>) claims.getBody().get("roles");
+        roles.add(role.getKey());
+        return new HashSet<>(roles);
+    }
+
     //---------------------------------------------------------------------------------------------
 
 }

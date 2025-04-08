@@ -21,6 +21,7 @@ import com.muzlive.kitpage.kitpage.domain.user.repository.MemberLogRepository;
 import com.muzlive.kitpage.kitpage.domain.user.repository.MemberRepository;
 import com.muzlive.kitpage.kitpage.domain.user.repository.TokenLogRepository;
 import com.muzlive.kitpage.kitpage.utils.enums.Region;
+import com.muzlive.kitpage.kitpage.utils.enums.TokenType;
 import com.querydsl.core.Tuple;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -61,7 +62,7 @@ public class UserService implements UserDetailsService {
 	}
 
 	@Transactional
-	public void insertTokenLog(TokenLog tokenLog) throws Exception {
+	public void insertTokenLog(TokenLog tokenLog) {
 		tokenLogRepository.save(tokenLog);
 	}
 
@@ -103,16 +104,16 @@ public class UserService implements UserDetailsService {
 	}
 
 	@Transactional
-	public Kit checkTag(String serialNumber, String deviceId, Long kihnoKitUid) throws Exception {
+	public void selectAndUpdateKit(String serialNumber, String deviceId, Long kihnoKitUid) throws Exception {
 		Kit kit = kitRepository.findBySerialNumber(serialNumber).orElseThrow(() -> new CommonException(ExceptionCode.CANNOT_FIND_MATCHED_ITEM));
 		kit.setKihnoKitUid(kihnoKitUid);
 		kit.setDeviceId(deviceId);
 		kit.setModifiedAt(LocalDateTime.now());
-		return this.upsertKit(kit);
+		this.upsertKitAndLog(kit);
 	}
 
 	@Transactional
-	public Kit upsertKit(Kit kit) throws Exception {
+	public Kit upsertKitAndLog(Kit kit) throws Exception {
 		kit = kitRepository.save(kit);
 		kitLogRepository.save(KitLog.of(kit));
 
@@ -155,6 +156,11 @@ public class UserService implements UserDetailsService {
 			.innerJoin(kit).on(kit.pageUid.eq(page.pageUid))
 			.where(kit.serialNumber.eq(serialNumber))
 			.fetchFirst();
+	}
+
+	@Transactional
+	public void issueTokenAndLog(String deviceId, String serialNumber, String token, TokenType tokenType) throws Exception {
+
 	}
 
 }
