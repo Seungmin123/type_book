@@ -3,6 +3,7 @@ package com.muzlive.kitpage.kitpage.controller;
 import com.muzlive.kitpage.kitpage.config.encryptor.AesSecurityProvider;
 import com.muzlive.kitpage.kitpage.config.exception.CommonException;
 import com.muzlive.kitpage.kitpage.config.exception.ExceptionCode;
+import com.muzlive.kitpage.kitpage.config.jwt.CurrentToken;
 import com.muzlive.kitpage.kitpage.config.jwt.JwtTokenProvider;
 import com.muzlive.kitpage.kitpage.domain.common.dto.resp.CommonResp;
 import com.muzlive.kitpage.kitpage.domain.page.Content;
@@ -55,9 +56,8 @@ public class PageController {
 		+ "descending - optional - default 'true' - 정렬 순서 변경<br>"
 		+ "searchValue - optional - 검색 대비용<br>")
 	@GetMapping("/list")
-	public CommonResp<List<ContentResp>> getInstallList(ContentListReq contentListReq, HttpServletRequest httpServletRequest) throws Exception {
-		String token = jwtTokenProvider.resolveToken(httpServletRequest);
-		contentListReq.setDeviceId(jwtTokenProvider.getDeviceIdByToken(token));
+	public CommonResp<List<ContentResp>> getInstallList(ContentListReq contentListReq, @CurrentToken String jwt) throws Exception {
+		contentListReq.setDeviceId(jwtTokenProvider.getDeviceIdByToken(jwt));
 
 		List<ContentResp> contentResps = pageService.findContentList(contentListReq).stream()
 			.map(ContentResp::new)
@@ -68,10 +68,10 @@ public class PageController {
 
 	@Operation(summary = "이미지 다운로드 API - Decrypted", description = "imageUid 를 통해 Image 파일 다운로드")
 	@GetMapping("/download/image/{imageUid}")
-	public ResponseEntity<InputStreamResource> downloadImage(@PathVariable Long imageUid, HttpServletRequest httpServletRequest) throws Exception {
+	public ResponseEntity<InputStreamResource> downloadImage(@PathVariable Long imageUid, @CurrentToken String jwt) throws Exception {
 
 		// ImageUid, SerialNumber 유효성 검사
-		if(!pageService.existsByImageUidAndSerialNumber(imageUid, jwtTokenProvider.getSerialNumberByToken(jwtTokenProvider.resolveToken(httpServletRequest))) // 토큰의 seiralNumber에 해당하는 키트와 이미지가 매칭되는 지 확인
+		if(!pageService.existsByImageUidAndSerialNumber(imageUid, jwtTokenProvider.getSerialNumberByToken(jwt)) // 토큰의 seiralNumber에 해당하는 키트와 이미지가 매칭되는 지 확인
 			&& SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream().noneMatch(v -> v.getAuthority().equals(UserRole.ENGINEER.getKey()))) // 관리자
 			throw new CommonException(ExceptionCode.NON_DOWNLOADABLE_TOKEN);
 
@@ -86,9 +86,9 @@ public class PageController {
 
 	@Operation(summary = "이미지 다운로드 API - Encrypted", description = "imageUid 를 통해 Image 파일 다운로드")
 	@GetMapping("/download/image/encrypt/{imageUid}")
-	public ResponseEntity<InputStreamResource> downloadImageEncrypted(@PathVariable Long imageUid, HttpServletRequest httpServletRequest) throws Exception {
+	public ResponseEntity<InputStreamResource> downloadImageEncrypted(@PathVariable Long imageUid, @CurrentToken String jwt) throws Exception {
 		// ImageUid, SerialNumber 유효성 검사
-		if(!pageService.existsByImageUidAndSerialNumber(imageUid, jwtTokenProvider.getSerialNumberByToken(jwtTokenProvider.resolveToken(httpServletRequest))) // 토큰의 seiralNumber에 해당하는 키트와 이미지가 매칭되는 지 확인
+		if(!pageService.existsByImageUidAndSerialNumber(imageUid, jwtTokenProvider.getSerialNumberByToken(jwt)) // 토큰의 seiralNumber에 해당하는 키트와 이미지가 매칭되는 지 확인
 			&& SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream().noneMatch(v -> v.getAuthority().equals(UserRole.ENGINEER.getKey()))) // 관리자
 			throw new CommonException(ExceptionCode.NON_DOWNLOADABLE_TOKEN);
 
