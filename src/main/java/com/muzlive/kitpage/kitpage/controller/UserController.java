@@ -171,8 +171,7 @@ public class UserController {
 
 	@Operation(summary = "키트 태그 기록 초기화 API")
 	@PutMapping("/clear")
-	public CommonResp<Void> clearTagHistory(HttpServletRequest httpServletRequest) throws Exception {
-		String jwt = jwtTokenProvider.resolveToken(httpServletRequest);
+	public CommonResp<Void> clearTagHistory(@CurrentToken String jwt) throws Exception {
 		userService.clearDeviceIdHistory(jwtTokenProvider.getDeviceIdByToken(jwt));
 		return new CommonResp<>();
 	}
@@ -180,12 +179,9 @@ public class UserController {
 	@Operation(summary = "회원가입 API")
 	@PostMapping("/join")
 	public CommonResp<String> userJoin(
-		@Valid @RequestBody KittorUserReq kittorUserReq,
-		HttpServletRequest request) throws Exception {
+		@Valid @RequestBody KittorUserReq kittorUserReq, @CurrentToken String jwt) throws Exception {
 
 		KittorTokenResp resp = kittorTransferSerivce.userJoin(kittorUserReq);
-
-		String jwt = jwtTokenProvider.resolveToken(request);
 
 		Member member = userService.findByDeviceId(jwtTokenProvider.getDeviceIdByToken(jwt));
 		member.setKittorToken(resp.getAccessToken());
@@ -208,12 +204,9 @@ public class UserController {
 	@Operation(summary = "로그인 API")
 	@PostMapping("/login")
 	public CommonResp<String> userLogin(
-		@Valid @RequestBody KittorUserReq kittorUserReq,
-		HttpServletRequest request) throws Exception {
+		@Valid @RequestBody KittorUserReq kittorUserReq, @CurrentToken String jwt) throws Exception {
 
 		KittorTokenResp resp = kittorTransferSerivce.userLogin(kittorUserReq);
-
-		String jwt = jwtTokenProvider.resolveToken(request);
 
 		Member member = userService.findByDeviceId(jwtTokenProvider.getDeviceIdByToken(jwt));
 		member.setKittorToken(resp.getAccessToken());
@@ -248,11 +241,8 @@ public class UserController {
 	@Operation(summary = "비밀번호 변경 API")
 	@PostMapping("/password/change")
 	public CommonResp<Boolean> changePassword(
-		@Valid @RequestBody KittorChangePasswordReq kittorChangePasswordReq,
-		HttpServletRequest request
-	) throws Exception {
-
-		Member member = userService.findByDeviceId(jwtTokenProvider.getDeviceIdByToken(jwtTokenProvider.resolveToken(request)));
+		@Valid @RequestBody KittorChangePasswordReq kittorChangePasswordReq, @CurrentToken String jwt) throws Exception {
+		Member member = userService.findByDeviceId(jwtTokenProvider.getDeviceIdByToken(jwt));
 		return new CommonResp<>(kittorTransferSerivce.changePassword(member.getKittorToken(), kittorChangePasswordReq));
 	}
 
@@ -261,10 +251,9 @@ public class UserController {
 	public CommonResp<KittorOAuthLoginResp> oAuthCallback(
 		@PathVariable String provider,
 		@Valid @RequestBody KittorOAuthLoginReq kittorChangePasswordReq,
-		HttpServletRequest request
-	) throws Exception {
+		@CurrentToken String jwt) throws Exception {
 
-		kittorChangePasswordReq.setDevice(jwtTokenProvider.getDeviceIdByToken(jwtTokenProvider.resolveToken(request)));
+		kittorChangePasswordReq.setDevice(jwtTokenProvider.getDeviceIdByToken(jwt));
 		KittorOAuthLoginResp kittorOAuthLoginResp;
 
 		switch (provider) {
