@@ -3,7 +3,7 @@ package com.muzlive.kitpage.kitpage.service.page;
 import com.luciad.imageio.webp.WebPWriteParam;
 import com.muzlive.kitpage.kitpage.domain.user.Image;
 import com.muzlive.kitpage.kitpage.domain.user.repository.ImageRepository;
-import com.muzlive.kitpage.kitpage.service.aws.S3Service;
+import com.muzlive.kitpage.kitpage.service.aws.s3.S3Service;
 import com.muzlive.kitpage.kitpage.utils.constants.ApplicationConstants;
 import com.muzlive.kitpage.kitpage.utils.enums.ImageCode;
 import java.awt.Graphics2D;
