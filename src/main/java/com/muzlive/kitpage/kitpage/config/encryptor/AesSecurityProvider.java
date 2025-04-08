@@ -1,12 +1,18 @@
 package com.muzlive.kitpage.kitpage.config.encryptor;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
+import javax.crypto.CipherInputStream;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.IvParameterSpec;
@@ -126,6 +132,28 @@ public class AesSecurityProvider {
             log.error("Exception occurred while encrypting.", e);
             throw e;
         }
+    }
+
+    public InputStream encryptAndBase64(String secretKey, String publicKey, InputStream inputStream) throws Exception {
+        IvParameterSpec iv = new IvParameterSpec(publicKey.getBytes(StandardCharsets.UTF_8));
+        SecretKeySpec skeySpec = generateKey(secretKey);
+        Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5PADDING");
+        cipher.init(Cipher.ENCRYPT_MODE, skeySpec, iv);
+
+        InputStream cipherStream = new CipherInputStream(inputStream, cipher);
+
+        // Base64 인코딩을 OutputStream으로 하므로 직접 래핑은 어려움 → 메모리에 저장 필요
+        ByteArrayOutputStream byteArrayOutput = new ByteArrayOutputStream();
+        OutputStream base64Output = Base64.getEncoder().wrap(byteArrayOutput);
+
+        byte[] buffer = new byte[4096];
+        int n;
+        while ((n = cipherStream.read(buffer)) != -1) {
+            base64Output.write(buffer, 0, n);
+        }
+        base64Output.close(); // 반드시 닫아야 Base64 마무리됨
+
+        return new ByteArrayInputStream(byteArrayOutput.toByteArray());
     }
 
     public byte[] decrypt(byte[] dataToEncrypt) throws Exception {
