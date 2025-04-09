@@ -5,7 +5,10 @@ import com.muzlive.kitpage.kitpage.domain.page.Page;
 import com.muzlive.kitpage.kitpage.domain.user.TokenLog;
 import com.muzlive.kitpage.kitpage.domain.user.dto.resp.CheckTagResp;
 import com.muzlive.kitpage.kitpage.service.page.ComicService;
+import com.muzlive.kitpage.kitpage.service.page.PageService;
 import com.muzlive.kitpage.kitpage.service.page.UserService;
+import com.muzlive.kitpage.kitpage.service.page.factory.PageStrategyFactory;
+import com.muzlive.kitpage.kitpage.service.page.strategy.PageStrategy;
 import com.muzlive.kitpage.kitpage.service.transfer.kihno.KihnoV2TransferSerivce;
 import com.muzlive.kitpage.kitpage.service.transfer.kihno.dto.req.KihnoKitCheckReq;
 import com.muzlive.kitpage.kitpage.usecase.command.CheckTagCommand;
@@ -21,6 +24,8 @@ import org.springframework.stereotype.Service;
 @Service
 public class CheckTagUseCase {
 
+	private final PageService pageService;
+
 	private final UserService userService;
 
 	private final ComicService comicService;
@@ -31,15 +36,18 @@ public class CheckTagUseCase {
 
 	private final CommonUtils commonUtils;
 
+	private final PageStrategyFactory pageStrategyFactory;
+
 	public CheckTagResp execute(CheckTagCommand command) throws Exception {
 		String serialNumber = sanitizeSerial(command.getSerialNumber());
 		String deviceId = jwtTokenProvider.getDeviceIdByToken(command.getJwt());
-		Page page = comicService.findPageWithComicBooksBySerialNumber(serialNumber);
+		Page page = pageService.findPageBySerialNumber(serialNumber);
+		PageStrategy pageStrategy = pageStrategyFactory.getStrategy(page.getContent().getContentType());
 
 		KihnoKitCheckReq kihnoKitCheckReq = KihnoKitCheckReq.builder()
 			.deviceId(deviceId)
 			.kitId(extendSerial(command.getSerialNumber()))
-			.countryCode(page == null ? ApplicationConstants.KOR_COUNTRY_CODE : page.getContent().getRegion().getCode())
+			.countryCode(page.getContent().getRegion().getCode())
 			.build();
 
 		Long kihnoKitUid = kihnoV2TransferSerivce.kihnoKitCheck(kihnoKitCheckReq).getKihnoKitUid();
@@ -57,9 +65,7 @@ public class CheckTagUseCase {
 				.build());
 
 		CheckTagResp checkTagResp = new CheckTagResp(page, token);
-
-		long totalSize = comicService.getImageSizeByPageUid(page.getPageUid());
-		checkTagResp.setTotalSize(totalSize);
+		checkTagResp.setTotalSize(pageStrategy.getTotalSize(page.getPageUid()));
 
 		return checkTagResp;
 	}

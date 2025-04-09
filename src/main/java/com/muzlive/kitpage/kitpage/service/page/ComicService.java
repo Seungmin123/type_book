@@ -167,7 +167,7 @@ public class ComicService {
 		return pageRepository.findWithChildBySerialNumber(serialNumber).orElse(null);
 	}
 
-	public Long getImageSizeByPageUid(Long pageUid) throws Exception {
+	public Long getImageSizeByPageUid(Long pageUid) {
 		return Optional.ofNullable(
 			queryFactory
 				.select(image.imageSize.sum())
