@@ -93,7 +93,7 @@ public class PageService {
 		return pageRepository.findBySerialNumber(serialNumber).orElseThrow(() -> new CommonException(ExceptionCode.CANNOT_FIND_MATCHED_ITEM));
 	}
 
-	public Page findPageById(Long pageUid) throws Exception {
+	public Page findPageById(Long pageUid) {
 		return pageRepository.findById(pageUid).orElseThrow(() -> new CommonException(ExceptionCode.CANNOT_FIND_MATCHED_ITEM));
 	}
 
