@@ -66,6 +66,8 @@ public class PageController {
 		return new CommonResp<>(contentResps);
 	}
 
+	// TODO Delete
+	@Deprecated
 	@Operation(summary = "이미지 다운로드 API - Decrypted", description = "imageUid 를 통해 Image 파일 다운로드")
 	@GetMapping("/download/image/{imageUid}")
 	public ResponseEntity<InputStreamResource> downloadImage(@PathVariable Long imageUid, @CurrentToken String jwt) throws Exception {

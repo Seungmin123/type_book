@@ -137,7 +137,7 @@ public class ComicService {
 	}
 
 
-	public ComicBookContentResp getComicBookContent(String contentId) throws Exception {
+	public ComicBookContentResp getComicBookContent(String contentId) {
 		List<Page> pages = pageRepository.findAllWithComicBooks(contentId);
 		if(CollectionUtils.isEmpty(pages)) throw new CommonException(ExceptionCode.CANNOT_FIND_MATCHED_ITEM);
 		ComicBookContentResp comicBookContentResp = new ComicBookContentResp(pages.get(0).getContent());
@@ -201,7 +201,7 @@ public class ComicService {
 		return 0L;
 	}
 
-	public List<ComicBookDetailResp> getRelatedComicDetailBookList(String contentId) throws Exception {
+	public List<ComicBookDetailResp> getRelatedComicDetailBookList(String contentId) {
 		List<ComicBookDetailResp> comicBookDetailResps = new ArrayList<>();
 
 		contentRepository.findByContentId(contentId).ifPresent(content -> {
