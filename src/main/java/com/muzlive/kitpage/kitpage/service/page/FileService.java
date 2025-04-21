@@ -3,6 +3,7 @@ package com.muzlive.kitpage.kitpage.service.page;
 import com.luciad.imageio.webp.WebPWriteParam;
 import com.muzlive.kitpage.kitpage.domain.user.Image;
 import com.muzlive.kitpage.kitpage.domain.user.repository.ImageRepository;
+import com.muzlive.kitpage.kitpage.service.FfmpegConverter;
 import com.muzlive.kitpage.kitpage.service.aws.s3.S3Service;
 import com.muzlive.kitpage.kitpage.utils.constants.ApplicationConstants;
 import com.muzlive.kitpage.kitpage.utils.enums.ImageCode;
@@ -31,6 +32,8 @@ public class FileService {
 
 	private final S3Service s3Service;
 
+	private final FfmpegConverter ffmpegConverter;
+
 	private final ImageRepository imageRepository;
 
 	@Transactional
@@ -53,7 +56,8 @@ public class FileService {
 
 		// Converting
 		try {
-			byte[] convertFile = this.convertToWebP(multipartFile.getBytes(), 1200, 0.8f);
+			//byte[] convertFile = this.convertToWebP(multipartFile.getBytes(), 1200, 0.8f);
+			byte[] convertFile = ffmpegConverter.convertToWebp(multipartFile.getBytes(), ext);
 			s3Service.uploadFile(imagePath, convertFile);
 			BufferedImage bufferedImage = ImageIO.read(new ByteArrayInputStream(convertFile));
 			image.setWidth(bufferedImage.getWidth());
@@ -68,6 +72,7 @@ public class FileService {
 		return imageRepository.save(image).getImageUid();
 	}
 
+	@Deprecated
 	private byte[] convertToWebP(byte[] file, int targetWidth, float quality) throws Exception {
 		// MultipartFile에서 이미지를 읽어 BufferedImage로 변환
 		BufferedImage originalImage = ImageIO.read(new ByteArrayInputStream(file));
