@@ -27,6 +27,8 @@ services:
       - ./logs:/app/logs
       - ./dump:/app/dump
       - /source:/source
+      - /usr/local/bin/ffmpeg:/usr/local/bin/ffmpeg
+      - /usr/local/bin/ffprobe:/usr/local/bin/ffprobe
     command: >
       java -Xms1024M -Xmx1536M
            -XX:+UseG1GC
