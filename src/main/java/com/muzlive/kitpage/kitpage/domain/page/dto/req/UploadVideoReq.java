@@ -55,6 +55,7 @@ public class UploadVideoReq {
 	@JsonProperty("videoCode")
 	private VideoCode videoCode;
 
+	// Y 가로 N 세로
 	@JsonProperty("landScapeYn")
 	private String landScapeYn = "Y";
 
