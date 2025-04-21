@@ -202,13 +202,22 @@ public class PageService {
 	@Transactional
 	public Page createPage(CreatePageReq createPageReq) throws Exception {
 		String contentId = createPageReq.getContentId();
+		String albumId = createPageReq.getAlbumId();
 
-		if(StringUtils.isEmpty(contentId)) {
-			Long nextPageUid = pageRepository.findFirstByOrderByPageUidDesc()
-				.map(page -> page.getPageUid() != null ? page.getPageUid() + 1L : 1L)
-				.orElse(1L);
+		if(StringUtils.isEmpty(createPageReq.getAlbumId())) {
+			Optional<String> maxIdOpt = pageRepository.findMaxAlbumIdByPrefix(contentId);
 
-			contentId = ApplicationConstants.PAGE_APP_ID_SEPARATOR + "_" + createPageReq.getContentType() + "_" + String.format("%08d", nextPageUid);
+			if (maxIdOpt.isEmpty()) {
+				albumId = contentId + "_00000001";
+			} else {
+				String maxId = maxIdOpt.get();
+
+				String numberPart = maxId.substring(contentId.length() + 1);
+				int number = Integer.parseInt(numberPart);
+				int nextNumber = number + 1;
+
+				albumId = String.format("%s_%08d", contentId, nextNumber);
+			}
 		}
 
 		// S3 Cover Image Upload
@@ -224,6 +233,7 @@ public class PageService {
 		return pageRepository.save(
 			Page.builder()
 			.contentId(contentId)
+			.albumId(albumId)
 			.coverImageUid(image.getImageUid())
 			.title(createPageReq.getTitle())
 			.subTitle(createPageReq.getSubtitle())
@@ -233,8 +243,26 @@ public class PageService {
 
 	@Transactional
 	public void createContent(CreateContentReq createContentReq) throws Exception {
+		String contentId = createContentReq.getContentId();
+		if(StringUtils.isEmpty(contentId)) {
+			String prefix = "KP_" + createContentReq.getContentType();
+			Optional<String> maxIdOpt = pageRepository.findMaxContentIdByPrefix(createContentReq.getContentType().getCode());
+
+			if (maxIdOpt.isEmpty()) {
+				contentId = prefix + "_00000001";
+			} else {
+				String maxId = maxIdOpt.get();
+
+				String numberPart = maxId.substring(prefix.length() + 1);
+				int number = Integer.parseInt(numberPart);
+				int nextNumber = number + 1;
+
+				contentId = String.format("%s_%08d", prefix, nextNumber);
+			}
+		}
+
 		contentRepository.save(Content.builder()
-				.contentId(createContentReq.getContentId())
+				.contentId(contentId)
 				.contentType(createContentReq.getContentType())
 				.company(createContentReq.getCompany())
 				.title(createContentReq.getTitle())
