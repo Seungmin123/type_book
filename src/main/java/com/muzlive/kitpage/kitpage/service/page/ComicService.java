@@ -115,27 +115,24 @@ public class ComicService {
 
 	@Transactional
 	public void insertComicBookDetail(UploadComicBookDetailReq uploadComicBookDetailReq) throws Exception {
-//		ComicBook comicBook = comicBookRepository.findById(uploadComicBookDetailReq.getComicBookUid())
-//			.orElseThrow(() -> new CommonException(ExceptionCode.CANNOT_FIND_MATCHED_ITEM));
-//
-//		String episode = Objects.nonNull(uploadComicBookDetailReq.getEpisode()) ? uploadComicBookDetailReq.getEpisode() : "";
-//		int page = this.findComicBookMaxPage(comicBook.getComicBookUid());
-//
-//		List<ComicBookDetail> comicBookDetails = new ArrayList<>();
-//		for(MultipartFile multipartFile : uploadComicBookDetailReq.getImages()) {
-//			comicBookDetails.add(ComicBookDetail.builder()
-//				.comicBookUid(comicBook.getComicBookUid())
-//				.episode(episode)
-//				.page(page++)
-//				.imageUid(fileService.uploadConvertFile(comicBook.getPage().getContentId(), multipartFile, ImageCode.COMIC_IMAGE))
-//				.build());
-//		}
-//
-//		if(!CollectionUtils.isEmpty(comicBookDetails)) {
-//			comicBookDetailRepository.saveAll(comicBookDetails);
-//		}
+		ComicBook comicBook = comicBookRepository.findById(uploadComicBookDetailReq.getComicBookUid())
+			.orElseThrow(() -> new CommonException(ExceptionCode.CANNOT_FIND_MATCHED_ITEM));
+
+		String episode = Objects.nonNull(uploadComicBookDetailReq.getEpisode()) ? uploadComicBookDetailReq.getEpisode() : "";
+		int page = this.findComicBookMaxPage(comicBook.getComicBookUid());
+
+		List<ComicBookDetail> comicBookDetails = new ArrayList<>();
 		for(MultipartFile multipartFile : uploadComicBookDetailReq.getImages()) {
-			fileService.uploadConvertFile("test", multipartFile, ImageCode.COMIC_IMAGE);
+			comicBookDetails.add(ComicBookDetail.builder()
+				.comicBookUid(comicBook.getComicBookUid())
+				.episode(episode)
+				.page(page++)
+				.imageUid(fileService.uploadConvertFile(comicBook.getPage().getContentId(), multipartFile, ImageCode.COMIC_IMAGE))
+				.build());
+		}
+
+		if(!CollectionUtils.isEmpty(comicBookDetails)) {
+			comicBookDetailRepository.saveAll(comicBookDetails);
 		}
 	}
 
