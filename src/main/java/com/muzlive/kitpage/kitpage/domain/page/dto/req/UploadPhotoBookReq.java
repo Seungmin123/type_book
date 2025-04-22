@@ -1,7 +1,6 @@
 package com.muzlive.kitpage.kitpage.domain.page.dto.req;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import java.util.List;
 import javax.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
@@ -9,19 +8,18 @@ import org.springframework.web.multipart.MultipartFile;
 
 @Getter
 @Setter
-public class UploadComicBookDetailReq {
+public class UploadPhotoBookReq {
 
 	@NotNull
-	@JsonProperty("comicBookUid")
-	private Long comicBookUid;
+	@JsonProperty("pageUid")
+	private Long pageUid;
 
-	@JsonProperty("episode")
-	private String episode;
+	@NotNull
+	@JsonProperty("coverImage")
+	private MultipartFile coverImage;
 
-	@JsonProperty("images")
-	private List<MultipartFile> images;
-
-	@JsonProperty("path")
-	private String path;
+	@NotNull
+	@JsonProperty("title")
+	private String title;
 
 }
