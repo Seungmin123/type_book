@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.muzlive.kitpage.kitpage.utils.enums.PageContentType;
 import com.muzlive.kitpage.kitpage.utils.enums.ReadingDirection;
 import com.muzlive.kitpage.kitpage.utils.enums.Region;
+import java.util.List;
 import javax.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
@@ -57,4 +58,7 @@ public class CreateContentReq {
 	@NotNull
 	@JsonProperty("image")
 	private MultipartFile image;
+
+	@JsonProperty("genreList")
+	private List<String> genreList;
 }

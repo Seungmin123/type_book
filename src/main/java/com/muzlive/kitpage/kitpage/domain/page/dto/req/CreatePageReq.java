@@ -34,4 +34,7 @@ public class CreatePageReq {
 	@JsonProperty("content_id")
 	private String contentId;
 
+	@JsonProperty("album_id")
+	private String albumId;
+
 }

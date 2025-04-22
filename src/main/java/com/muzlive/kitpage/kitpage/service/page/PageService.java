@@ -274,6 +274,7 @@ public class PageService {
 				.infoText(createContentReq.getInfoText())
 				.coverImageUid(fileService.uploadConvertFile(createContentReq.getContentId(), createContentReq.getImage(), ImageCode.CONTENT_COVER_IMAGE))
 				.region(createContentReq.getRegion())
+				.genreList(createContentReq.getGenreList())
 			.build());
 	}
 

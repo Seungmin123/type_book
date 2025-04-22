@@ -98,7 +98,7 @@ public class Content extends BaseTimeEntity implements Serializable {
 	public Content(String contentId, PageContentType contentType, String title,
 		String infoText, Long coverImageUid, Region region, String company,
 		String writer, String illustrator, String volumeUnit, String pageUnit,
-		ReadingDirection readingDirection) {
+		ReadingDirection readingDirection, List<String> genreList) {
 		this.contentId = contentId;
 		this.contentType = contentType;
 		this.title = title;
@@ -111,6 +111,7 @@ public class Content extends BaseTimeEntity implements Serializable {
 		this.volumeUnit = volumeUnit;
 		this.pageUnit = pageUnit;
 		this.readingDirection = readingDirection;
+		this.genreList = genreList;
 	}
 
 	@PrePersist
