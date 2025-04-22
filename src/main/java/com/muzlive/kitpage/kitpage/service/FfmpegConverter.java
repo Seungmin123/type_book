@@ -8,7 +8,6 @@ import net.bramp.ffmpeg.FFmpeg;
 import net.bramp.ffmpeg.FFmpegExecutor;
 import net.bramp.ffmpeg.FFprobe;
 import net.bramp.ffmpeg.builder.FFmpegBuilder;
-import net.bramp.ffmpeg.probe.FFmpegProbeResult;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -16,19 +15,13 @@ import org.springframework.web.multipart.MultipartFile;
 @Service
 public class FfmpegConverter {
 
-	private final FfmpegProperties properties;
+	private final FFmpegExecutor ffmpegExecutor;
 
 	public byte[] convertToWebp(byte[] imageBytes, String extension) throws Exception {
-		FFmpeg ffmpeg = new FFmpeg(properties.getPath());
-		FFprobe ffprobe = new FFprobe(properties.getProbe());
-
 		File inputFile = File.createTempFile("input-", "." + extension);
 		File outputFile = File.createTempFile("converted-", ".webp");
 
 		Files.write(inputFile.toPath(), imageBytes);
-
-		// 해상도 측정
-		FFmpegProbeResult probeResult = ffprobe.probe(inputFile.getAbsolutePath());
 
 		String scaleFilter = "scale='if(gt(iw\\,5120)\\,5120\\,iw)':'if(gt(iw\\,5120)\\,trunc(ih*5120/iw)\\,ih)'";
 
@@ -44,7 +37,7 @@ public class FfmpegConverter {
 			.addExtraArgs("-vf", scaleFilter)
 			.done();
 
-		new FFmpegExecutor(ffmpeg, ffprobe).createJob(builder).run();
+		ffmpegExecutor.createJob(builder).run();
 
 		byte[] webpBytes = Files.readAllBytes(outputFile.toPath());
 
@@ -55,7 +48,6 @@ public class FfmpegConverter {
 		return webpBytes;
 	}
 
-	// Optional: MultipartFile 처리 버전도 바로 가능
 	public byte[] convertToWebp(MultipartFile multipartFile) throws Exception {
 		String extension = getExtension(multipartFile.getOriginalFilename());
 		return convertToWebp(multipartFile.getBytes(), extension);

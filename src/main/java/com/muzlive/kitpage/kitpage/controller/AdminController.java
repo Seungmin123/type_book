@@ -13,10 +13,13 @@ import com.muzlive.kitpage.kitpage.domain.page.dto.req.CreatePageReq;
 import com.muzlive.kitpage.kitpage.domain.page.dto.req.UploadComicBookDetailReq;
 import com.muzlive.kitpage.kitpage.domain.page.dto.req.UploadComicBookReq;
 import com.muzlive.kitpage.kitpage.domain.page.dto.req.UploadMusicReq;
+import com.muzlive.kitpage.kitpage.domain.page.dto.req.UploadPhotoBookDetailReq;
+import com.muzlive.kitpage.kitpage.domain.page.dto.req.UploadPhotoBookReq;
 import com.muzlive.kitpage.kitpage.domain.page.dto.req.UploadVideoReq;
 import com.muzlive.kitpage.kitpage.service.google.YoutubeService;
 import com.muzlive.kitpage.kitpage.service.page.ComicService;
 import com.muzlive.kitpage.kitpage.service.page.PageService;
+import com.muzlive.kitpage.kitpage.service.page.PhotoService;
 import com.muzlive.kitpage.kitpage.service.transfer.kihno.SnsTransferService;
 import com.muzlive.kitpage.kitpage.service.transfer.kihno.VideoEncodingTransferService;
 import com.muzlive.kitpage.kitpage.service.transfer.kihno.dto.req.SnsVideoInsertReq;
@@ -51,6 +54,8 @@ public class AdminController {
 
 	private final ComicService comicService;
 
+	private final PhotoService photoService;
+
 	private final SnsTransferService snsTransferService;
 
 	private final YoutubeService youtubeService;
@@ -79,6 +84,22 @@ public class AdminController {
 	@PostMapping("/comic/detail")
 	CommonResp<Void> uploadComicDetail(@Valid @ModelAttribute UploadComicBookDetailReq uploadComicBookDetailReq) throws Exception {
 		comicService.insertComicBookDetail(uploadComicBookDetailReq);
+		return new CommonResp<>();
+	}
+
+	@PostMapping("/photo")
+	CommonResp<Long> uploadPhotoBook(@Valid @ModelAttribute UploadPhotoBookReq uploadPhotoBookReq) throws Exception {
+		return new CommonResp<>(
+			photoService.insertPhotoBook(
+				pageService.findPageById(uploadPhotoBookReq.getPageUid()).getContentId(),
+				uploadPhotoBookReq
+			).getPhotoBookUid()
+		);
+	}
+
+	@PostMapping("/photo/detail")
+	CommonResp<Void> uploadPhotoDetail(@Valid @ModelAttribute UploadPhotoBookDetailReq uploadPhotoBookDetailReq) throws Exception {
+		photoService.insertPhotoBookDetail(uploadPhotoBookDetailReq);
 		return new CommonResp<>();
 	}
 

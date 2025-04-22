@@ -9,14 +9,11 @@ import org.springframework.web.multipart.MultipartFile;
 
 @Getter
 @Setter
-public class UploadComicBookDetailReq {
+public class UploadPhotoBookDetailReq {
 
 	@NotNull
-	@JsonProperty("comicBookUid")
-	private Long comicBookUid;
-
-	@JsonProperty("episode")
-	private String episode;
+	@JsonProperty("photoBookUid")
+	private Long photoBookUid;
 
 	@JsonProperty("images")
 	private List<MultipartFile> images;

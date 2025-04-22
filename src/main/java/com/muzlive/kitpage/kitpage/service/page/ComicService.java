@@ -30,6 +30,9 @@ import com.muzlive.kitpage.kitpage.utils.constants.ApplicationConstants;
 import com.muzlive.kitpage.kitpage.utils.enums.ImageCode;
 import com.muzlive.kitpage.kitpage.utils.enums.KitStatus;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -37,10 +40,13 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
@@ -82,7 +88,7 @@ public class ComicService {
 		return comicBookDetailRepository.save(comicBookDetail);
 	}
 
-	public int findComicBookMaxPage(Long comicBookUid) throws Exception {
+	public int findComicBookMaxPage(Long comicBookUid) {
 		Integer page = comicBookDetailRepository.findMaxPage(comicBookUid);
 		return page == null ? 0 : page + 1;
 	}
@@ -115,28 +121,67 @@ public class ComicService {
 
 	@Transactional
 	public void insertComicBookDetail(UploadComicBookDetailReq uploadComicBookDetailReq) throws Exception {
-		ComicBook comicBook = comicBookRepository.findById(uploadComicBookDetailReq.getComicBookUid())
-			.orElseThrow(() -> new CommonException(ExceptionCode.CANNOT_FIND_MATCHED_ITEM));
+		if(uploadComicBookDetailReq.getPath() != null && !uploadComicBookDetailReq.getPath().isEmpty()) {
+			ComicBook comicBook = comicBookRepository.findById(uploadComicBookDetailReq.getComicBookUid())
+				.orElseThrow(() -> new CommonException(ExceptionCode.CANNOT_FIND_MATCHED_ITEM));
 
-		String episode = Objects.nonNull(uploadComicBookDetailReq.getEpisode()) ? uploadComicBookDetailReq.getEpisode() : "";
-		int page = this.findComicBookMaxPage(comicBook.getComicBookUid());
+			String episode = Objects.nonNull(uploadComicBookDetailReq.getEpisode()) ? uploadComicBookDetailReq.getEpisode() : "";
+			AtomicInteger page = new AtomicInteger(this.findComicBookMaxPage(comicBook.getComicBookUid()));
+			List<ComicBookDetail> comicBookDetails = new ArrayList<>();
 
-		List<ComicBookDetail> comicBookDetails = new ArrayList<>();
-		for(MultipartFile multipartFile : uploadComicBookDetailReq.getImages()) {
-			comicBookDetails.add(ComicBookDetail.builder()
-				.comicBookUid(comicBook.getComicBookUid())
-				.episode(episode)
-				.page(page++)
-				.imageUid(fileService.uploadConvertFile(comicBook.getPage().getContentId(), multipartFile, ImageCode.COMIC_IMAGE))
-				.build());
-		}
+			try (Stream<Path> paths = Files.walk(Paths.get(uploadComicBookDetailReq.getPath()))) {
+				paths.filter(Files::isRegularFile)
+					.forEach(file -> {
+						try {
+							MultipartFile multipartFile = convert(file);
+							String ext = FilenameUtils.getExtension(multipartFile.getOriginalFilename());
 
-		if(!CollectionUtils.isEmpty(comicBookDetails)) {
-			comicBookDetailRepository.saveAll(comicBookDetails);
+							if(ext != null && !ext.equals("DS_Store")) {
+								comicBookDetails.add(ComicBookDetail.builder()
+									.comicBookUid(comicBook.getComicBookUid())
+									.episode(episode)
+									.page(page.getAndIncrement())
+									.imageUid(fileService.uploadConvertFile(comicBook.getPage().getContentId(), multipartFile, ImageCode.COMIC_IMAGE))
+									.build());
+							}
+						} catch (Exception ignore){}
+					});
+			} finally {
+				comicBookDetailRepository.saveAll(comicBookDetails);
+			}
+
+		} else if (!CollectionUtils.isEmpty(uploadComicBookDetailReq.getImages())) {
+			ComicBook comicBook = comicBookRepository.findById(uploadComicBookDetailReq.getComicBookUid())
+				.orElseThrow(() -> new CommonException(ExceptionCode.CANNOT_FIND_MATCHED_ITEM));
+
+			String episode = Objects.nonNull(uploadComicBookDetailReq.getEpisode()) ? uploadComicBookDetailReq.getEpisode() : "";
+			int page = this.findComicBookMaxPage(comicBook.getComicBookUid());
+
+			List<ComicBookDetail> comicBookDetails = new ArrayList<>();
+			for(MultipartFile multipartFile : uploadComicBookDetailReq.getImages()) {
+				comicBookDetails.add(ComicBookDetail.builder()
+					.comicBookUid(comicBook.getComicBookUid())
+					.episode(episode)
+					.page(page++)
+					.imageUid(fileService.uploadConvertFile(comicBook.getPage().getContentId(), multipartFile, ImageCode.COMIC_IMAGE))
+					.build());
+			}
+
+			if(!CollectionUtils.isEmpty(comicBookDetails)) {
+				comicBookDetailRepository.saveAll(comicBookDetails);
+			}
 		}
 	}
 
-	//3466
+	private MultipartFile convert(Path path) throws Exception {
+		String name = path.toFile().getName();
+		String originalFileName = path.toFile().getName();
+		String contentType = Files.probeContentType(path);
+		byte[] content = Files.readAllBytes(path);
+		MultipartFile multipartFile = new MockMultipartFile(name, originalFileName, contentType, content);
+
+		return multipartFile;
+	}
 
 	public ComicBookContentResp getComicBookContent(String contentId) {
 		List<Page> pages = pageRepository.findAllWithComicBooks(contentId);
