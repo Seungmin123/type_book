@@ -7,12 +7,20 @@ import com.muzlive.kitpage.kitpage.config.jwt.CurrentToken;
 import com.muzlive.kitpage.kitpage.config.jwt.JwtTokenProvider;
 import com.muzlive.kitpage.kitpage.domain.common.dto.resp.CommonResp;
 import com.muzlive.kitpage.kitpage.domain.page.Content;
+import com.muzlive.kitpage.kitpage.domain.page.comicbook.dto.req.ComicBookContentReq;
 import com.muzlive.kitpage.kitpage.domain.page.dto.req.ContentListReq;
+import com.muzlive.kitpage.kitpage.domain.page.dto.resp.CommonContentDetailResp;
+import com.muzlive.kitpage.kitpage.domain.page.dto.resp.CommonContentResp;
 import com.muzlive.kitpage.kitpage.domain.page.dto.resp.ContentResp;
+import com.muzlive.kitpage.kitpage.domain.page.photobook.dto.resp.PhotoBookContentResp;
+import com.muzlive.kitpage.kitpage.domain.page.photobook.dto.resp.PhotoBookDetailResp;
 import com.muzlive.kitpage.kitpage.domain.user.Image;
 import com.muzlive.kitpage.kitpage.service.aws.CloudFrontService;
 import com.muzlive.kitpage.kitpage.service.page.PageService;
+import com.muzlive.kitpage.kitpage.service.page.factory.PageStrategyFactory;
+import com.muzlive.kitpage.kitpage.service.page.strategy.PageStrategy;
 import com.muzlive.kitpage.kitpage.utils.enums.UserRole;
+import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.io.ByteArrayInputStream;
@@ -21,6 +29,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletRequest;
+import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.InputStreamResource;
@@ -31,6 +40,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -50,6 +60,8 @@ public class PageController {
 
 	private final JwtTokenProvider jwtTokenProvider;
 
+	private final PageStrategyFactory pageStrategyFactory;
+
 	@Operation(summary = "앨범 목록 API", description = "Device Id 별 앨범 리스트<br>"
 		+ "listSize - optional - default 20<br>"
 		+ "contentUid - optional - 스크롤 대비용<br>"
@@ -66,24 +78,28 @@ public class PageController {
 		return new CommonResp<>(contentResps);
 	}
 
-	// TODO Delete
-	@Deprecated
-	@Operation(summary = "이미지 다운로드 API - Decrypted", description = "imageUid 를 통해 Image 파일 다운로드")
-	@GetMapping("/download/image/{imageUid}")
-	public ResponseEntity<InputStreamResource> downloadImage(@PathVariable Long imageUid, @CurrentToken String jwt) throws Exception {
+	@Hidden
+	@Operation(summary = "Content 리스트 조회")
+	@GetMapping("/content/list")
+	public CommonResp<? extends CommonContentResp> getContentListByContentId(@Valid @ModelAttribute ComicBookContentReq comicBookContentReq) throws Exception {
+		PageStrategy strategy = pageStrategyFactory.getStrategy(pageService.findContentByContentId(comicBookContentReq.getContentId()).getContentType());
+		return new CommonResp<>(strategy.getContentList(comicBookContentReq.getContentId()));
+	}
 
-		// ImageUid, SerialNumber 유효성 검사
-		if(!pageService.existsByImageUidAndSerialNumber(imageUid, jwtTokenProvider.getSerialNumberByToken(jwt)) // 토큰의 seiralNumber에 해당하는 키트와 이미지가 매칭되는 지 확인
-			&& SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream().noneMatch(v -> v.getAuthority().equals(UserRole.ENGINEER.getKey()))) // 관리자
-			throw new CommonException(ExceptionCode.NON_DOWNLOADABLE_TOKEN);
+	@Hidden
+	@Operation(summary = "Content 컨텐츠 상세 정보 리스트 조회")
+	@GetMapping("/content/detail/list")
+	public CommonResp<List<? extends CommonContentDetailResp>> getContentContents(@Valid @ModelAttribute ComicBookContentReq comicBookContentReq) throws Exception {
+		PageStrategy strategy = pageStrategyFactory.getStrategy(pageService.findContentByContentId(comicBookContentReq.getContentId()).getContentType());
+		return new CommonResp<>(strategy.getContentDetailList(comicBookContentReq.getContentId()));
+	}
 
-
-		Image image = pageService.findImageById(imageUid);
-		byte[] decryptedImage = aesSecurityProvider.decrypt(cloudFrontService.getCFImageByKey(image.getImagePath()));
-		return ResponseEntity.ok()
-			.contentType(MediaType.APPLICATION_OCTET_STREAM)
-			.header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + image.getSaveFileName() + "\"")
-			.body(new InputStreamResource(new ByteArrayInputStream(decryptedImage)));
+	@Hidden
+	@Operation(summary = "Content 컨텐츠 상세 정보 조회")
+	@GetMapping("/content/detail/{pageUid}")
+	public CommonResp<? extends CommonContentDetailResp> getContentContent(@Valid @PathVariable Long pageUid) throws Exception {
+		PageStrategy strategy = pageStrategyFactory.getStrategy(pageService.findPageById(pageUid).getContent().getContentType());
+		return new CommonResp<>(strategy.getContentDetail(pageUid));
 	}
 
 	@Operation(summary = "이미지 다운로드 API - Encrypted", description = "imageUid 를 통해 Image 파일 다운로드")

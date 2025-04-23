@@ -28,8 +28,6 @@ public class CheckTagUseCase {
 
 	private final UserService userService;
 
-	private final ComicService comicService;
-
 	private final KihnoV2TransferSerivce kihnoV2TransferSerivce;
 
 	private final JwtTokenProvider jwtTokenProvider;
@@ -41,6 +39,7 @@ public class CheckTagUseCase {
 	public CheckTagResp execute(CheckTagCommand command) throws Exception {
 		String serialNumber = sanitizeSerial(command.getSerialNumber());
 		String deviceId = jwtTokenProvider.getDeviceIdByToken(command.getJwt());
+		// TODO 못찾으면 날려버리는데 수정
 		Page page = pageService.findPageBySerialNumber(serialNumber);
 		PageStrategy pageStrategy = pageStrategyFactory.getStrategy(page.getContent().getContentType());
 
