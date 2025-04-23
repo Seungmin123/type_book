@@ -1,21 +1,51 @@
 package com.muzlive.kitpage.kitpage.service.page;
 
+import static com.muzlive.kitpage.kitpage.domain.page.QPage.page;
+import static com.muzlive.kitpage.kitpage.domain.page.comicbook.QComicBook.comicBook;
+import static com.muzlive.kitpage.kitpage.domain.page.comicbook.QComicBookDetail.comicBookDetail;
+import static com.muzlive.kitpage.kitpage.domain.page.photobook.QPhotoBook.photoBook;
+import static com.muzlive.kitpage.kitpage.domain.page.photobook.QPhotoBookDetail.photoBookDetail;
+import static com.muzlive.kitpage.kitpage.domain.user.QImage.image;
+
 import com.muzlive.kitpage.kitpage.config.exception.CommonException;
 import com.muzlive.kitpage.kitpage.config.exception.ExceptionCode;
+import com.muzlive.kitpage.kitpage.domain.page.Page;
+import com.muzlive.kitpage.kitpage.domain.page.comicbook.ComicBook;
+import com.muzlive.kitpage.kitpage.domain.page.comicbook.ComicBookDetail;
+import com.muzlive.kitpage.kitpage.domain.page.comicbook.dto.resp.ComicBookContentResp;
+import com.muzlive.kitpage.kitpage.domain.page.comicbook.dto.resp.ComicBookDetailResp;
+import com.muzlive.kitpage.kitpage.domain.page.comicbook.dto.resp.ComicBookEpisodeResp;
+import com.muzlive.kitpage.kitpage.domain.page.comicbook.dto.resp.ComicBookImageResp;
+import com.muzlive.kitpage.kitpage.domain.page.comicbook.dto.resp.ComicBookResp;
+import com.muzlive.kitpage.kitpage.domain.page.comicbook.dto.resp.VideoResp;
+import com.muzlive.kitpage.kitpage.domain.page.comicbook.repository.VideoRepository;
 import com.muzlive.kitpage.kitpage.domain.page.dto.req.UploadPhotoBookDetailReq;
 import com.muzlive.kitpage.kitpage.domain.page.dto.req.UploadPhotoBookReq;
 import com.muzlive.kitpage.kitpage.domain.page.photobook.PhotoBook;
 import com.muzlive.kitpage.kitpage.domain.page.photobook.PhotoBookDetail;
+import com.muzlive.kitpage.kitpage.domain.page.photobook.dto.resp.PhotoBookContentResp;
+import com.muzlive.kitpage.kitpage.domain.page.photobook.dto.resp.PhotoBookDetailResp;
+import com.muzlive.kitpage.kitpage.domain.page.photobook.dto.resp.PhotoBookEpisodeResp;
+import com.muzlive.kitpage.kitpage.domain.page.photobook.dto.resp.PhotoBookImageResp;
+import com.muzlive.kitpage.kitpage.domain.page.photobook.dto.resp.PhotoBookResp;
 import com.muzlive.kitpage.kitpage.domain.page.photobook.repository.PhotoBookDetailRepository;
 import com.muzlive.kitpage.kitpage.domain.page.photobook.repository.PhotoBookRepository;
+import com.muzlive.kitpage.kitpage.domain.page.repository.ContentRepository;
+import com.muzlive.kitpage.kitpage.domain.page.repository.PageRepository;
+import com.muzlive.kitpage.kitpage.utils.constants.ApplicationConstants;
 import com.muzlive.kitpage.kitpage.utils.enums.ImageCode;
+import com.muzlive.kitpage.kitpage.utils.enums.KitStatus;
+import com.querydsl.jpa.impl.JPAQueryFactory;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.io.FilenameUtils;
@@ -29,12 +59,120 @@ import org.springframework.web.multipart.MultipartFile;
 @Service
 public class PhotoService {
 
+	private final JPAQueryFactory queryFactory;
+
 	private final FileService fileService;
+
+	private final ContentRepository contentRepository;
+
+	private final PageRepository pageRepository;
+
+	private final VideoRepository videoRepository;
 
 	private final PhotoBookRepository photoBookRepository;
 
 	private final PhotoBookDetailRepository photoBookDetailRepository;
 
+	// TODO 사실상 중복코드들 추상화 필요
+
+	public PhotoBookContentResp getPhotoBookContent(String contentId) {
+		List<Page> pages = pageRepository.findAllWithPhotoBooks(contentId);
+		if(CollectionUtils.isEmpty(pages)) throw new CommonException(ExceptionCode.CANNOT_FIND_MATCHED_ITEM);
+		PhotoBookContentResp photoBookContentResp = new PhotoBookContentResp(pages.get(0).getContent());
+
+		List<PhotoBookResp> photoBookResps = new ArrayList<>();
+		for (Page pageItem : pages) {
+			PhotoBookResp photoBookResp = new PhotoBookResp(pageItem);
+			photoBookResp.setKitStatus(KitStatus.NEVER_USE);
+
+			List<PhotoBook> photoBooks = pageItem.getPhotoBooks();
+			if(!CollectionUtils.isEmpty(photoBooks)) {
+				photoBookContentResp.setTotalVolume(photoBookContentResp.getTotalVolume() + photoBooks.size());
+
+				long totalSize = photoBookRepository.sumImageSizeByPageUid(pageItem.getPageUid()).orElse(0L);
+				photoBookResp.setTotalSize(totalSize);
+			}
+
+			photoBookResps.add(photoBookResp);
+		}
+		photoBookContentResp.setPhotoBookResps(photoBookResps);
+
+		return photoBookContentResp;
+	}
+
+	public List<PhotoBookDetailResp> getRelatedPhotoDetailBookList(String contentId) {
+		List<PhotoBookDetailResp> photoBookDetailResps = new ArrayList<>();
+
+		contentRepository.findByContentId(contentId).ifPresent(content -> {
+			for (Page pageItem : content.getPages()) {
+				photoBookDetailResps.add(this.getPhotoBookDetail(pageItem));
+			}
+		});
+
+		return photoBookDetailResps;
+	}
+
+	public PhotoBookDetailResp getPhotoBookDetail(Page page) {
+		PhotoBookDetailResp photoBookDetailResp = new PhotoBookDetailResp(page);
+		photoBookDetailResp.setDetails(this.getEpisodeResps(page.getPageUid()));
+		photoBookDetailResp.setVideos(this.findVideoByPageUid(page.getPageUid()));
+		return photoBookDetailResp;
+	}
+
+	public List<PhotoBookEpisodeResp> getEpisodeResps(Long pageUid) {
+		List<PhotoBookEpisodeResp> photoBookEpisodeResps = new ArrayList<>();
+
+		List<PhotoBook> photoBooks = photoBookRepository.findAllByPageUid(pageUid).orElse(new ArrayList<>());
+
+		for(PhotoBook photoBook : photoBooks) {
+			PhotoBookEpisodeResp photoBookEpisodeResp = new PhotoBookEpisodeResp(photoBook);
+
+			// 최근 업데이트 날짜 확인을 위해 for 루프 여기서 실행
+			if(CollectionUtils.isEmpty(photoBook.getPhotoBookDetails())){
+				photoBookEpisodeResp.setPageSize(0);
+				photoBookEpisodeResp.setDetailPages(new ArrayList<>());
+			} else {
+				LocalDateTime lastModifiedAt = null;
+
+				photoBookEpisodeResp.setPageSize(photoBook.getPhotoBookDetails().size());
+
+				List<PhotoBookImageResp> photoBookImageResps = new ArrayList<>();
+				for(PhotoBookDetail photoBookDetail : photoBook.getPhotoBookDetails()) {
+					photoBookImageResps.add(PhotoBookImageResp.of(photoBookDetail));
+
+					// 최근 이미지 업데이트 날짜. - 클라이언트에서 변경된 파일 확인용
+					if(lastModifiedAt == null || lastModifiedAt.isBefore(photoBookDetail.getModifiedAt()))
+						lastModifiedAt = photoBookDetail.getModifiedAt();
+				}
+				photoBookEpisodeResp.setDetailPages(photoBookImageResps);
+				photoBookEpisodeResp.setLastModifiedAt(lastModifiedAt);
+			}
+
+			photoBookEpisodeResps.add(photoBookEpisodeResp);
+		}
+		photoBookEpisodeResps.sort(Comparator.comparing(PhotoBookEpisodeResp::getPhotoBookUid));
+		return photoBookEpisodeResps;
+	}
+
+	public List<VideoResp> findVideoByPageUid(Long pageUid) {
+		return videoRepository.findByPageUid(pageUid).stream().map(VideoResp::new).collect(
+			Collectors.toList());
+	}
+
+	public Long getImageSizeByPageUid(Long pageUid) {
+		return Optional.ofNullable(
+			queryFactory
+				.select(image.imageSize.sum())
+				.from(image)
+				.innerJoin(photoBookDetail).on(photoBookDetail.imageUid.eq(image.imageUid))
+				.innerJoin(photoBook).on(photoBook.photoBookUid.eq(photoBookDetail.photoBookUid))
+				.innerJoin(page).on(page.pageUid.eq(photoBook.pageUid))
+				.where(page.pageUid.eq(pageUid))
+				.fetchFirst()
+		).orElse(0L);
+	}
+
+	// Admin ************************************************************************************************************
 	@Transactional
 	public PhotoBook insertPhotoBook(String contentId, UploadPhotoBookReq uploadPhotoBookReq) throws Exception {
 		return photoBookRepository.save(
@@ -112,5 +250,7 @@ public class PhotoService {
 
 		return multipartFile;
 	}
+
+	// Admin ************************************************************************************************************
 
 }

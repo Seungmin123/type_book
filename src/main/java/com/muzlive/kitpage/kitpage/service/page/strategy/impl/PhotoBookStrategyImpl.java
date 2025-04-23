@@ -1,0 +1,46 @@
+package com.muzlive.kitpage.kitpage.service.page.strategy.impl;
+
+import com.muzlive.kitpage.kitpage.domain.page.photobook.dto.resp.PhotoBookContentResp;
+import com.muzlive.kitpage.kitpage.domain.page.photobook.dto.resp.PhotoBookDetailResp;
+import com.muzlive.kitpage.kitpage.service.page.ComicService;
+import com.muzlive.kitpage.kitpage.service.page.PageService;
+import com.muzlive.kitpage.kitpage.service.page.PhotoService;
+import com.muzlive.kitpage.kitpage.service.page.strategy.PageStrategy;
+import com.muzlive.kitpage.kitpage.utils.enums.PageContentType;
+import java.util.List;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
+
+@RequiredArgsConstructor
+@Component
+public class PhotoBookStrategyImpl implements PageStrategy<PhotoBookContentResp, PhotoBookDetailResp> {
+
+	private final PageService pageService;
+
+	private final PhotoService photoService;
+
+	@Override
+	public PhotoBookContentResp getContentList(String contentId) {
+		return photoService.getPhotoBookContent(contentId);
+	}
+
+	@Override
+	public List<PhotoBookDetailResp> getContentDetailList(String contentId) {
+		return photoService.getRelatedPhotoDetailBookList(contentId);
+	}
+
+	@Override
+	public PhotoBookDetailResp getContentDetail(long pageUid) {
+		return photoService.getPhotoBookDetail(pageService.findPageById(pageUid));
+	}
+
+	@Override
+	public PageContentType getSupportedType() {
+		return PageContentType.PHOTOBOOK;
+	}
+
+	@Override
+	public long getTotalSize(Long pageUid) {
+		return photoService.getImageSizeByPageUid(pageUid);
+	}
+}

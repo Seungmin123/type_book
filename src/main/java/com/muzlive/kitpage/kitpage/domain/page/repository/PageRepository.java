@@ -34,6 +34,13 @@ public interface PageRepository extends JpaRepository<Page, Long> {
 		+ "WHERE k.serialNumber = :serialNumber")
 	Optional<Page> findWithChildBySerialNumber(String serialNumber);
 
+	@Query("SELECT DISTINCT p "
+		+ "FROM Page p "
+		+ "JOIN FETCH p.content "
+		+ "LEFT JOIN FETCH p.photoBooks "
+		+ "WHERE p.contentId = :contentId")
+	List<Page> findAllWithPhotoBooks(String contentId);
+
 	@Query("SELECT p "
 		+ "FROM Page p "
 		+ "INNER JOIN Kit k ON k.pageUid = p.pageUid "

@@ -89,6 +89,10 @@ public class PageService {
 
 	private final CommonUtils commonUtils;
 
+	public Content findContentByContentId(String contentId) {
+		return contentRepository.findByContentId(contentId).orElseThrow(() -> new CommonException(ExceptionCode.CANNOT_FIND_MATCHED_ITEM));
+	}
+
 	public Page findPageBySerialNumber(String serialNumber) {
 		return pageRepository.findBySerialNumber(serialNumber).orElseThrow(() -> new CommonException(ExceptionCode.CANNOT_FIND_MATCHED_ITEM));
 	}

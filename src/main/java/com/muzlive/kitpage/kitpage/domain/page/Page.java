@@ -2,6 +2,7 @@ package com.muzlive.kitpage.kitpage.domain.page;
 
 import com.muzlive.kitpage.kitpage.domain.common.BaseTimeEntity;
 import com.muzlive.kitpage.kitpage.domain.page.comicbook.ComicBook;
+import com.muzlive.kitpage.kitpage.domain.page.photobook.PhotoBook;
 import com.muzlive.kitpage.kitpage.utils.enums.PageContentType;
 import com.muzlive.kitpage.kitpage.utils.enums.Region;
 import java.util.List;
@@ -62,6 +63,10 @@ public class Page extends BaseTimeEntity {
 	@OneToMany(mappedBy = "page", fetch = FetchType.LAZY)
 	@OrderBy("comicBookUid ASC")
 	private List<ComicBook> comicBooks;
+
+	@OneToMany(mappedBy = "page", fetch = FetchType.LAZY)
+	@OrderBy("photoBookUid ASC")
+	private List<PhotoBook> photoBooks;
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "content_id", referencedColumnName = "content_id", insertable = false, updatable = false)
