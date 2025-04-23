@@ -97,6 +97,10 @@ public class PageService {
 		return pageRepository.findBySerialNumber(serialNumber).orElseThrow(() -> new CommonException(ExceptionCode.CANNOT_FIND_MATCHED_ITEM));
 	}
 
+	public Page findPageBySerialNumberOrElseNull(String serialNumber) {
+		return pageRepository.findBySerialNumber(serialNumber).orElse(null);
+	}
+
 	public Page findPageById(Long pageUid) {
 		return pageRepository.findById(pageUid).orElseThrow(() -> new CommonException(ExceptionCode.CANNOT_FIND_MATCHED_ITEM));
 	}

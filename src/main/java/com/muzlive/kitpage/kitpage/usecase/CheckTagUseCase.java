@@ -39,18 +39,18 @@ public class CheckTagUseCase {
 	public CheckTagResp execute(CheckTagCommand command) throws Exception {
 		String serialNumber = sanitizeSerial(command.getSerialNumber());
 		String deviceId = jwtTokenProvider.getDeviceIdByToken(command.getJwt());
-		// TODO 못찾으면 날려버리는데 수정
-		Page page = pageService.findPageBySerialNumber(serialNumber);
-		PageStrategy pageStrategy = pageStrategyFactory.getStrategy(page.getContent().getContentType());
+		Page page = pageService.findPageBySerialNumberOrElseNull(serialNumber);
 
 		KihnoKitCheckReq kihnoKitCheckReq = KihnoKitCheckReq.builder()
 			.deviceId(deviceId)
 			.kitId(extendSerial(command.getSerialNumber()))
-			.countryCode(page.getContent().getRegion().getCode())
+			.countryCode(page == null ? ApplicationConstants.KOR_COUNTRY_CODE : page.getContent().getRegion().getCode())
 			.build();
 
 		Long kihnoKitUid = kihnoV2TransferSerivce.kihnoKitCheck(kihnoKitCheckReq).getKihnoKitUid();
 		userService.selectAndUpdateKit(serialNumber, deviceId, kihnoKitUid);
+
+		PageStrategy pageStrategy = pageStrategyFactory.getStrategy(page.getContent().getContentType());
 
 		Set<String> roles = jwtTokenProvider.addRolesByToken(command.getJwt(), UserRole.HALF_LINKER);
 
