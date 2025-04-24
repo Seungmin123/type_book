@@ -67,6 +67,7 @@ public class JwtFilter extends OncePerRequestFilter {
 		return role;
 	}
 
+	// TODO access + refresh + rotation + blacklist
 	private boolean validUserToken(String deviceId, TokenType type) {
 		return tokenLogRepository.findFirstByDeviceIdAndTypeOrderByCreatedAtDesc(deviceId, type)
 			.map(tokenLog -> tokenLog.getCreatedAt().plusDays(1).isAfter(LocalDateTime.now()))
