@@ -14,10 +14,6 @@ public class ApplicationConstants {
 
 	public static final String DATA = "data";
 
-	public static final String AUTHORIZATION = "Authorization";
-
-	public static final String BEARER = "Bearer";
-
 	public static final String IMAGE = "image";
 
 	public static final String CONVERT = "convert";
