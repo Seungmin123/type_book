@@ -1,13 +1,13 @@
 package com.muzlive.kitpage.kitpage.service.page;
 
-import com.luciad.imageio.webp.WebPWriteParam;
+import com.muzlive.kitpage.kitpage.domain.page.photobook.Pdf;
+import com.muzlive.kitpage.kitpage.domain.page.photobook.repository.PdfRepository;
 import com.muzlive.kitpage.kitpage.domain.user.Image;
 import com.muzlive.kitpage.kitpage.domain.user.repository.ImageRepository;
 import com.muzlive.kitpage.kitpage.service.FfmpegConverter;
 import com.muzlive.kitpage.kitpage.service.aws.s3.S3Service;
 import com.muzlive.kitpage.kitpage.utils.constants.ApplicationConstants;
 import com.muzlive.kitpage.kitpage.utils.enums.ImageCode;
-import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -16,11 +16,15 @@ import javax.imageio.IIOImage;
 import javax.imageio.ImageIO;
 import javax.imageio.ImageWriteParam;
 import javax.imageio.ImageWriter;
-import javax.imageio.stream.MemoryCacheImageOutputStream;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -36,8 +40,11 @@ public class FileService {
 
 	private final ImageRepository imageRepository;
 
+	private final PdfRepository pdfRepository;
+
 	@Transactional
-	public Long uploadConvertFile(String contentId, MultipartFile multipartFile, ImageCode code) throws Exception {
+	public Long uploadConvertImageFile(String contentId, MultipartFile multipartFile, ImageCode code) throws Exception {
+		// TODO 결합도 지림 수정 필요
 
 		// S3 Cover Image Upload
 		String ext = "." + FilenameUtils.getExtension(multipartFile.getOriginalFilename());
@@ -72,42 +79,53 @@ public class FileService {
 		return imageRepository.save(image).getImageUid();
 	}
 
-	@Deprecated
-	private byte[] convertToWebP(byte[] file, int targetWidth, float quality) throws Exception {
-		// MultipartFile에서 이미지를 읽어 BufferedImage로 변환
-		BufferedImage originalImage = ImageIO.read(new ByteArrayInputStream(file));
+	public Long convertImageBytesToPdf(String contentId, MultipartFile multipartFile, float jpegQuality) throws Exception {
+		BufferedImage processedImage = ImageIO.read(new ByteArrayInputStream(multipartFile.getBytes()));
 
-		// 비율에 맞춰 세로 크기 계산
-		int targetHeight = (int) ((double) targetWidth / originalImage.getWidth() * originalImage.getHeight());
+		// JPEG 압축
+		ByteArrayOutputStream jpegOutput = new ByteArrayOutputStream();
+		ImageWriter jpgWriter = ImageIO.getImageWritersByFormatName("jpg").next();
+		ImageWriteParam jpgWriteParam = jpgWriter.getDefaultWriteParam();
+		jpgWriteParam.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
+		jpgWriteParam.setCompressionQuality(jpegQuality); // 0.0 ~ 1.0
 
-		// 리사이즈된 이미지 생성
-		java.awt.Image resizedImage = originalImage.getScaledInstance(targetWidth, targetHeight, java.awt.Image.SCALE_SMOOTH);
-		BufferedImage outputImage = new BufferedImage(targetWidth, targetHeight, BufferedImage.TYPE_INT_RGB);
+		jpgWriter.setOutput(ImageIO.createImageOutputStream(jpegOutput));
+		jpgWriter.write(null, new IIOImage(processedImage, null, null), jpgWriteParam);
+		jpgWriter.dispose();
 
-		Graphics2D g2d = outputImage.createGraphics();
-		g2d.drawImage(resizedImage, 0, 0, null);
-		g2d.dispose();
+		byte[] compressedJpegBytes = jpegOutput.toByteArray();
 
-		// WebP 포맷으로 변환하고 결과를 바이트 배열로 저장
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		ImageWriter writer = ImageIO.getImageWritersByFormatName("webp").next();
+		// PDF 생성
+		PDDocument document = new PDDocument();
+		PDPage page = new PDPage(new PDRectangle(processedImage.getWidth(), processedImage.getHeight()));
+		document.addPage(page);
 
-		try (MemoryCacheImageOutputStream ios = new MemoryCacheImageOutputStream(baos)) {
-			writer.setOutput(ios);
+		PDImageXObject pdImage = PDImageXObject.createFromByteArray(document, compressedJpegBytes, "jpegImage");
+		PDPageContentStream contentStream = new PDPageContentStream(document, page);
+		contentStream.drawImage(pdImage, 0, 0, processedImage.getWidth(), processedImage.getHeight());
+		contentStream.close();
 
-			WebPWriteParam writeParam = new WebPWriteParam(writer.getLocale());
-			writeParam.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
-			writeParam.setCompressionType("Lossy"); // 압축 유형 설정
-			writeParam.setCompressionQuality(quality); // 압축 품질 설정 (0.0 ~ 1.0)
+		// byte[] 로도 반환
+		ByteArrayOutputStream pdfOutput = new ByteArrayOutputStream();
+		document.save(pdfOutput);
+		document.close();
 
-			writer.write(null, new IIOImage(outputImage, null, null), writeParam);
-		} catch (Exception e) {
-			throw e;
-		} finally {
-			writer.dispose();
-		}
+		byte[] pdfBytes = pdfOutput.toByteArray();
 
-		return baos.toByteArray();
+		String saveFileName = UUID.randomUUID() + ".pdf";
+		String pdfPath = contentId + "/" + ApplicationConstants.PDF + "/" + saveFileName;
+		s3Service.uploadFile(pdfPath, pdfBytes);
+
+		return pdfRepository.save(
+			Pdf.builder()
+				.pdfPath(pdfPath)
+				.pdfSize((long) pdfBytes.length)
+				.width(processedImage.getWidth())
+				.height(processedImage.getHeight())
+				.saveFileName(saveFileName)
+				.originalFileName(multipartFile.getOriginalFilename())
+				.build()
+			).getPdfUid();
 	}
 
 }

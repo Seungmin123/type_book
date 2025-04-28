@@ -32,6 +32,8 @@ import com.muzlive.kitpage.kitpage.domain.page.photobook.repository.PhotoBookDet
 import com.muzlive.kitpage.kitpage.domain.page.photobook.repository.PhotoBookRepository;
 import com.muzlive.kitpage.kitpage.domain.page.repository.ContentRepository;
 import com.muzlive.kitpage.kitpage.domain.page.repository.PageRepository;
+import com.muzlive.kitpage.kitpage.service.FfmpegConverter;
+import com.muzlive.kitpage.kitpage.service.aws.s3.S3Service;
 import com.muzlive.kitpage.kitpage.utils.constants.ApplicationConstants;
 import com.muzlive.kitpage.kitpage.utils.enums.ImageCode;
 import com.muzlive.kitpage.kitpage.utils.enums.KitStatus;
@@ -44,6 +46,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -62,6 +65,10 @@ public class PhotoService {
 	private final JPAQueryFactory queryFactory;
 
 	private final FileService fileService;
+
+	private final S3Service s3Service;
+
+	private final FfmpegConverter ffmpegConverter;
 
 	private final ContentRepository contentRepository;
 
@@ -178,7 +185,7 @@ public class PhotoService {
 		return photoBookRepository.save(
 			PhotoBook.builder()
 				.pageUid(uploadPhotoBookReq.getPageUid())
-				.coverImageUid(fileService.uploadConvertFile(contentId, uploadPhotoBookReq.getCoverImage(), ImageCode.PHOTO_IMAGE))
+				.coverImageUid(fileService.uploadConvertImageFile(contentId, uploadPhotoBookReq.getCoverImage(), ImageCode.PHOTO_IMAGE))
 				.title(uploadPhotoBookReq.getTitle())
 				.build()
 		);
@@ -190,6 +197,7 @@ public class PhotoService {
 			PhotoBook photoBook = photoBookRepository.findById(uploadPhotoBookDetailReq.getPhotoBookUid())
 				.orElseThrow(() -> new CommonException(ExceptionCode.CANNOT_FIND_MATCHED_ITEM));
 
+			String contentId = photoBook.getPage().getContentId();
 			AtomicInteger page = new AtomicInteger(this.findPhotoBookMaxPage(photoBook.getPhotoBookUid()));
 			List<PhotoBookDetail> photoBookDetails = new ArrayList<>();
 
@@ -206,7 +214,8 @@ public class PhotoService {
 									PhotoBookDetail.builder()
 									.photoBookUid(photoBook.getPhotoBookUid())
 									.page(page.getAndIncrement())
-									.imageUid(fileService.uploadConvertFile(photoBook.getPage().getContentId(), multipartFile, ImageCode.PHOTO_IMAGE))
+									.imageUid(fileService.uploadConvertImageFile(contentId, multipartFile, ImageCode.PHOTO_IMAGE))
+									.pdfUid(fileService.convertImageBytesToPdf(contentId, multipartFile, 0.7f))
 									.build());
 							}
 						} catch (Exception ignore){}
@@ -227,7 +236,7 @@ public class PhotoService {
 					PhotoBookDetail.builder()
 						.photoBookUid(photoBook.getPhotoBookUid())
 						.page(page++)
-						.imageUid(fileService.uploadConvertFile(photoBook.getPage().getContentId(), multipartFile, ImageCode.PHOTO_IMAGE))
+						.imageUid(fileService.uploadConvertImageFile(photoBook.getPage().getContentId(), multipartFile, ImageCode.PHOTO_IMAGE))
 						.build()
 				);
 			}

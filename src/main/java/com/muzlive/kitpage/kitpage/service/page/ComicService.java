@@ -75,19 +75,6 @@ public class ComicService {
 
 	private final VideoRepository videoRepository;
 
-	public ComicBook getComicBook(Long comicBookUid) throws Exception {
-		return comicBookRepository.findById(comicBookUid)
-			.orElseThrow(() -> new CommonException(ExceptionCode.CANNOT_FIND_ITEM_THAT_MATCH_THE_PARAM));
-	}
-
-	public ComicBook upsertComicBook(ComicBook comicBook) throws Exception {
-		return comicBookRepository.save(comicBook);
-	}
-
-	public ComicBookDetail upsertComicBookDetail(ComicBookDetail comicBookDetail) throws Exception {
-		return comicBookDetailRepository.save(comicBookDetail);
-	}
-
 	public int findComicBookMaxPage(Long comicBookUid) {
 		Integer page = comicBookDetailRepository.findMaxPage(comicBookUid);
 		return page == null ? 0 : page + 1;
@@ -141,7 +128,7 @@ public class ComicService {
 									.comicBookUid(comicBook.getComicBookUid())
 									.episode(episode)
 									.page(page.getAndIncrement())
-									.imageUid(fileService.uploadConvertFile(comicBook.getPage().getContentId(), multipartFile, ImageCode.COMIC_IMAGE))
+									.imageUid(fileService.uploadConvertImageFile(comicBook.getPage().getContentId(), multipartFile, ImageCode.COMIC_IMAGE))
 									.build());
 							}
 						} catch (Exception ignore){}
@@ -163,7 +150,7 @@ public class ComicService {
 					.comicBookUid(comicBook.getComicBookUid())
 					.episode(episode)
 					.page(page++)
-					.imageUid(fileService.uploadConvertFile(comicBook.getPage().getContentId(), multipartFile, ImageCode.COMIC_IMAGE))
+					.imageUid(fileService.uploadConvertImageFile(comicBook.getPage().getContentId(), multipartFile, ImageCode.COMIC_IMAGE))
 					.build());
 			}
 
@@ -209,10 +196,6 @@ public class ComicService {
 		return comicBookContentResp;
 	}
 
-	public Page findPageWithComicBooksBySerialNumber(String serialNumber) throws Exception {
-		return pageRepository.findWithChildBySerialNumber(serialNumber).orElse(null);
-	}
-
 	public Long getImageSizeByPageUid(Long pageUid) {
 		return Optional.ofNullable(
 			queryFactory
@@ -224,27 +207,6 @@ public class ComicService {
 				.where(page.pageUid.eq(pageUid))
 				.fetchFirst()
 		).orElse(0L);
-	}
-
-	public Long getImageSizeByComicBookUid(Long comicBookUid) throws Exception {
-		return Optional.ofNullable(
-			queryFactory
-				.select(image.imageSize.sum())
-				.from(image)
-				.innerJoin(comicBookDetail).on(comicBookDetail.imageUid.eq(image.imageUid))
-				.innerJoin(comicBook).on(comicBook.comicBookUid.eq(comicBookDetail.comicBookUid))
-				.where(comicBook.comicBookUid.eq(comicBookUid))
-			.fetchFirst()
-		).orElse(0L);
-	}
-
-	public Long getComicBookImageSize(ComicBook comicBook) {
-		List<ComicBookDetail> comicBookDetails = comicBook.getComicBookDetails();
-		if(!CollectionUtils.isEmpty(comicBookDetails)) {
-			return comicBookDetails.stream().mapToLong(v -> v.getImage().getImageSize()).sum();
-		}
-
-		return 0L;
 	}
 
 	public List<ComicBookDetailResp> getRelatedComicDetailBookList(String contentId) {
