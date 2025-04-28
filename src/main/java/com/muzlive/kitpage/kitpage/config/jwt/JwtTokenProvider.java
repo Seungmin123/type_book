@@ -3,6 +3,7 @@ package com.muzlive.kitpage.kitpage.config.jwt;
 import com.muzlive.kitpage.kitpage.config.exception.CommonException;
 import com.muzlive.kitpage.kitpage.config.exception.ExceptionCode;
 import com.muzlive.kitpage.kitpage.utils.constants.ApplicationConstants;
+import com.muzlive.kitpage.kitpage.utils.constants.HeaderConstants;
 import com.muzlive.kitpage.kitpage.utils.enums.UserRole;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -98,8 +99,8 @@ public class JwtTokenProvider {
 
 
     public String resolveToken(HttpServletRequest request) {
-        String bearerToken = request.getHeader(ApplicationConstants.AUTHORIZATION);
-        final String startWith = (ApplicationConstants.BEARER + " ");
+        String bearerToken = request.getHeader(HeaderConstants.AUTHORIZATION);
+        final String startWith = (HeaderConstants.BEARER + " ");
         if (StringUtils.hasText(bearerToken) && bearerToken.startsWith(startWith)) {
             return bearerToken.substring(startWith.length());
         }
