@@ -42,18 +42,26 @@ public class PhotoBookDetail extends BaseTimeEntity {
 	@Column(name = "image_uid")
 	private Long imageUid;
 
+	@Column(name = "pdf_uid")
+	private Long pdfUid;
+
 	@OneToOne
 	@JoinColumn(name = "image_uid", insertable = false, updatable = false)
 	private Image image;
+
+	@OneToOne
+	@JoinColumn(name = "pdf_uid", insertable = false, updatable = false)
+	private Pdf pdf;
 
 	@ManyToOne
 	@JoinColumn(name = "photo_book_uid", insertable = false, updatable = false)
 	private PhotoBook photoBook;
 
 	@Builder
-	public PhotoBookDetail(Long photoBookUid, Integer page, Long imageUid) {
+	public PhotoBookDetail(Long photoBookUid, Integer page, Long imageUid, Long pdfUid) {
 		this.photoBookUid = photoBookUid;
 		this.page = page;
 		this.imageUid = imageUid;
+		this.pdfUid = pdfUid;
 	}
 }
