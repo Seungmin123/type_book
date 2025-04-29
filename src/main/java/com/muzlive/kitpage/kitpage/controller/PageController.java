@@ -2,16 +2,18 @@ package com.muzlive.kitpage.kitpage.controller;
 
 import com.muzlive.kitpage.kitpage.config.aspect.ClientPlatform;
 import com.muzlive.kitpage.kitpage.config.encryptor.AesSecurityProvider;
-import com.muzlive.kitpage.kitpage.config.exception.CommonException;
-import com.muzlive.kitpage.kitpage.config.exception.ExceptionCode;
 import com.muzlive.kitpage.kitpage.config.aspect.CurrentToken;
 import com.muzlive.kitpage.kitpage.config.jwt.JwtTokenProvider;
 import com.muzlive.kitpage.kitpage.domain.common.dto.resp.CommonResp;
-import com.muzlive.kitpage.kitpage.domain.page.comicbook.dto.req.ComicBookContentReq;
+import com.muzlive.kitpage.kitpage.domain.page.dto.req.ContentReq;
+import com.muzlive.kitpage.kitpage.domain.page.comicbook.dto.resp.ComicBookContentResp;
+import com.muzlive.kitpage.kitpage.domain.page.comicbook.dto.resp.ComicBookDetailResp;
 import com.muzlive.kitpage.kitpage.domain.page.dto.req.ContentListReq;
 import com.muzlive.kitpage.kitpage.domain.page.dto.resp.CommonContentDetailResp;
 import com.muzlive.kitpage.kitpage.domain.page.dto.resp.CommonContentResp;
 import com.muzlive.kitpage.kitpage.domain.page.dto.resp.ContentResp;
+import com.muzlive.kitpage.kitpage.domain.page.photobook.dto.resp.PhotoBookContentResp;
+import com.muzlive.kitpage.kitpage.domain.page.photobook.dto.resp.PhotoBookDetailResp;
 import com.muzlive.kitpage.kitpage.domain.user.Image;
 import com.muzlive.kitpage.kitpage.service.aws.CloudFrontService;
 import com.muzlive.kitpage.kitpage.service.page.PageService;
@@ -19,9 +21,10 @@ import com.muzlive.kitpage.kitpage.service.page.factory.PageStrategyFactory;
 import com.muzlive.kitpage.kitpage.service.page.strategy.PageStrategy;
 import com.muzlive.kitpage.kitpage.utils.CommonUtils;
 import com.muzlive.kitpage.kitpage.utils.enums.ClientPlatformType;
-import com.muzlive.kitpage.kitpage.utils.enums.UserRole;
-import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.io.ByteArrayInputStream;
 import java.net.URLConnection;
@@ -35,7 +38,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.InvalidMediaTypeException;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -79,23 +81,50 @@ public class PageController {
 		return new CommonResp<>(contentResps);
 	}
 
-	@Operation(summary = "컨텐츠 리스트 조회")
+	@Operation(summary = "컨텐츠 리스트 조회",
+		responses = {
+			@ApiResponse(
+				responseCode = "200",
+				description = "성공",
+				content = @Content(
+					schema = @Schema(oneOf = {ComicBookContentResp.class, PhotoBookContentResp.class})
+				)
+			)
+		})
 	@GetMapping("/content/list")
-	public CommonResp<? extends CommonContentResp> getComicBookListByContentId(@Valid @ModelAttribute ComicBookContentReq comicBookContentReq) throws Exception {
-		strategy = pageStrategyFactory.getStrategy(pageService.findContentByContentId(comicBookContentReq.getContentId()).getContentType());
-		return new CommonResp<>(strategy.getContentList(comicBookContentReq.getContentId()));
+	public CommonResp<? extends CommonContentResp> getComicBookListByContentId(@Valid @ModelAttribute ContentReq contentReq) throws Exception {
+		strategy = pageStrategyFactory.getStrategy(pageService.findContentByContentId(contentReq.getContentId()).getContentType());
+		return new CommonResp<>(strategy.getContentList(contentReq.getContentId()));
 	}
 
-	@Operation(summary = "컨텐츠 상세 정보 리스트 조회")
+	@Operation(summary = "컨텐츠 상세 정보 리스트 조회",
+		responses = {
+			@ApiResponse(
+				responseCode = "200",
+				description = "성공",
+				content = @Content(
+					schema = @Schema(oneOf = {ComicBookDetailResp.class, PhotoBookDetailResp.class})
+				)
+			)
+		})
 	@GetMapping("/content/detail/list")
 	public CommonResp<List<? extends CommonContentDetailResp>> getComicBookContents(
-		@Valid @ModelAttribute ComicBookContentReq comicBookContentReq,
+		@Valid @ModelAttribute ContentReq contentReq,
 		@ClientPlatform ClientPlatformType clientPlatformType) throws Exception {
-		strategy = pageStrategyFactory.getStrategy(pageService.findContentByContentId(comicBookContentReq.getContentId()).getContentType());
-		return new CommonResp<>(strategy.getContentDetailList(comicBookContentReq.getContentId(), clientPlatformType));
+		strategy = pageStrategyFactory.getStrategy(pageService.findContentByContentId(contentReq.getContentId()).getContentType());
+		return new CommonResp<>(strategy.getContentDetailList(contentReq.getContentId(), clientPlatformType));
 	}
 
-	@Operation(summary = "컨텐츠 상세 정보 조회")
+	@Operation(summary = "컨텐츠 상세 정보 조회",
+		responses = {
+			@ApiResponse(
+				responseCode = "200",
+				description = "성공",
+				content = @Content(
+					schema = @Schema(oneOf = {ComicBookDetailResp.class, PhotoBookDetailResp.class})
+				)
+			)
+		})
 	@GetMapping("/content/detail/{pageUid}")
 	public CommonResp<? extends CommonContentDetailResp> getComicBookContent(
 		@Valid @PathVariable Long pageUid,

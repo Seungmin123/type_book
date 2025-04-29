@@ -2,7 +2,7 @@ package com.muzlive.kitpage.kitpage.controller;
 
 import com.muzlive.kitpage.kitpage.config.aspect.ClientPlatform;
 import com.muzlive.kitpage.kitpage.domain.common.dto.resp.CommonResp;
-import com.muzlive.kitpage.kitpage.domain.page.comicbook.dto.req.ComicBookContentReq;
+import com.muzlive.kitpage.kitpage.domain.page.dto.req.ContentReq;
 import com.muzlive.kitpage.kitpage.domain.page.comicbook.dto.resp.ComicBookContentResp;
 import com.muzlive.kitpage.kitpage.domain.page.comicbook.dto.resp.ComicBookDetailResp;
 import com.muzlive.kitpage.kitpage.service.page.factory.PageStrategyFactory;
@@ -38,16 +38,16 @@ public class ComicController {
 
 	@Operation(summary = "ComicBook 리스트 조회")
 	@GetMapping("/list")
-	public CommonResp<ComicBookContentResp> getComicBookListByContentId(@Valid @ModelAttribute ComicBookContentReq comicBookContentReq) throws Exception {
-		return new CommonResp<>(strategy.getContentList(comicBookContentReq.getContentId()));
+	public CommonResp<ComicBookContentResp> getComicBookListByContentId(@Valid @ModelAttribute ContentReq contentReq) throws Exception {
+		return new CommonResp<>(strategy.getContentList(contentReq.getContentId()));
 	}
 
 	@Operation(summary = "ComicBook 컨텐츠 상세 정보 리스트 조회")
 	@GetMapping("/detail/list")
 	public CommonResp<List<ComicBookDetailResp>> getComicBookContents(
-		@Valid @ModelAttribute ComicBookContentReq comicBookContentReq,
+		@Valid @ModelAttribute ContentReq contentReq,
 		@ClientPlatform ClientPlatformType clientPlatformType) throws Exception {
-		return new CommonResp<>(strategy.getContentDetailList(comicBookContentReq.getContentId(), clientPlatformType));
+		return new CommonResp<>(strategy.getContentDetailList(contentReq.getContentId(), clientPlatformType));
 	}
 
 	@Operation(summary = "ComicBook 컨텐츠 상세 정보 조회")

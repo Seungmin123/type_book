@@ -1,4 +1,4 @@
-package com.muzlive.kitpage.kitpage.domain.page.comicbook.dto.req;
+package com.muzlive.kitpage.kitpage.domain.page.dto.req;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import javax.validation.constraints.NotNull;
@@ -7,7 +7,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class ComicBookContentReq {
+public class ContentReq {
 
 	@NotNull
 	@JsonProperty("contentId")
