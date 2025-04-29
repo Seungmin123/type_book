@@ -47,15 +47,6 @@ public class SpringDocConfig {
     }
 
     @Bean
-    public GroupedOpenApi createPhotoBookApi(){
-        return GroupedOpenApi.builder()
-            .group("Content")
-            .pathsToMatch("/v1/content/**")
-            .addOpenApiCustomiser(swaggerKitCustomApi)
-            .build();
-    }
-
-    @Bean
     public GroupedOpenApi createUserApi(){
         return GroupedOpenApi.builder()
             .group("User")
