@@ -49,8 +49,8 @@ public class SpringDocConfig {
     @Bean
     public GroupedOpenApi createPhotoBookApi(){
         return GroupedOpenApi.builder()
-            .group("PhotoBook")
-            .pathsToMatch("/v1/photo/**")
+            .group("Content")
+            .pathsToMatch("/v1/content/**")
             .addOpenApiCustomiser(swaggerKitCustomApi)
             .build();
     }

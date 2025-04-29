@@ -5,6 +5,7 @@ import com.muzlive.kitpage.kitpage.domain.page.comicbook.dto.resp.ComicBookDetai
 import com.muzlive.kitpage.kitpage.service.page.ComicService;
 import com.muzlive.kitpage.kitpage.service.page.PageService;
 import com.muzlive.kitpage.kitpage.service.page.strategy.PageStrategy;
+import com.muzlive.kitpage.kitpage.utils.enums.ClientPlatformType;
 import com.muzlive.kitpage.kitpage.utils.enums.PageContentType;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -24,12 +25,12 @@ public class ComicBookStrategyImpl implements PageStrategy<ComicBookContentResp,
 	}
 
 	@Override
-	public List<ComicBookDetailResp> getContentDetailList(String contentId) {
+	public List<ComicBookDetailResp> getContentDetailList(String contentId, ClientPlatformType clientPlatformType) {
 		return comicService.getRelatedComicDetailBookList(contentId);
 	}
 
 	@Override
-	public ComicBookDetailResp getContentDetail(long pageUid) {
+	public ComicBookDetailResp getContentDetail(long pageUid, ClientPlatformType clientPlatformType) {
 		return comicService.getComicBookDetail(pageService.findPageById(pageUid));
 	}
 
@@ -39,7 +40,7 @@ public class ComicBookStrategyImpl implements PageStrategy<ComicBookContentResp,
 	}
 
 	@Override
-	public long getTotalSize(Long pageUid) {
+	public long getTotalSize(Long pageUid, ClientPlatformType clientPlatformType) {
 		return comicService.getImageSizeByPageUid(pageUid);
 	}
 }

@@ -2,7 +2,8 @@ package com.muzlive.kitpage.kitpage.config;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.muzlive.kitpage.kitpage.config.jwt.CurrentTokenArgumentResolver;
+import com.muzlive.kitpage.kitpage.config.aspect.resolver.ClientPlatformArgumentResolver;
+import com.muzlive.kitpage.kitpage.config.aspect.resolver.CurrentTokenArgumentResolver;
 import com.muzlive.kitpage.kitpage.config.jwt.JwtTokenProvider;
 import java.util.List;
 import java.util.Locale;
@@ -55,5 +56,6 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addArgumentResolvers(List<HandlerMethodArgumentResolver> resolvers) {
         resolvers.add(new CurrentTokenArgumentResolver(jwtTokenProvider));
+        resolvers.add(new ClientPlatformArgumentResolver());
     }
 }

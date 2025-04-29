@@ -2,10 +2,10 @@ package com.muzlive.kitpage.kitpage.service.page.strategy.impl;
 
 import com.muzlive.kitpage.kitpage.domain.page.photobook.dto.resp.PhotoBookContentResp;
 import com.muzlive.kitpage.kitpage.domain.page.photobook.dto.resp.PhotoBookDetailResp;
-import com.muzlive.kitpage.kitpage.service.page.ComicService;
 import com.muzlive.kitpage.kitpage.service.page.PageService;
 import com.muzlive.kitpage.kitpage.service.page.PhotoService;
 import com.muzlive.kitpage.kitpage.service.page.strategy.PageStrategy;
+import com.muzlive.kitpage.kitpage.utils.enums.ClientPlatformType;
 import com.muzlive.kitpage.kitpage.utils.enums.PageContentType;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -25,13 +25,13 @@ public class PhotoBookStrategyImpl implements PageStrategy<PhotoBookContentResp,
 	}
 
 	@Override
-	public List<PhotoBookDetailResp> getContentDetailList(String contentId) {
-		return photoService.getRelatedPhotoDetailBookList(contentId);
+	public List<PhotoBookDetailResp> getContentDetailList(String contentId, ClientPlatformType clientPlatformType) {
+		return photoService.getRelatedPhotoDetailBookList(contentId, clientPlatformType);
 	}
 
 	@Override
-	public PhotoBookDetailResp getContentDetail(long pageUid) {
-		return photoService.getPhotoBookDetail(pageService.findPageById(pageUid));
+	public PhotoBookDetailResp getContentDetail(long pageUid, ClientPlatformType clientPlatformType) {
+		return photoService.getPhotoBookDetail(pageService.findPageById(pageUid), clientPlatformType);
 	}
 
 	@Override
@@ -40,7 +40,7 @@ public class PhotoBookStrategyImpl implements PageStrategy<PhotoBookContentResp,
 	}
 
 	@Override
-	public long getTotalSize(Long pageUid) {
-		return photoService.getImageSizeByPageUid(pageUid);
+	public long getTotalSize(Long pageUid, ClientPlatformType clientPlatformType) {
+		return photoService.getImageSizeByPageUid(pageUid, clientPlatformType);
 	}
 }

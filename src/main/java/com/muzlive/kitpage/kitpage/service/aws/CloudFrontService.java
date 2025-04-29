@@ -22,10 +22,13 @@ public class CloudFrontService {
 
 	private final CloudFrontDomain cloudFrontDomain;
 
-	public byte[] getCFImageByKey(String key) throws Exception {
+	public String getSignedUrl(String key) throws Exception {
 		CannedSignerRequest request = createRequestForCannedPolicy(key);
-		String signedUrl = cloudFrontDomain.getCloudFrontUtilities().getSignedUrlWithCannedPolicy(request).url();
-		return this.downloadFile(signedUrl);
+		return cloudFrontDomain.getCloudFrontUtilities().getSignedUrlWithCannedPolicy(request).url();
+	}
+
+	public byte[] getCFImageByKey(String key) throws Exception {
+		return this.downloadFile(this.getSignedUrl(key));
 	}
 
 	private byte[] downloadFile(String fileUrl) throws Exception {

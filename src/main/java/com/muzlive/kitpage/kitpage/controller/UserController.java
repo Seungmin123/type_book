@@ -1,9 +1,10 @@
 package com.muzlive.kitpage.kitpage.controller;
 
+import com.muzlive.kitpage.kitpage.config.aspect.ClientPlatform;
 import com.muzlive.kitpage.kitpage.config.encryptor.AesSecurityProvider;
 import com.muzlive.kitpage.kitpage.config.exception.CommonException;
 import com.muzlive.kitpage.kitpage.config.exception.ExceptionCode;
-import com.muzlive.kitpage.kitpage.config.jwt.CurrentToken;
+import com.muzlive.kitpage.kitpage.config.aspect.CurrentToken;
 import com.muzlive.kitpage.kitpage.config.jwt.JwtTokenProvider;
 import com.muzlive.kitpage.kitpage.domain.common.dto.resp.CommonResp;
 import com.muzlive.kitpage.kitpage.domain.page.Page;
@@ -22,7 +23,6 @@ import com.muzlive.kitpage.kitpage.service.page.ComicService;
 import com.muzlive.kitpage.kitpage.service.page.PageService;
 import com.muzlive.kitpage.kitpage.service.page.UserService;
 import com.muzlive.kitpage.kitpage.service.transfer.kihno.KihnoV2TransferSerivce;
-import com.muzlive.kitpage.kitpage.service.transfer.kihno.dto.req.KihnoKitCheckReq;
 import com.muzlive.kitpage.kitpage.service.transfer.kihno.dto.req.KihnoMicLocationReq;
 import com.muzlive.kitpage.kitpage.service.transfer.kihno.dto.req.KihnoMicProcessedReq;
 import com.muzlive.kitpage.kitpage.service.transfer.kihno.dto.resp.KihnoMicLocationResp;
@@ -38,7 +38,7 @@ import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.resp.KittorTokenR
 import com.muzlive.kitpage.kitpage.usecase.CheckTagUseCase;
 import com.muzlive.kitpage.kitpage.usecase.command.CheckTagCommand;
 import com.muzlive.kitpage.kitpage.utils.CommonUtils;
-import com.muzlive.kitpage.kitpage.utils.constants.ApplicationConstants;
+import com.muzlive.kitpage.kitpage.utils.enums.ClientPlatformType;
 import com.muzlive.kitpage.kitpage.utils.enums.KitStatus;
 import com.muzlive.kitpage.kitpage.utils.enums.TokenType;
 import com.muzlive.kitpage.kitpage.utils.enums.UserRole;
@@ -104,12 +104,17 @@ public class UserController {
 
 	@Operation(summary = "체크 태그 API", description = "키노 서버를 통한 체크 태그 API")
 	@PostMapping("/checkTag")
-	public CommonResp<CheckTagResp> checkTag(@Valid @RequestBody CheckTagReq checkTagReq, @CurrentToken String jwt) throws Exception {
+	public CommonResp<CheckTagResp> checkTag(
+		@Valid @RequestBody CheckTagReq checkTagReq,
+		@CurrentToken String jwt,
+		@ClientPlatform ClientPlatformType clientPlatformType
+	) throws Exception {
 		return new CommonResp<>(
 			checkTagUseCase.execute(
 				CheckTagCommand.builder()
 				.serialNumber(checkTagReq.getSerialNumber())
 				.jwt(jwt)
+				.clientPlatformType(clientPlatformType)
 				.build())
 		);
 	}

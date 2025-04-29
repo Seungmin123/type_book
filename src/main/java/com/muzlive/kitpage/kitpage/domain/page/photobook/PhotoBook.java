@@ -3,6 +3,7 @@ package com.muzlive.kitpage.kitpage.domain.page.photobook;
 import com.muzlive.kitpage.kitpage.domain.common.BaseTimeEntity;
 import com.muzlive.kitpage.kitpage.domain.page.Page;
 import com.muzlive.kitpage.kitpage.domain.page.comicbook.ComicBookDetail;
+import com.muzlive.kitpage.kitpage.domain.user.Image;
 import java.util.List;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -12,6 +13,7 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 import javax.persistence.OrderBy;
 import javax.persistence.Table;
 import lombok.Builder;
@@ -45,6 +47,10 @@ public class PhotoBook extends BaseTimeEntity {
 	@ManyToOne
 	@JoinColumn(name = "page_uid", insertable = false, updatable = false)
 	private Page page;
+
+	@OneToOne
+	@JoinColumn(name = "cover_image_uid", insertable = false, updatable = false)
+	private Image image;
 
 	@OneToMany(mappedBy = "photoBook")
 	@OrderBy("page ASC")

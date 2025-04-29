@@ -2,21 +2,30 @@ package com.muzlive.kitpage.kitpage.service.page.strategy;
 
 import com.muzlive.kitpage.kitpage.domain.page.dto.resp.CommonContentDetailResp;
 import com.muzlive.kitpage.kitpage.domain.page.dto.resp.CommonContentResp;
+import com.muzlive.kitpage.kitpage.utils.enums.ClientPlatformType;
 import com.muzlive.kitpage.kitpage.utils.enums.PageContentType;
 import java.util.List;
 
 public interface PageStrategy<T extends CommonContentResp, D extends CommonContentDetailResp> {
 
-	// TODO 컨텐츠 추가될 경우 공통적으로 필요한 메소드 추가
+	// 컨텐츠 추가될 경우 공통적으로 필요한 메소드 추가
 
-	T getContentList(String contentId);
+	default T getContentList(String contentId) {
+		throw new UnsupportedOperationException("not implemented");
+	};
 
-	List<D> getContentDetailList(String contentId);
+	default List<D> getContentDetailList(String contentId, ClientPlatformType clientPlatformType) {
+		throw new UnsupportedOperationException("not implemented");
+	};
 
-	D getContentDetail(long pageUid);
+	default D getContentDetail(long pageUid, ClientPlatformType clientPlatformType) {
+		throw new UnsupportedOperationException("not implemented");
+	};
 
 	PageContentType getSupportedType();
 
-	long getTotalSize(Long pageUid);
+	default long getTotalSize(Long pageUid, ClientPlatformType clientPlatformType) {
+		return 0L;
+	};
 
 }
