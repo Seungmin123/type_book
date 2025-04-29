@@ -2,6 +2,7 @@ package com.muzlive.kitpage.kitpage.domain.page.comicbook;
 
 import com.muzlive.kitpage.kitpage.domain.common.BaseTimeEntity;
 import com.muzlive.kitpage.kitpage.domain.page.Page;
+import com.muzlive.kitpage.kitpage.domain.user.Image;
 import com.muzlive.kitpage.kitpage.utils.enums.ReadingDirection;
 import java.util.Arrays;
 import java.util.List;
@@ -15,6 +16,7 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 import javax.persistence.OrderBy;
 import javax.persistence.PostLoad;
 import javax.persistence.PrePersist;
@@ -52,6 +54,10 @@ public class ComicBook extends BaseTimeEntity {
 	@ManyToOne
 	@JoinColumn(name = "page_uid", insertable = false, updatable = false)
 	private Page page;
+
+	@OneToOne
+	@JoinColumn(name = "cover_image_uid", insertable = false, updatable = false)
+	private Image image;
 
 	@OneToMany(mappedBy = "comicBook")
 	@OrderBy("page ASC")

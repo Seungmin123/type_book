@@ -13,7 +13,11 @@ public interface PhotoBookRepository extends JpaRepository<PhotoBook, Long> {
 
 	@EntityGraph(attributePaths = {"photoBookDetails", "photoBookDetails.image"})
 	@Query("SELECT DISTINCT pb FROM PhotoBook pb WHERE pb.pageUid = :pageUid")
-	Optional<List<PhotoBook>> findAllByPageUid(Long pageUid);
+	Optional<List<PhotoBook>> findAllWithImageByPageUid(Long pageUid);
+
+	@EntityGraph(attributePaths = {"photoBookDetails", "photoBookDetails.pdf"})
+	@Query("SELECT DISTINCT pb FROM PhotoBook pb WHERE pb.pageUid = :pageUid")
+	Optional<List<PhotoBook>> findAllWithPdfByPageUid(Long pageUid);
 
 	@Query("SELECT SUM(i.imageSize) "
 		+ "FROM PhotoBook pb "

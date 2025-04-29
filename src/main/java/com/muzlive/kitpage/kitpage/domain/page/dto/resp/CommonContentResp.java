@@ -20,6 +20,8 @@ public class CommonContentResp {
 
 	private Integer totalVolume;
 
+	private String contentType;
+
 	// Builder 로 전환 고려
 	public CommonContentResp(Content content) {
 		this.contentId = content.getContentId();
@@ -28,5 +30,6 @@ public class CommonContentResp {
 		this.contentInfoText = content.getInfoText();
 		this.category = content.getContentType().getName();
 		this.totalVolume = 0;
+		this.contentType = content.getContentType().getCode();
 	}
 }

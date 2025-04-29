@@ -1,14 +1,18 @@
 package com.muzlive.kitpage.kitpage.service.page;
 
+import static com.muzlive.kitpage.kitpage.domain.page.QContent.content;
 import static com.muzlive.kitpage.kitpage.domain.page.QPage.page;
 import static com.muzlive.kitpage.kitpage.domain.page.comicbook.QComicBook.comicBook;
 import static com.muzlive.kitpage.kitpage.domain.page.comicbook.QComicBookDetail.comicBookDetail;
+import static com.muzlive.kitpage.kitpage.domain.page.photobook.QPdf.pdf;
 import static com.muzlive.kitpage.kitpage.domain.page.photobook.QPhotoBook.photoBook;
 import static com.muzlive.kitpage.kitpage.domain.page.photobook.QPhotoBookDetail.photoBookDetail;
 import static com.muzlive.kitpage.kitpage.domain.user.QImage.image;
+import static com.muzlive.kitpage.kitpage.domain.user.QKit.kit;
 
 import com.muzlive.kitpage.kitpage.config.exception.CommonException;
 import com.muzlive.kitpage.kitpage.config.exception.ExceptionCode;
+import com.muzlive.kitpage.kitpage.domain.common.BaseTimeEntity;
 import com.muzlive.kitpage.kitpage.domain.page.Page;
 import com.muzlive.kitpage.kitpage.domain.page.comicbook.ComicBook;
 import com.muzlive.kitpage.kitpage.domain.page.comicbook.ComicBookDetail;
@@ -21,10 +25,13 @@ import com.muzlive.kitpage.kitpage.domain.page.comicbook.dto.resp.VideoResp;
 import com.muzlive.kitpage.kitpage.domain.page.comicbook.repository.VideoRepository;
 import com.muzlive.kitpage.kitpage.domain.page.dto.req.UploadPhotoBookDetailReq;
 import com.muzlive.kitpage.kitpage.domain.page.dto.req.UploadPhotoBookReq;
+import com.muzlive.kitpage.kitpage.domain.page.dto.resp.CommonEpisodeDetailResp;
+import com.muzlive.kitpage.kitpage.domain.page.dto.resp.CommonEpisodeResp;
 import com.muzlive.kitpage.kitpage.domain.page.photobook.PhotoBook;
 import com.muzlive.kitpage.kitpage.domain.page.photobook.PhotoBookDetail;
 import com.muzlive.kitpage.kitpage.domain.page.photobook.dto.resp.PhotoBookContentResp;
 import com.muzlive.kitpage.kitpage.domain.page.photobook.dto.resp.PhotoBookDetailResp;
+import com.muzlive.kitpage.kitpage.domain.page.photobook.dto.resp.PhotoBookEpisodeDetailResp;
 import com.muzlive.kitpage.kitpage.domain.page.photobook.dto.resp.PhotoBookEpisodeResp;
 import com.muzlive.kitpage.kitpage.domain.page.photobook.dto.resp.PhotoBookImageResp;
 import com.muzlive.kitpage.kitpage.domain.page.photobook.dto.resp.PhotoBookResp;
@@ -34,9 +41,12 @@ import com.muzlive.kitpage.kitpage.domain.page.repository.ContentRepository;
 import com.muzlive.kitpage.kitpage.domain.page.repository.PageRepository;
 import com.muzlive.kitpage.kitpage.service.FfmpegConverter;
 import com.muzlive.kitpage.kitpage.service.aws.s3.S3Service;
+import com.muzlive.kitpage.kitpage.service.page.converter.PhotoBookEpisodeConverter;
 import com.muzlive.kitpage.kitpage.utils.constants.ApplicationConstants;
+import com.muzlive.kitpage.kitpage.utils.enums.ClientPlatformType;
 import com.muzlive.kitpage.kitpage.utils.enums.ImageCode;
 import com.muzlive.kitpage.kitpage.utils.enums.KitStatus;
+import com.querydsl.core.BooleanBuilder;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -45,6 +55,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -66,9 +77,7 @@ public class PhotoService {
 
 	private final FileService fileService;
 
-	private final S3Service s3Service;
-
-	private final FfmpegConverter ffmpegConverter;
+	private final PhotoBookEpisodeConverter photoBookEpisodeConverter;
 
 	private final ContentRepository contentRepository;
 
@@ -107,58 +116,43 @@ public class PhotoService {
 		return photoBookContentResp;
 	}
 
-	public List<PhotoBookDetailResp> getRelatedPhotoDetailBookList(String contentId) {
+	public List<PhotoBookDetailResp> getRelatedPhotoDetailBookList(String contentId, ClientPlatformType clientPlatformType) {
 		List<PhotoBookDetailResp> photoBookDetailResps = new ArrayList<>();
 
 		contentRepository.findByContentId(contentId).ifPresent(content -> {
 			for (Page pageItem : content.getPages()) {
-				photoBookDetailResps.add(this.getPhotoBookDetail(pageItem));
+				photoBookDetailResps.add(this.getPhotoBookDetail(pageItem, clientPlatformType));
 			}
 		});
 
 		return photoBookDetailResps;
 	}
 
-	public PhotoBookDetailResp getPhotoBookDetail(Page page) {
+	public PhotoBookDetailResp getPhotoBookDetail(Page page, ClientPlatformType clientPlatformType) {
 		PhotoBookDetailResp photoBookDetailResp = new PhotoBookDetailResp(page);
-		photoBookDetailResp.setDetails(this.getEpisodeResps(page.getPageUid()));
 		photoBookDetailResp.setVideos(this.findVideoByPageUid(page.getPageUid()));
+		photoBookDetailResp.setDetails(this.getEpisodeResps(page.getPageUid(), clientPlatformType));
 		return photoBookDetailResp;
 	}
 
-	public List<PhotoBookEpisodeResp> getEpisodeResps(Long pageUid) {
-		List<PhotoBookEpisodeResp> photoBookEpisodeResps = new ArrayList<>();
+	private List<PhotoBookEpisodeResp> getEpisodeResps(Long pageUid, ClientPlatformType clientPlatformType) {
+		// 조회 단계의 분기
+		List<PhotoBook> photoBooks = clientPlatformType.equals(ClientPlatformType.IOS)
+			? photoBookRepository.findAllWithPdfByPageUid(pageUid).orElse(new ArrayList<>())
+			: photoBookRepository.findAllWithImageByPageUid(pageUid).orElse(new ArrayList<>());
 
-		List<PhotoBook> photoBooks = photoBookRepository.findAllByPageUid(pageUid).orElse(new ArrayList<>());
-
-		for(PhotoBook photoBook : photoBooks) {
-			PhotoBookEpisodeResp photoBookEpisodeResp = new PhotoBookEpisodeResp(photoBook);
-
-			// 최근 업데이트 날짜 확인을 위해 for 루프 여기서 실행
-			if(CollectionUtils.isEmpty(photoBook.getPhotoBookDetails())){
-				photoBookEpisodeResp.setPageSize(0);
-				photoBookEpisodeResp.setDetailPages(new ArrayList<>());
-			} else {
-				LocalDateTime lastModifiedAt = null;
-
-				photoBookEpisodeResp.setPageSize(photoBook.getPhotoBookDetails().size());
-
-				List<PhotoBookImageResp> photoBookImageResps = new ArrayList<>();
-				for(PhotoBookDetail photoBookDetail : photoBook.getPhotoBookDetails()) {
-					photoBookImageResps.add(PhotoBookImageResp.of(photoBookDetail));
-
-					// 최근 이미지 업데이트 날짜. - 클라이언트에서 변경된 파일 확인용
-					if(lastModifiedAt == null || lastModifiedAt.isBefore(photoBookDetail.getModifiedAt()))
-						lastModifiedAt = photoBookDetail.getModifiedAt();
-				}
-				photoBookEpisodeResp.setDetailPages(photoBookImageResps);
-				photoBookEpisodeResp.setLastModifiedAt(lastModifiedAt);
-			}
-
-			photoBookEpisodeResps.add(photoBookEpisodeResp);
-		}
-		photoBookEpisodeResps.sort(Comparator.comparing(PhotoBookEpisodeResp::getPhotoBookUid));
-		return photoBookEpisodeResps;
+		// converter 는 변환 단계이기 때문에 내부적으로 clientType 별도의 분기로 처리함.
+		return photoBooks.stream()
+			.map(photoBook -> {
+				PhotoBookEpisodeResp resp = new PhotoBookEpisodeResp(photoBook);
+				CommonEpisodeResp commonEpisodeResp = photoBookEpisodeConverter.convert(photoBook, clientPlatformType);
+				resp.setPageSize(commonEpisodeResp.getPageSize());
+				resp.setDetailPages(commonEpisodeResp.getDetailPages());
+				resp.setLastModifiedAt(commonEpisodeResp.getLastModifiedAt());
+				return resp;
+			})
+			.sorted(Comparator.comparing(PhotoBookEpisodeResp::getPhotoBookUid))
+			.collect(Collectors.toList());
 	}
 
 	public List<VideoResp> findVideoByPageUid(Long pageUid) {
@@ -166,17 +160,30 @@ public class PhotoService {
 			Collectors.toList());
 	}
 
-	public Long getImageSizeByPageUid(Long pageUid) {
-		return Optional.ofNullable(
-			queryFactory
-				.select(image.imageSize.sum())
-				.from(image)
-				.innerJoin(photoBookDetail).on(photoBookDetail.imageUid.eq(image.imageUid))
-				.innerJoin(photoBook).on(photoBook.photoBookUid.eq(photoBookDetail.photoBookUid))
-				.innerJoin(page).on(page.pageUid.eq(photoBook.pageUid))
-				.where(page.pageUid.eq(pageUid))
-				.fetchFirst()
-		).orElse(0L);
+	public Long getImageSizeByPageUid(Long pageUid, ClientPlatformType clientPlatformType) {
+		if(clientPlatformType.equals(ClientPlatformType.IOS)) {
+			return Optional.ofNullable(
+				queryFactory
+					.select(pdf.pdfSize.sum())
+					.from(pdf)
+					.innerJoin(photoBookDetail).on(photoBookDetail.pdfUid.eq(pdf.pdfUid))
+					.innerJoin(photoBook).on(photoBook.photoBookUid.eq(photoBookDetail.photoBookUid))
+					.innerJoin(page).on(page.pageUid.eq(photoBook.pageUid))
+					.where(page.pageUid.eq(pageUid))
+					.fetchFirst()
+			).orElse(0L);
+		} else {
+			return Optional.ofNullable(
+				queryFactory
+					.select(image.imageSize.sum())
+					.from(image)
+					.innerJoin(photoBookDetail).on(photoBookDetail.imageUid.eq(image.imageUid))
+					.innerJoin(photoBook).on(photoBook.photoBookUid.eq(photoBookDetail.photoBookUid))
+					.innerJoin(page).on(page.pageUid.eq(photoBook.pageUid))
+					.where(page.pageUid.eq(pageUid))
+					.fetchFirst()
+			).orElse(0L);
+		}
 	}
 
 	// Admin ************************************************************************************************************

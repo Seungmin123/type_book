@@ -5,11 +5,13 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.Duration;
+import java.util.Base64;
 import java.util.Locale;
 import java.util.Random;
 import javax.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
 @Slf4j
@@ -96,6 +98,11 @@ public class CommonUtils {
 		formattedDuration.append(String.format("%02d", seconds));
 
 		return formattedDuration.toString();
+	}
+
+	public String base64Decode(final String str){
+		if(StringUtils.isEmpty(str)) return "";
+		return new String(Base64.getDecoder().decode(str));
 	}
 
 }

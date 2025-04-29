@@ -64,10 +64,7 @@ public class CheckTagUseCase {
 				.build());
 
 		CheckTagResp checkTagResp = new CheckTagResp(page, token);
-		checkTagResp.setTotalSize(pageStrategy.getTotalSize(page.getPageUid()));
-
-		// TODO total Image Size? total Pdf size? checkTag 시 정리해서 알려줘?
-
+		checkTagResp.setTotalSize(pageStrategy.getTotalSize(page.getPageUid(), command.getClientPlatformType()));
 		return checkTagResp;
 	}
 

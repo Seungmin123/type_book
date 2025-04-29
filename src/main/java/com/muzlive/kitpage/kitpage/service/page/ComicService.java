@@ -21,11 +21,13 @@ import com.muzlive.kitpage.kitpage.domain.page.comicbook.repository.ComicBookRep
 import com.muzlive.kitpage.kitpage.domain.page.comicbook.repository.VideoRepository;
 import com.muzlive.kitpage.kitpage.domain.page.dto.req.UploadComicBookDetailReq;
 import com.muzlive.kitpage.kitpage.domain.page.dto.req.UploadComicBookReq;
+import com.muzlive.kitpage.kitpage.domain.page.dto.resp.CommonEpisodeResp;
 import com.muzlive.kitpage.kitpage.domain.page.repository.ContentRepository;
 import com.muzlive.kitpage.kitpage.domain.page.repository.PageRepository;
 import com.muzlive.kitpage.kitpage.domain.user.Image;
 import com.muzlive.kitpage.kitpage.domain.user.repository.ImageRepository;
 import com.muzlive.kitpage.kitpage.service.aws.s3.S3Service;
+import com.muzlive.kitpage.kitpage.service.page.converter.ComicBookEpisodeConverter;
 import com.muzlive.kitpage.kitpage.utils.constants.ApplicationConstants;
 import com.muzlive.kitpage.kitpage.utils.enums.ImageCode;
 import com.muzlive.kitpage.kitpage.utils.enums.KitStatus;
@@ -62,6 +64,8 @@ public class ComicService {
 	private final FileService fileService;
 
 	private final S3Service s3Service;
+
+	private final ComicBookEpisodeConverter comicBookEpisodeConverter;
 
 	private final ContentRepository contentRepository;
 
@@ -229,36 +233,19 @@ public class ComicService {
 	}
 
 	public List<ComicBookEpisodeResp> getEpisodeResps(Long pageUid) {
-		List<ComicBookEpisodeResp> comicBookEpisodeResps = new ArrayList<>();
 		List<ComicBook> comicBooks = comicBookRepository.findAllByPageUid(pageUid).orElse(new ArrayList<>());
-		for(ComicBook comicBook : comicBooks) {
-			ComicBookEpisodeResp comicBookEpisodeResp = new ComicBookEpisodeResp(comicBook, ApplicationConstants.COMIC_BOOK_UNIT_1);
 
-			// 최근 업데이트 날짜 확인을 위해 for 루프 여기서 실행
-			if(CollectionUtils.isEmpty(comicBook.getComicBookDetails())){
-				comicBookEpisodeResp.setPageSize(0);
-				comicBookEpisodeResp.setDetailPages(new ArrayList<>());
-			} else {
-				LocalDateTime lastModifiedAt = null;
-
-				comicBookEpisodeResp.setPageSize(comicBook.getComicBookDetails().size());
-
-				List<ComicBookImageResp> comicBookImageResps = new ArrayList<>();
-				for(ComicBookDetail comicBookDetail : comicBook.getComicBookDetails()) {
-					comicBookImageResps.add(ComicBookImageResp.of(comicBookDetail));
-
-					// 최근 이미지 업데이트 날짜. - 클라이언트에서 변경된 파일 확인용
-					if(lastModifiedAt == null || lastModifiedAt.isBefore(comicBookDetail.getModifiedAt()))
-						lastModifiedAt = comicBookDetail.getModifiedAt();
-				}
-				comicBookEpisodeResp.setDetailPages(comicBookImageResps);
-				comicBookEpisodeResp.setLastModifiedAt(lastModifiedAt);
-			}
-
-			comicBookEpisodeResps.add(comicBookEpisodeResp);
-		}
-		comicBookEpisodeResps.sort(Comparator.comparing(ComicBookEpisodeResp::getVolume));
-		return comicBookEpisodeResps;
+		return comicBooks.stream()
+			.map(comicBook -> {
+				ComicBookEpisodeResp resp = new ComicBookEpisodeResp(comicBook);
+				CommonEpisodeResp commonEpisodeResp = comicBookEpisodeConverter.convert(comicBook, null);
+				resp.setPageSize(commonEpisodeResp.getPageSize());
+				resp.setDetailPages(commonEpisodeResp.getDetailPages());
+				resp.setLastModifiedAt(commonEpisodeResp.getLastModifiedAt());
+				return resp;
+			})
+			.sorted(Comparator.comparing(ComicBookEpisodeResp::getVolume))
+			.collect(Collectors.toList());
 	}
 
 	public KitStatus getInstallStatus(Long pageUid, String deviceId) throws Exception {
