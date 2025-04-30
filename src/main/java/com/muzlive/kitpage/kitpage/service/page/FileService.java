@@ -123,6 +123,7 @@ public class FileService {
 				.width(processedImage.getWidth())
 				.height(processedImage.getHeight())
 				.saveFileName(saveFileName)
+				.md5(DigestUtils.md5Hex(pdfBytes))
 				.originalFileName(multipartFile.getOriginalFilename())
 				.build()
 			).getPdfUid();
