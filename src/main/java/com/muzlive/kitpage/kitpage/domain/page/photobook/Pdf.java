@@ -49,14 +49,19 @@ public class Pdf extends BaseTimeEntity {
 	@Column(name = "original_file_name", nullable = false)
 	private String originalFileName;
 
+	@Setter
+	@Column(name = "md5", nullable = false)
+	private String md5;
+
 	@Builder
 	public Pdf(String pdfPath, Long pdfSize, Integer width, Integer height,
-		String saveFileName, String originalFileName) {
+		String saveFileName, String originalFileName, String md5) {
 		this.pdfPath = pdfPath;
 		this.pdfSize = pdfSize;
 		this.width = width;
 		this.height = height;
 		this.saveFileName = saveFileName;
 		this.originalFileName = originalFileName;
+		this.md5 = md5;
 	}
 }
