@@ -22,6 +22,7 @@ import com.muzlive.kitpage.kitpage.service.page.strategy.PageStrategy;
 import com.muzlive.kitpage.kitpage.utils.CommonUtils;
 import com.muzlive.kitpage.kitpage.utils.enums.ClientPlatformType;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -103,7 +104,12 @@ public class PageController {
 				responseCode = "200",
 				description = "성공",
 				content = @Content(
-					schema = @Schema(oneOf = {ComicBookDetailResp.class, PhotoBookDetailResp.class})
+					mediaType = "application/json",
+					array = @ArraySchema(
+						schema = @Schema(
+							oneOf = { ComicBookDetailResp.class, PhotoBookDetailResp.class }
+						)
+					)
 				)
 			)
 		})
