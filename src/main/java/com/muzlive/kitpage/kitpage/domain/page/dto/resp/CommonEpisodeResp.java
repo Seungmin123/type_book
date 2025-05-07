@@ -3,10 +3,7 @@ package com.muzlive.kitpage.kitpage.domain.page.dto.resp;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.muzlive.kitpage.kitpage.config.serializer.LocalDateTimeSerializer;
 import com.muzlive.kitpage.kitpage.domain.page.comicbook.dto.resp.ComicBookEpisodeResp;
-import com.muzlive.kitpage.kitpage.domain.page.comicbook.dto.resp.ComicBookImageResp;
-import com.muzlive.kitpage.kitpage.domain.page.photobook.dto.resp.PhotoBookEpisodeDetailResp;
 import com.muzlive.kitpage.kitpage.domain.page.photobook.dto.resp.PhotoBookEpisodeResp;
-import com.muzlive.kitpage.kitpage.domain.page.photobook.dto.resp.PhotoBookImageResp;
 import com.muzlive.kitpage.kitpage.utils.enums.ReadingDirection;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDateTime;
@@ -17,7 +14,10 @@ import lombok.Setter;
 
 @Schema(
 	description = "컨텐츠 상세 volume 단위 응답 공통 클래스",
-	subTypes = {ComicBookEpisodeResp.class, PhotoBookEpisodeResp.class},
+	subTypes = {
+		ComicBookEpisodeResp.class,
+		PhotoBookEpisodeResp.class
+	},
 	discriminatorProperty = "type"
 )
 @AllArgsConstructor
@@ -33,10 +33,6 @@ public class CommonEpisodeResp {
 
 	private ReadingDirection readingDirection;
 
-	@Schema(
-		description = "컨텐츠 상세 page 단위 응답 클래스",
-		oneOf = { ComicBookImageResp.class, PhotoBookImageResp.class, PhotoBookEpisodeDetailResp.class }
-	)
 	private List<? extends CommonEpisodeDetailResp> detailPages;
 
 	@JsonSerialize(using = LocalDateTimeSerializer.class)

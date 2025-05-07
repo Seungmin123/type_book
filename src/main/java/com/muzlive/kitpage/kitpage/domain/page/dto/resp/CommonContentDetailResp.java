@@ -9,7 +9,10 @@ import lombok.Setter;
 
 @Schema(
 	description = "컨텐츠 상세 응답 공통 클래스",
-	subTypes = {ComicBookDetailResp.class, PhotoBookDetailResp.class},
+	subTypes = {
+		ComicBookDetailResp.class,
+		PhotoBookDetailResp.class
+	},
 	discriminatorProperty = "type"
 )
 @Getter
