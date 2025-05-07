@@ -97,8 +97,8 @@ public class PageController {
 		@Valid @ModelAttribute ContentReq contentReq,
 
 		@Parameter(
-			name = "clientPlatform",
-			description = "클라이언트 플랫폼 정보 - X-Client-Platform",
+			name = "X-Client-Platform",
+			description = "클라이언트 플랫폼 정보",
 			in = ParameterIn.HEADER
 		)
 		@ClientPlatform ClientPlatformType clientPlatformType) throws Exception {
@@ -112,8 +112,8 @@ public class PageController {
 		@Valid @PathVariable Long pageUid,
 
 		@Parameter(
-			name = "clientPlatform",
-			description = "클라이언트 플랫폼 정보 - X-Client-Platform",
+			name = "X-Client-Platform",
+			description = "클라이언트 플랫폼 정보",
 			in = ParameterIn.HEADER
 		)
 		@ClientPlatform ClientPlatformType clientPlatformType) throws Exception {
