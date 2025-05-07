@@ -22,6 +22,8 @@ import com.muzlive.kitpage.kitpage.service.page.strategy.PageStrategy;
 import com.muzlive.kitpage.kitpage.utils.CommonUtils;
 import com.muzlive.kitpage.kitpage.utils.enums.ClientPlatformType;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -82,58 +84,38 @@ public class PageController {
 		return new CommonResp<>(contentResps);
 	}
 
-	@Operation(summary = "컨텐츠 리스트 조회",
-		responses = {
-			@ApiResponse(
-				responseCode = "200",
-				description = "성공",
-				content = @Content(
-					schema = @Schema(oneOf = {ComicBookContentResp.class, PhotoBookContentResp.class})
-				)
-			)
-		})
+	@Operation(summary = "컨텐츠 리스트 조회")
 	@GetMapping("/content/list")
 	public CommonResp<? extends CommonContentResp> getComicBookListByContentId(@Valid @ModelAttribute ContentReq contentReq) throws Exception {
 		strategy = pageStrategyFactory.getStrategy(pageService.findContentByContentId(contentReq.getContentId()).getContentType());
 		return new CommonResp<>(strategy.getContentList(contentReq.getContentId()));
 	}
 
-	@Operation(summary = "컨텐츠 상세 정보 리스트 조회",
-		responses = {
-			@ApiResponse(
-				responseCode = "200",
-				description = "성공",
-				content = @Content(
-					mediaType = "application/json",
-					array = @ArraySchema(
-						schema = @Schema(
-							oneOf = { ComicBookDetailResp.class, PhotoBookDetailResp.class }
-						)
-					)
-				)
-			)
-		})
+	@Operation(summary = "컨텐츠 상세 정보 리스트 조회")
 	@GetMapping("/content/detail/list")
 	public CommonResp<List<? extends CommonContentDetailResp>> getComicBookContents(
 		@Valid @ModelAttribute ContentReq contentReq,
+
+		@Parameter(
+			name = "clientPlatform",
+			description = "클라이언트 플랫폼 정보 - X-Client-Platform",
+			in = ParameterIn.HEADER
+		)
 		@ClientPlatform ClientPlatformType clientPlatformType) throws Exception {
 		strategy = pageStrategyFactory.getStrategy(pageService.findContentByContentId(contentReq.getContentId()).getContentType());
 		return new CommonResp<>(strategy.getContentDetailList(contentReq.getContentId(), clientPlatformType));
 	}
 
-	@Operation(summary = "컨텐츠 상세 정보 조회",
-		responses = {
-			@ApiResponse(
-				responseCode = "200",
-				description = "성공",
-				content = @Content(
-					schema = @Schema(oneOf = {ComicBookDetailResp.class, PhotoBookDetailResp.class})
-				)
-			)
-		})
+	@Operation(summary = "컨텐츠 상세 정보 조회")
 	@GetMapping("/content/detail/{pageUid}")
 	public CommonResp<? extends CommonContentDetailResp> getComicBookContent(
 		@Valid @PathVariable Long pageUid,
+
+		@Parameter(
+			name = "clientPlatform",
+			description = "클라이언트 플랫폼 정보 - X-Client-Platform",
+			in = ParameterIn.HEADER
+		)
 		@ClientPlatform ClientPlatformType clientPlatformType) throws Exception {
 		strategy = pageStrategyFactory.getStrategy(pageService.findPageById(pageUid).getContent().getContentType());
 		return new CommonResp<>(strategy.getContentDetail(pageUid, clientPlatformType));

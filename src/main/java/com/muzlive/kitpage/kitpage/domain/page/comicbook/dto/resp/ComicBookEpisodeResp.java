@@ -1,16 +1,13 @@
 package com.muzlive.kitpage.kitpage.domain.page.comicbook.dto.resp;
 
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.muzlive.kitpage.kitpage.config.serializer.LocalDateTimeSerializer;
 import com.muzlive.kitpage.kitpage.domain.page.comicbook.ComicBook;
 import com.muzlive.kitpage.kitpage.domain.page.dto.resp.CommonEpisodeResp;
-import com.muzlive.kitpage.kitpage.utils.enums.ReadingDirection;
 
-import java.time.LocalDateTime;
-import java.util.List;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
 
+@Schema(name = "ComicBookEpisodeResp", description = "만화책 상세 volume 단위 정보")
 @Getter
 @Setter
 public class ComicBookEpisodeResp extends CommonEpisodeResp {

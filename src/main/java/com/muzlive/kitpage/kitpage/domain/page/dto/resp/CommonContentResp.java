@@ -1,9 +1,17 @@
 package com.muzlive.kitpage.kitpage.domain.page.dto.resp;
 
 import com.muzlive.kitpage.kitpage.domain.page.Content;
+import com.muzlive.kitpage.kitpage.domain.page.comicbook.dto.resp.ComicBookContentResp;
+import com.muzlive.kitpage.kitpage.domain.page.photobook.dto.resp.PhotoBookContentResp;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
 
+@Schema(
+	description = "컨텐츠 리스트 응답 공통 클래스",
+	subTypes = {ComicBookContentResp.class, PhotoBookContentResp.class},
+	discriminatorProperty = "type"
+)
 @Getter
 @Setter
 public class CommonContentResp {
