@@ -139,14 +139,24 @@ public class PageController {
 		return new CommonResp<>(cloudFrontService.getSignedUrl(commonUtils.base64Decode(filePath)));
 	}
 
-	@Operation(summary = "이미지 View API")
-	@GetMapping("/view/{imageUid}")
-	public ResponseEntity<byte[]> viewImage(@PathVariable Long imageUid) throws Exception {
-		Image image = pageService.findImageById(imageUid);
-		byte[] decryptedImage = aesSecurityProvider.decrypt(cloudFrontService.getCFImageByKey(image.getImagePath()));
+	// TODO ImageUid 제거
+	@Operation(summary = "이미지 View API", description = "Long 타입 ImageUid / String 타입 saveFilePath(base64) 가능<br>"
+		+ "ImageUid 제거 예정")
+	@GetMapping("/view/{imageUidOrSaveFilePath}")
+	public ResponseEntity<byte[]> viewImage(@PathVariable String imageUidOrSaveFilePath) throws Exception {
+		String filePath;
+		if (imageUidOrSaveFilePath.matches("\\d+")) {
+			Long imageUid = Long.parseLong(imageUidOrSaveFilePath);
+			Image image = pageService.findImageById(imageUid);
+			filePath = image.getImagePath();
+		} else {
+			filePath = commonUtils.base64Decode(imageUidOrSaveFilePath);
+		}
+
+		byte[] decryptedImage = aesSecurityProvider.decrypt(cloudFrontService.getCFImageByKey(filePath));
 		try {
 			return ResponseEntity.ok()
-				.contentType(MediaType.parseMediaType(URLConnection.guessContentTypeFromName(image.getSaveFileName())))
+				.contentType(MediaType.parseMediaType(URLConnection.guessContentTypeFromName(filePath)))
 				.body(decryptedImage);
 		} catch (InvalidMediaTypeException e) {
 			log.error(e.getMessage());
