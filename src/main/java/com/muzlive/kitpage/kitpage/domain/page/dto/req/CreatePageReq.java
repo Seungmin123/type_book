@@ -17,10 +17,6 @@ public class CreatePageReq {
 	private MultipartFile coverImage;
 
 	@NotNull
-	@JsonProperty("contentType")
-	private PageContentType contentType;
-
-	@NotNull
 	@JsonProperty("title")
 	private String title;
 
@@ -31,6 +27,7 @@ public class CreatePageReq {
 	@JsonProperty("infoText")
 	private String infoText;
 
+	@NotNull
 	@JsonProperty("content_id")
 	private String contentId;
 
