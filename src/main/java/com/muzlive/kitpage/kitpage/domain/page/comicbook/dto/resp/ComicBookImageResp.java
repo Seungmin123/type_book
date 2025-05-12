@@ -20,12 +20,16 @@ public class ComicBookImageResp extends CommonEpisodeDetailResp {
 
 	private String md5;
 
-	public ComicBookImageResp(Integer page, String saveFilePath, Long comicBookDetailUid, Long imageUid, String episode, String md5) {
+	@Deprecated
+	private String saveFileName;
+
+	public ComicBookImageResp(Integer page, String saveFilePath, Long comicBookDetailUid, Long imageUid, String episode, String md5, String saveFileName) {
 		super(page, saveFilePath);
 		this.comicBookDetailUid = comicBookDetailUid;
 		this.imageUid = imageUid;
 		this.episode = episode;
 		this.md5 = md5;
+		this.saveFileName = saveFileName;
 	}
 
 	public static ComicBookImageResp of(ComicBookDetail comicBookDetail) {
@@ -35,7 +39,9 @@ public class ComicBookImageResp extends CommonEpisodeDetailResp {
 			comicBookDetail.getComicBookDetailUid(),
 			comicBookDetail.getImage().getImageUid(),
 			comicBookDetail.getEpisode(),
-			comicBookDetail.getImage().getMd5());
+			comicBookDetail.getImage().getMd5(),
+			comicBookDetail.getImage().getSaveFileName()
+		);
 	}
 
 }
