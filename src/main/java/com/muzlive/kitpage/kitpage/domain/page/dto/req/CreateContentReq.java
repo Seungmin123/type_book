@@ -18,7 +18,6 @@ public class CreateContentReq {
 	@JsonProperty("contentType")
 	private PageContentType contentType;
 
-	@NotNull
 	@JsonProperty("contentId")
 	private String contentId;
 
@@ -34,7 +33,6 @@ public class CreateContentReq {
 	@JsonProperty("title")
 	private String title;
 
-	@NotNull
 	@JsonProperty("company")
 	private String company;
 

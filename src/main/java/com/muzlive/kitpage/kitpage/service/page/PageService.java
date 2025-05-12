@@ -216,7 +216,7 @@ public class PageService {
 			Optional<String> maxIdOpt = pageRepository.findMaxAlbumIdByPrefix(contentId);
 
 			if (maxIdOpt.isEmpty()) {
-				albumId = contentId + "_00000001";
+				albumId = contentId + "_01";
 			} else {
 				String maxId = maxIdOpt.get();
 
@@ -224,27 +224,17 @@ public class PageService {
 				int number = Integer.parseInt(numberPart);
 				int nextNumber = number + 1;
 
-				albumId = String.format("%s_%08d", contentId, nextNumber);
+				albumId = String.format("%s_%02d", contentId, nextNumber);
 			}
 		}
-
-		// S3 Cover Image Upload
-		String saveFileName = UUID.randomUUID() + "." + FilenameUtils.getExtension(createPageReq.getCoverImage().getOriginalFilename());
-		String coverImagePath = contentId + "/" + ApplicationConstants.IMAGE + "/" + saveFileName;
-		s3Service.uploadFile(coverImagePath, createPageReq.getCoverImage());
-
-		// Image DB Insert
-		Image image = Image.of(coverImagePath, ImageCode.PAGE_IMAGE, createPageReq.getCoverImage());
-		image.setSaveFileName(saveFileName);
-		imageRepository.save(image);
 
 		return pageRepository.save(
 			Page.builder()
 			.contentId(contentId)
 			.albumId(albumId)
-			.coverImageUid(image.getImageUid())
+			.coverImageUid(fileService.uploadConvertImageFile(contentId, createPageReq.getCoverImage(), ImageCode.PAGE_IMAGE))
 			.title(createPageReq.getTitle())
-			.subTitle(createPageReq.getSubtitle())
+			.subTitle(createPageReq.getSubtitle() == null ? "" : createPageReq.getSubtitle())
 			.infoText(createPageReq.getInfoText())
 			.build());
 	}
@@ -272,7 +262,7 @@ public class PageService {
 		contentRepository.save(Content.builder()
 				.contentId(contentId)
 				.contentType(createContentReq.getContentType())
-				.company(createContentReq.getCompany())
+				.company(createContentReq.getCompany() == null ? "" : createContentReq.getCompany())
 				.title(createContentReq.getTitle())
 				.writer(createContentReq.getWriter())
 				.illustrator(createContentReq.getIllustrator())

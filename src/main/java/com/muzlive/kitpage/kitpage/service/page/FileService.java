@@ -111,6 +111,7 @@ public class FileService {
 		document.close();
 
 		byte[] pdfBytes = pdfOutput.toByteArray();
+		String md5 = DigestUtils.md5Hex(pdfBytes);
 
 		String saveFileName = UUID.randomUUID() + ".pdf";
 		String pdfPath = contentId + "/" + ApplicationConstants.PDF + "/" + saveFileName;
@@ -123,7 +124,7 @@ public class FileService {
 				.width(processedImage.getWidth())
 				.height(processedImage.getHeight())
 				.saveFileName(saveFileName)
-				.md5(DigestUtils.md5Hex(pdfBytes))
+				.md5(md5)
 				.originalFileName(multipartFile.getOriginalFilename())
 				.build()
 			).getPdfUid();
