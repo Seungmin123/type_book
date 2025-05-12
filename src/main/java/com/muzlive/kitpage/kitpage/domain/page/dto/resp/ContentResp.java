@@ -12,6 +12,8 @@ public class ContentResp {
 
 	private Long coverImageUid;
 
+	private String coverImagePath;
+
 	private String contentId;
 
 	private PageContentType contentType;
@@ -24,6 +26,7 @@ public class ContentResp {
 
 	public ContentResp(Content content) {
 		this.coverImageUid = content.getCoverImageUid();
+		this.coverImagePath = content.getImage().getImagePath();
 		this.contentId = content.getContentId();
 		this.contentType = content.getContentType();
 		this.title = content.getTitle();

@@ -1,6 +1,7 @@
 package com.muzlive.kitpage.kitpage.domain.page;
 
 import com.muzlive.kitpage.kitpage.domain.common.BaseTimeEntity;
+import com.muzlive.kitpage.kitpage.domain.user.Image;
 import com.muzlive.kitpage.kitpage.utils.enums.PageContentType;
 import com.muzlive.kitpage.kitpage.utils.enums.ReadingDirection;
 import com.muzlive.kitpage.kitpage.utils.enums.Region;
@@ -15,7 +16,9 @@ import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
 import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 import javax.persistence.OrderBy;
 import javax.persistence.PostLoad;
 import javax.persistence.PrePersist;
@@ -93,6 +96,10 @@ public class Content extends BaseTimeEntity implements Serializable {
 	@OneToMany(mappedBy = "content", fetch = FetchType.LAZY)
 	@OrderBy("pageUid ASC")
 	private List<Page> pages;
+
+	@OneToOne
+	@JoinColumn(name = "cover_image_uid", insertable = false, updatable = false)
+	private Image image;
 
 	@Builder
 	public Content(String contentId, PageContentType contentType, String title,
