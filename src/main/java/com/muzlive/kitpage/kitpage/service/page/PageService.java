@@ -270,7 +270,7 @@ public class PageService {
 				.pageUnit(createContentReq.getPageUnit() == null ? "%d쪽" : createContentReq.getPageUnit())
 				.readingDirection(createContentReq.getReadingDirection())
 				.infoText(createContentReq.getInfoText())
-				.coverImageUid(fileService.uploadConvertImageFile(createContentReq.getContentId(), createContentReq.getImage(), ImageCode.CONTENT_COVER_IMAGE))
+				.coverImageUid(fileService.uploadConvertImageFile(contentId, createContentReq.getImage(), ImageCode.CONTENT_COVER_IMAGE))
 				.region(createContentReq.getRegion())
 				.genreList(createContentReq.getGenreList())
 			.build());
