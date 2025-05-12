@@ -20,6 +20,8 @@ public class CommonContentResp {
 
 	private Long contentImageUid;
 
+	private String contentSaveFilePath;
+
 	private String contentInfoText;
 
 	private String contentTitle;
@@ -34,6 +36,7 @@ public class CommonContentResp {
 	public CommonContentResp(Content content) {
 		this.contentId = content.getContentId();
 		this.contentImageUid = content.getCoverImageUid();
+		this.contentSaveFilePath = content.getImage().getImagePath();
 		this.contentTitle = content.getTitle();
 		this.contentInfoText = content.getInfoText();
 		this.category = content.getContentType().getName();
