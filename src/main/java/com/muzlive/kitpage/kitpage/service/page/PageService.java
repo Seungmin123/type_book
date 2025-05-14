@@ -216,7 +216,7 @@ public class PageService {
 			Optional<String> maxIdOpt = pageRepository.findMaxAlbumIdByPrefix(contentId);
 
 			if (maxIdOpt.isEmpty()) {
-				albumId = contentId + "_01";
+				albumId = "KP_" + contentId + "_01";
 			} else {
 				String maxId = maxIdOpt.get();
 
@@ -224,7 +224,7 @@ public class PageService {
 				int number = Integer.parseInt(numberPart);
 				int nextNumber = number + 1;
 
-				albumId = String.format("%s_%02d", contentId, nextNumber);
+				albumId = String.format("%s_%02d", "KP_" + contentId, nextNumber);
 			}
 		}
 
@@ -243,7 +243,7 @@ public class PageService {
 	public void createContent(CreateContentReq createContentReq) throws Exception {
 		String contentId = createContentReq.getContentId();
 		if(StringUtils.isEmpty(contentId)) {
-			String prefix = "KP_" + createContentReq.getContentType();
+			String prefix = String.valueOf(createContentReq.getContentType());
 			Optional<String> maxIdOpt = pageRepository.findMaxContentIdByPrefix(createContentReq.getContentType().getCode());
 
 			if (maxIdOpt.isEmpty()) {
