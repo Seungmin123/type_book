@@ -51,10 +51,6 @@ public class VersionInfoReq {
         return this.compareTo(version, ApplicationConstants.VERSION_TYPE_CURRENT) < 0;
     }
 
-    public int CurrentVersionCompareTo(String version) {
-        return this.compareTo(version, ApplicationConstants.VERSION_TYPE_CURRENT);
-    }
-
     public Boolean isOsVersionGreaterThanTo(String version) {
         return this.compareTo(version, ApplicationConstants.VERSION_TYPE_OS) >= 0;
     }
