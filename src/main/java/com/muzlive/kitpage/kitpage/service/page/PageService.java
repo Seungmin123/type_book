@@ -398,8 +398,8 @@ public class PageService {
 
 		versionInfoReq.setCurrentVersion(this.extractVersionFormat(versionInfoReq.getCurrentVersion()));
 
-		if(!this.isVersionFormat(versionInfoReq.getCurrentVersion())
-			|| !this.isVersionFormat(versionInfoReq.getOsVersion()))
+		if(this.invalidVersionFormat(versionInfoReq.getCurrentVersion())
+			|| this.invalidVersionFormat(versionInfoReq.getOsVersion()))
 			throw new CommonException(ExceptionCode.INVALID_REQUEST_PRAMETER);
 
 		VersionInfo version = queryFactory
@@ -420,9 +420,9 @@ public class PageService {
 		}).orElse(null);
 	}
 
-	private boolean isVersionFormat(String version) {
+	private boolean invalidVersionFormat(String version) {
 		String pattern = "^\\d+(\\.\\d+)?(\\.\\d+)?$";
-		return version.matches(pattern);
+		return !version.matches(pattern);
 	}
 
 	private String extractVersionFormat(String version) throws Exception {
