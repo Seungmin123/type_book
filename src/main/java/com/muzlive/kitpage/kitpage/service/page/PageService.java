@@ -413,9 +413,8 @@ public class PageService {
 			String forcedVersion = v.getForcedVersion();
 			String osVersion = v.getOsVersion();
 
-			int currentVersionCompare = versionInfoReq.CurrentVersionCompareTo(latestVersion);
-			Boolean needUpdate = currentVersionCompare < 0;
-			Boolean isForced = (versionInfoReq.isCurrentVersionLessThanTo(forcedVersion) && versionInfoReq.isOsVersionGreaterThanTo(osVersion));
+			Boolean needUpdate = versionInfoReq.isCurrentVersionLessThanTo(latestVersion);
+			Boolean isForced = versionInfoReq.isCurrentVersionLessThanTo(forcedVersion) && versionInfoReq.isOsVersionGreaterThanTo(osVersion);
 
 			return new VersionInfoResp(needUpdate, isForced);
 		}).orElse(null);
