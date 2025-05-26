@@ -6,14 +6,10 @@ import com.muzlive.kitpage.kitpage.config.aspect.CurrentToken;
 import com.muzlive.kitpage.kitpage.config.jwt.JwtTokenProvider;
 import com.muzlive.kitpage.kitpage.domain.common.dto.resp.CommonResp;
 import com.muzlive.kitpage.kitpage.domain.page.dto.req.ContentReq;
-import com.muzlive.kitpage.kitpage.domain.page.comicbook.dto.resp.ComicBookContentResp;
-import com.muzlive.kitpage.kitpage.domain.page.comicbook.dto.resp.ComicBookDetailResp;
 import com.muzlive.kitpage.kitpage.domain.page.dto.req.ContentListReq;
 import com.muzlive.kitpage.kitpage.domain.page.dto.resp.CommonContentDetailResp;
 import com.muzlive.kitpage.kitpage.domain.page.dto.resp.CommonContentResp;
 import com.muzlive.kitpage.kitpage.domain.page.dto.resp.ContentResp;
-import com.muzlive.kitpage.kitpage.domain.page.photobook.dto.resp.PhotoBookContentResp;
-import com.muzlive.kitpage.kitpage.domain.page.photobook.dto.resp.PhotoBookDetailResp;
 import com.muzlive.kitpage.kitpage.domain.user.Image;
 import com.muzlive.kitpage.kitpage.service.aws.CloudFrontService;
 import com.muzlive.kitpage.kitpage.service.page.PageService;
@@ -24,10 +20,6 @@ import com.muzlive.kitpage.kitpage.utils.enums.ClientPlatformType;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
-import io.swagger.v3.oas.annotations.media.ArraySchema;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.io.ByteArrayInputStream;
 import java.net.URLConnection;
@@ -74,7 +66,14 @@ public class PageController {
 		+ "descending - optional - default 'true' - 정렬 순서 변경<br>"
 		+ "searchValue - optional - 검색 대비용<br>")
 	@GetMapping("/list")
-	public CommonResp<List<ContentResp>> getInstallList(ContentListReq contentListReq, @CurrentToken String jwt) throws Exception {
+	public CommonResp<List<ContentResp>> getInstallList(
+		ContentListReq contentListReq,
+		@Parameter(
+			name = "Authorization Bearer ",
+			description = "JWT",
+			in = ParameterIn.HEADER
+		)
+		@CurrentToken String jwt) throws Exception {
 		contentListReq.setDeviceId(jwtTokenProvider.getDeviceIdByToken(jwt));
 
 		List<ContentResp> contentResps = pageService.findContentList(contentListReq).stream()
@@ -95,7 +94,6 @@ public class PageController {
 	@GetMapping("/content/detail/list")
 	public CommonResp<List<? extends CommonContentDetailResp>> getComicBookContents(
 		@Valid @ModelAttribute ContentReq contentReq,
-
 		@Parameter(
 			name = "X-Client-Platform",
 			description = "클라이언트 플랫폼 정보",
