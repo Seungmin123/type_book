@@ -28,12 +28,18 @@ import com.muzlive.kitpage.kitpage.service.transfer.kihno.dto.req.KihnoMicProces
 import com.muzlive.kitpage.kitpage.service.transfer.kihno.dto.resp.KihnoMicLocationResp;
 import com.muzlive.kitpage.kitpage.service.transfer.kihno.dto.resp.KihnoMicProcessedResp;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.KittorTransferSerivce;
+import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.KittorAccountCloseReq;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.KittorChangePasswordReq;
+import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.KittorGetPreSignedUrlReq;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.KittorOAuthLoginReq;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.KittorResetPasswordReq;
+import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.KittorUpdateProfileReq;
+import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.KittorUpdateProfileValidNickNameReq;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.KittorUserReq;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.SendVerificationReq;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.resp.KittorOAuthLoginResp;
+import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.resp.KittorPreSignedUrlResp;
+import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.resp.KittorProfileResp;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.resp.KittorTokenResp;
 import com.muzlive.kitpage.kitpage.usecase.CheckTagUseCase;
 import com.muzlive.kitpage.kitpage.usecase.command.CheckTagCommand;
@@ -43,6 +49,8 @@ import com.muzlive.kitpage.kitpage.utils.enums.KitStatus;
 import com.muzlive.kitpage.kitpage.utils.enums.TokenType;
 import com.muzlive.kitpage.kitpage.utils.enums.UserRole;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.time.LocalDateTime;
 import java.util.Set;
@@ -59,7 +67,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RequiredArgsConstructor
-@Tag(name = "사용자 관리 API")
+@Tag(name = "사용자 관리 API", description = "회원 관련 API 명세 https://www.notion.so/muzlive/5bd8500944f4404e8caa749559552525?pvs=4")
 @RequestMapping("/v1/user")
 @RestController
 public class UserController {
@@ -106,7 +114,17 @@ public class UserController {
 	@PostMapping("/checkTag")
 	public CommonResp<CheckTagResp> checkTag(
 		@Valid @RequestBody CheckTagReq checkTagReq,
+		@Parameter(
+			name = "Authorization Bearer ",
+			description = "JWT",
+			in = ParameterIn.HEADER
+		)
 		@CurrentToken String jwt,
+		@Parameter(
+			name = "X-Client-Platform",
+			description = "클라이언트 플랫폼 정보",
+			in = ParameterIn.HEADER
+		)
 		@ClientPlatform ClientPlatformType clientPlatformType
 	) throws Exception {
 		return new CommonResp<>(
@@ -176,15 +194,31 @@ public class UserController {
 
 	@Operation(summary = "키트 태그 기록 초기화 API")
 	@PutMapping("/clear")
-	public CommonResp<Void> clearTagHistory(@CurrentToken String jwt) throws Exception {
+	public CommonResp<Void> clearTagHistory(
+		@Parameter(
+			name = "Authorization Bearer ",
+			description = "JWT",
+			in = ParameterIn.HEADER
+		)
+		@CurrentToken String jwt
+	) throws Exception {
 		userService.clearDeviceIdHistory(jwtTokenProvider.getDeviceIdByToken(jwt));
 		return new CommonResp<>();
 	}
 
+	// --------------------------------------- Member - External Kittor Server
+
 	@Operation(summary = "회원가입 API")
 	@PostMapping("/join")
 	public CommonResp<String> userJoin(
-		@Valid @RequestBody KittorUserReq kittorUserReq, @CurrentToken String jwt) throws Exception {
+		@Valid @RequestBody KittorUserReq kittorUserReq,
+		@Parameter(
+			name = "Authorization Bearer ",
+			description = "JWT",
+			in = ParameterIn.HEADER
+		)
+		@CurrentToken String jwt
+	) throws Exception {
 
 		KittorTokenResp resp = kittorTransferSerivce.userJoin(kittorUserReq);
 
@@ -209,7 +243,14 @@ public class UserController {
 	@Operation(summary = "로그인 API")
 	@PostMapping("/login")
 	public CommonResp<String> userLogin(
-		@Valid @RequestBody KittorUserReq kittorUserReq, @CurrentToken String jwt) throws Exception {
+		@Valid @RequestBody KittorUserReq kittorUserReq,
+		@Parameter(
+			name = "Authorization Bearer ",
+			description = "JWT",
+			in = ParameterIn.HEADER
+		)
+		@CurrentToken String jwt
+	) throws Exception {
 
 		KittorTokenResp resp = kittorTransferSerivce.userLogin(kittorUserReq);
 
@@ -233,20 +274,31 @@ public class UserController {
 
 	@Operation(summary = "인증코드 발송 API", description = "비밀번호 변경용 인증코드 발송")
 	@PostMapping("/send/verification-code")
-	public CommonResp<Boolean> sendVerificationCode(@Valid @RequestBody SendVerificationReq sendVerificationReq) throws Exception {
+	public CommonResp<Boolean> sendVerificationCode(
+		@Valid @RequestBody SendVerificationReq sendVerificationReq
+	) throws Exception {
 		return new CommonResp<>(kittorTransferSerivce.sendVerificationCode(sendVerificationReq));
 	}
 
 	@Operation(summary = "비밀번호 초기화 API", description = "인증코드 발송 API 를 통한 비밀번호 초기화")
 	@PostMapping("/password/reset")
-	public CommonResp<Boolean> resetPassword(@Valid @RequestBody KittorResetPasswordReq kittorResetPasswordReq) throws Exception {
+	public CommonResp<Boolean> resetPassword(
+		@Valid @RequestBody KittorResetPasswordReq kittorResetPasswordReq
+	) throws Exception {
 		return new CommonResp<>(kittorTransferSerivce.resetPassword(kittorResetPasswordReq));
 	}
 
 	@Operation(summary = "비밀번호 변경 API")
 	@PostMapping("/password/change")
 	public CommonResp<Boolean> changePassword(
-		@Valid @RequestBody KittorChangePasswordReq kittorChangePasswordReq, @CurrentToken String jwt) throws Exception {
+		@Valid @RequestBody KittorChangePasswordReq kittorChangePasswordReq,
+		@Parameter(
+			name = "Authorization Bearer ",
+			description = "JWT",
+			in = ParameterIn.HEADER
+		)
+		@CurrentToken String jwt
+	) throws Exception {
 		Member member = userService.findByDeviceId(jwtTokenProvider.getDeviceIdByToken(jwt));
 		return new CommonResp<>(kittorTransferSerivce.changePassword(member.getKittorToken(), kittorChangePasswordReq));
 	}
@@ -256,7 +308,13 @@ public class UserController {
 	public CommonResp<KittorOAuthLoginResp> oAuthCallback(
 		@PathVariable String provider,
 		@Valid @RequestBody KittorOAuthLoginReq kittorChangePasswordReq,
-		@CurrentToken String jwt) throws Exception {
+		@Parameter(
+			name = "Authorization Bearer ",
+			description = "JWT",
+			in = ParameterIn.HEADER
+		)
+		@CurrentToken String jwt
+	) throws Exception {
 
 		kittorChangePasswordReq.setDevice(jwtTokenProvider.getDeviceIdByToken(jwt));
 		KittorOAuthLoginResp kittorOAuthLoginResp;
@@ -273,6 +331,93 @@ public class UserController {
 		}
 
 		return new CommonResp<>(kittorOAuthLoginResp);
+	}
+
+	@Operation(summary = "프로필 조회 API")
+	@GetMapping("/profile")
+	public CommonResp<KittorProfileResp> changePassword(
+		@Parameter(
+			name = "Authorization Bearer ",
+			description = "JWT",
+			in = ParameterIn.HEADER
+		)
+		@CurrentToken String jwt
+	) throws Exception {
+		Member member = userService.findByDeviceId(jwtTokenProvider.getDeviceIdByToken(jwt));
+		return new CommonResp<>(kittorTransferSerivce.getProfile(member.getKittorToken()));
+	}
+
+	@Operation(summary = "프로필 닉네임 사용 가능 여부 확인 API")
+	@PostMapping("/profile/verify")
+	public CommonResp<Boolean> verifyNickName(
+		@RequestBody @Valid KittorUpdateProfileValidNickNameReq kittorUpdateProfileValidNickNameReq,
+		@Parameter(
+			name = "Authorization Bearer ",
+			description = "JWT",
+			in = ParameterIn.HEADER
+		)
+		@CurrentToken String jwt
+	) throws Exception {
+		Member member = userService.findByDeviceId(jwtTokenProvider.getDeviceIdByToken(jwt));
+		return new CommonResp<>(kittorTransferSerivce.verifyNickName(member.getKittorToken(), kittorUpdateProfileValidNickNameReq));
+	}
+
+	@Operation(summary = "프로필 수정 API",
+		description = "nickname : 변경하고자하는 닉네임 <br>"
+			+ "profileFileUrl :  \"uploaded/path/\", // 실제 파일 업로드 과정 완료 후의 해당 경로 <br>"
+			+ "profileFileName : \"file.png\" // 실제 파일 업로드 과정 완료 후의 해당 파일명.확장자")
+	@PostMapping("/profile/update")
+	public CommonResp<Boolean> verifyNickName(
+		@RequestBody @Valid KittorUpdateProfileReq kittorUpdateProfileReq,
+		@Parameter(
+			name = "Authorization Bearer ",
+			description = "JWT",
+			in = ParameterIn.HEADER
+		)
+		@CurrentToken String jwt
+	) throws Exception {
+		Member member = userService.findByDeviceId(jwtTokenProvider.getDeviceIdByToken(jwt));
+		return new CommonResp<>(kittorTransferSerivce.updateProfile(member.getKittorToken(), kittorUpdateProfileReq));
+	}
+
+	@Operation(summary = "프로필 수정 - 프로필 이미지 pre-signed url 조회 API",
+		description = "Request <br>"
+			+ "files : 리스트로 여러 개 가능(프로필의 경우 통상 1개만 사용될 것) <br>"
+			+ "extension : png // 실제 파일의 확장자 <br>"
+			+ "Response <br>"
+			+ "fileUrl : 파일의 경로 // 이 값을 각각 수정 API의 profileFileUrl <br>"
+			+ "fileName : 파일명과 확장자 // 그리고 profileName에 그대로 담아주시면 됩니다.<br>"
+			+ "uploadUrl : 사용자 측에서 업로드 할 때 사용할 S3 Pre-Signed URL <br>"
+			+ "resultUrl : 클라우드 프론트 조회용 URL // UI-UX 에 따라 사용되지 않을 수 있고 실제 업로드 완료 시 접근 가능")
+	@PostMapping("/profile/upload/pre-signed")
+	public CommonResp<KittorPreSignedUrlResp> getProfileImagePreSignedUrl(
+		@RequestBody @Valid KittorGetPreSignedUrlReq kittorUpdateProfileReq,
+		@Parameter(
+			name = "Authorization Bearer ",
+			description = "JWT",
+			in = ParameterIn.HEADER
+		)
+		@CurrentToken String jwt
+	) throws Exception {
+		Member member = userService.findByDeviceId(jwtTokenProvider.getDeviceIdByToken(jwt));
+		return new CommonResp<>(kittorTransferSerivce.getProfileImagePreSignedUrl(member.getKittorToken(), kittorUpdateProfileReq));
+	}
+
+	@Operation(summary = "회원 탈퇴 API",
+		description = "reasons: 0 부터 선택 사유 Index <br>"
+			+ "comment : 최대 500 자")
+	@PostMapping("/account/close")
+	public CommonResp<Boolean> accountClose(
+		@RequestBody @Valid KittorAccountCloseReq kittorAccountCloseReq,
+		@Parameter(
+			name = "Authorization Bearer ",
+			description = "JWT",
+			in = ParameterIn.HEADER
+		)
+		@CurrentToken String jwt
+	) throws Exception {
+		Member member = userService.findByDeviceId(jwtTokenProvider.getDeviceIdByToken(jwt));
+		return new CommonResp<>(kittorTransferSerivce.accountClose(member.getKittorToken(), kittorAccountCloseReq));
 	}
 
 }
