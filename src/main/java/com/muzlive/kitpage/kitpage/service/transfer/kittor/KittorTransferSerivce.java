@@ -5,20 +5,28 @@ import com.muzlive.kitpage.kitpage.config.exception.ExceptionCode;
 import com.muzlive.kitpage.kitpage.config.transfer.domain.KittorDomain;
 import com.muzlive.kitpage.kitpage.domain.common.dto.resp.Result;
 import com.muzlive.kitpage.kitpage.domain.common.dto.resp.SimpleResult;
+import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.KittorAccountCloseReq;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.KittorChangePasswordReq;
+import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.KittorGetPreSignedUrlReq;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.KittorOAuthLoginReq;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.KittorResetPasswordReq;
+import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.KittorUpdateProfileReq;
+import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.KittorUpdateProfileValidNickNameReq;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.KittorUserReq;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.SendVerificationReq;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.resp.KittorOAuthLoginResp;
+import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.resp.KittorPreSignedUrlResp;
+import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.resp.KittorProfileResp;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.resp.KittorSimpleResult;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.resp.KittorTokenResp;
 import java.time.Duration;
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
@@ -26,21 +34,41 @@ import reactor.core.publisher.Mono;
 @Service
 public class KittorTransferSerivce {
 
+    // 회원가입
     private final String JOIN_URL = "/v1/web/user/join";
 
+    // 로그인
     private final String LOGIN_URL = "/v1/web/user/login";
 
+    // 인증코드 발송
     private final String SEND_VERIFICATION_URL = "/v1/web/send/verification-code";
 
     // 인증코드 이용한 패스워드 초기화
     private final String RESET_PASSWORD_URL = "/v1/web/reset/password";
 
+    // 비밀번호 변경
     private final String CHANGE_PASSWORD_URL = "/v1/web/user/change/password";
 
-    // OAuth Callback
+    // OAuth Callback - Google
     private final String OAUTH_CALLBACK_GOOGLE_URL = "/oauth/callback/google";
 
+    // OAuth Callback - Apple
     private final String OAUTH_CALLBACK_APPLE_URL = "/oauth/callback/apple";
+
+    // 프로필 조회 (GET)
+    private final String GET_PROFILE_URL = "/v1/web/user/integration/profile";
+
+    // 프로필 닉네임 사용 가능 여부 확인 (POST)
+    private final String VERIFY_NICKNAME_URL = "/v1/web/user/integration/profile/verify";
+
+    // 프로필 수정 (POST)
+    private final String UPDATE_PROFILE_URL = "/v1/web/user/integration/profile/update";
+
+    // 파일 업로드 준비 (POST)
+    private final String GET_PROFILE_PRE_SIGNED_URL = "/v1/web/content/upload/pre-signed";
+
+    // 회원 탈퇴 (POST)
+    private final String ACCOUNT_CLOSE_URL = "/v1/web/user/account/close";
 
     private WebClient webClient;
 
@@ -194,6 +222,115 @@ public class KittorTransferSerivce {
                 result == null || result.getData() == null
                     ? Mono.error(new CommonException(HttpStatus.BAD_REQUEST, getErrorMessage(result)))
                     : Mono.just(result.getData())
+            )
+            .block();
+    }
+
+    public KittorProfileResp getProfile(String accessToken) throws Exception  {
+        return webClient.get()
+            .uri(GET_PROFILE_URL)
+            .headers(h -> h.setBearerAuth(accessToken))
+            .accept(MediaType.APPLICATION_JSON)
+            .retrieve()
+            .onStatus(HttpStatus::is4xxClientError, response ->
+                Mono.error(new CommonException(HttpStatus.BAD_REQUEST, "Client error during get profile")))
+            .onStatus(HttpStatus::is5xxServerError, response ->
+                Mono.error(new CommonException(ExceptionCode.KITTOR_EXTERNAL_SERVER_ERROR, "Server error during get profile")))
+            .bodyToMono(new ParameterizedTypeReference<Result<KittorProfileResp>>() {})
+            .timeout(Duration.ofMillis(15000))
+            .doOnError(e -> log.error("프로필 조회 중 오류", e))
+            .flatMap(result ->
+                result == null || result.getData() == null
+                    ? Mono.error(new CommonException(HttpStatus.BAD_REQUEST, getErrorMessage(result)))
+                    : Mono.just(result.getData())
+            )
+            .block();
+    }
+
+    public Boolean verifyNickName(String accessToken, KittorUpdateProfileValidNickNameReq kittorUpdateProfileValidNickNameReq) throws Exception  {
+        return webClient.post()
+            .uri(VERIFY_NICKNAME_URL)
+            .headers(h -> h.setBearerAuth(accessToken))
+            .accept(MediaType.APPLICATION_JSON)
+            .body(Mono.just(kittorUpdateProfileValidNickNameReq), KittorUpdateProfileValidNickNameReq.class)
+            .retrieve()
+            .onStatus(HttpStatus::is4xxClientError, response ->
+                Mono.error(new CommonException(HttpStatus.BAD_REQUEST, "Client error during verify nickname")))
+            .onStatus(HttpStatus::is5xxServerError, response ->
+                Mono.error(new CommonException(ExceptionCode.KITTOR_EXTERNAL_SERVER_ERROR, "Server error during verify nickname")))
+            .bodyToMono(new ParameterizedTypeReference<SimpleResult>() {})
+            .timeout(Duration.ofMillis(15000))
+            .doOnError(e -> log.error("닉네임 유효성 검사 중 오류", e))
+            .flatMap(result ->
+                result == null || result.getStatus() != 200
+                    ? Mono.error(new CommonException(HttpStatus.BAD_REQUEST, getErrorMessage(result)))
+                    : Mono.just(true)
+            )
+            .block();
+    }
+
+    public Boolean updateProfile(String accessToken, KittorUpdateProfileReq kittorUpdateProfileReq) throws Exception  {
+        return webClient.post()
+            .uri(UPDATE_PROFILE_URL)
+            .headers(h -> h.setBearerAuth(accessToken))
+            .accept(MediaType.APPLICATION_JSON)
+            .body(Mono.just(kittorUpdateProfileReq), KittorUpdateProfileReq.class)
+            .retrieve()
+            .onStatus(HttpStatus::is4xxClientError, response ->
+                Mono.error(new CommonException(HttpStatus.BAD_REQUEST, "Client error during update profile")))
+            .onStatus(HttpStatus::is5xxServerError, response ->
+                Mono.error(new CommonException(ExceptionCode.KITTOR_EXTERNAL_SERVER_ERROR, "Server error during update profile")))
+            .bodyToMono(new ParameterizedTypeReference<SimpleResult>() {})
+            .timeout(Duration.ofMillis(15000))
+            .doOnError(e -> log.error("프로필 수정 중 오류", e))
+            .flatMap(result ->
+                result == null || result.getStatus() != 200
+                    ? Mono.error(new CommonException(HttpStatus.BAD_REQUEST, getErrorMessage(result)))
+                    : Mono.just(true)
+            )
+            .block();
+    }
+
+    public KittorPreSignedUrlResp getProfileImagePreSignedUrl(String accessToken, KittorGetPreSignedUrlReq kittorGetPreSignedUrlReq) throws Exception  {
+        return webClient.post()
+            .uri(GET_PROFILE_PRE_SIGNED_URL)
+            .headers(h -> h.setBearerAuth(accessToken))
+            .accept(MediaType.APPLICATION_JSON)
+            .body(Mono.just(kittorGetPreSignedUrlReq), KittorGetPreSignedUrlReq.class)
+            .retrieve()
+            .onStatus(HttpStatus::is4xxClientError, response ->
+                Mono.error(new CommonException(HttpStatus.BAD_REQUEST, "Client error during get pre-signed url")))
+            .onStatus(HttpStatus::is5xxServerError, response ->
+                Mono.error(new CommonException(ExceptionCode.KITTOR_EXTERNAL_SERVER_ERROR, "Server error during get pre-signed url")))
+            .bodyToMono(new ParameterizedTypeReference<Result<List<KittorPreSignedUrlResp>>>() {})
+            .timeout(Duration.ofMillis(15000))
+            .doOnError(e -> log.error("프로필 이미지 pre-signed Url 호출 중 오류", e))
+            .flatMap(result ->
+                result == null || CollectionUtils.isEmpty(result.getData())
+                    ? Mono.error(new CommonException(HttpStatus.BAD_REQUEST, getErrorMessage(result)))
+                    : Mono.just(result.getData().get(0))
+            )
+            .block();
+    }
+
+    public Boolean accountClose(String accessToken, KittorAccountCloseReq kittorAccountCloseReq) throws Exception  {
+        return webClient.post()
+            .uri(ACCOUNT_CLOSE_URL)
+            .headers(h -> h.setBearerAuth(accessToken))
+            .accept(MediaType.APPLICATION_JSON)
+            .body(Mono.just(kittorAccountCloseReq), KittorAccountCloseReq.class)
+            .retrieve()
+            .onStatus(HttpStatus::is4xxClientError, response ->
+                Mono.error(new CommonException(HttpStatus.BAD_REQUEST, "Client error during account close")))
+            .onStatus(HttpStatus::is5xxServerError, response ->
+                Mono.error(new CommonException(ExceptionCode.KITTOR_EXTERNAL_SERVER_ERROR, "Server error during account close")))
+            .bodyToMono(new ParameterizedTypeReference<SimpleResult>() {})
+            .timeout(Duration.ofMillis(15000))
+            .doOnError(e -> log.error("회원 탈퇴 중 오류", e))
+            .flatMap(result ->
+                result == null || result.getStatus() != 200
+                    ? Mono.error(new CommonException(HttpStatus.BAD_REQUEST, getErrorMessage(result)))
+                    : Mono.just(true)
             )
             .block();
     }
