@@ -8,6 +8,7 @@ import com.muzlive.kitpage.kitpage.config.aspect.CurrentToken;
 import com.muzlive.kitpage.kitpage.config.jwt.JwtTokenProvider;
 import com.muzlive.kitpage.kitpage.domain.common.dto.resp.CommonResp;
 import com.muzlive.kitpage.kitpage.domain.page.Page;
+import com.muzlive.kitpage.kitpage.domain.page.dto.resp.MyKitResp;
 import com.muzlive.kitpage.kitpage.domain.user.Kit;
 import com.muzlive.kitpage.kitpage.domain.user.Member;
 import com.muzlive.kitpage.kitpage.domain.user.TokenLog;
@@ -53,10 +54,12 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Set;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -192,6 +195,35 @@ public class UserController {
 		return new CommonResp<>();
 	}
 
+	@Operation(summary = "마이 페이지 - 앨범 목록 API (Kit 단위)")
+	@GetMapping("/kit/list")
+	public CommonResp<List<MyKitResp>> getKitList(
+		@Parameter(
+			name = "Authorization Bearer ",
+			description = "JWT",
+			in = ParameterIn.HEADER
+		)
+		@CurrentToken String jwt
+	) throws Exception {
+		return new CommonResp<>(userService.findKitByDeviceIdOrderByModifiedAtDesc(jwtTokenProvider.getDeviceIdByToken(jwt)));
+	}
+
+	@Operation(summary = "키트 삭제 API")
+	@DeleteMapping("/kit/{pageUid}")
+	public CommonResp<Boolean> deleteKit(
+		@Parameter(
+			name = "Authorization Bearer ",
+			description = "JWT",
+			in = ParameterIn.HEADER
+		)
+		@CurrentToken String jwt,
+		@PathVariable Long pageUid
+	) throws Exception {
+		userService.deleteKit(jwtTokenProvider.getDeviceIdByToken(jwt), pageUid);
+		return new CommonResp<>(true);
+	}
+
+	@Deprecated
 	@Operation(summary = "키트 태그 기록 초기화 API")
 	@PutMapping("/clear")
 	public CommonResp<Void> clearTagHistory(

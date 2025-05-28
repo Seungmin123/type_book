@@ -1,12 +1,15 @@
 package com.muzlive.kitpage.kitpage.service.page;
 
+import static com.muzlive.kitpage.kitpage.domain.page.QContent.content;
 import static com.muzlive.kitpage.kitpage.domain.page.QPage.page;
+import static com.muzlive.kitpage.kitpage.domain.user.QImage.image;
 import static com.muzlive.kitpage.kitpage.domain.user.QInstallLog.installLog;
 import static com.muzlive.kitpage.kitpage.domain.user.QKit.kit;
 
 import com.muzlive.kitpage.kitpage.config.exception.CommonException;
 import com.muzlive.kitpage.kitpage.config.exception.ExceptionCode;
 import com.muzlive.kitpage.kitpage.domain.page.Page;
+import com.muzlive.kitpage.kitpage.domain.page.dto.resp.MyKitResp;
 import com.muzlive.kitpage.kitpage.domain.user.InstallLog;
 import com.muzlive.kitpage.kitpage.domain.user.Kit;
 import com.muzlive.kitpage.kitpage.domain.user.KitLog;
@@ -23,6 +26,7 @@ import com.muzlive.kitpage.kitpage.domain.user.repository.TokenLogRepository;
 import com.muzlive.kitpage.kitpage.utils.enums.Region;
 import com.muzlive.kitpage.kitpage.utils.enums.TokenType;
 import com.querydsl.core.Tuple;
+import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import java.time.LocalDateTime;
@@ -84,6 +88,18 @@ public class UserService implements UserDetailsService {
 		return member;
 	}
 
+	public List<MyKitResp> findKitByDeviceIdOrderByModifiedAtDesc(String deviceId) {
+		return queryFactory.select(Projections.constructor(MyKitResp.class,
+				image.imagePath, page.pageUid, page.title, content.writer, kit.modifiedAt
+			)).from(kit)
+			.innerJoin(page).on(page.pageUid.eq(kit.pageUid))
+			.innerJoin(image).on(image.imageUid.eq(page.coverImageUid))
+			.innerJoin(content).on(content.contentId.eq(page.contentId))
+			.where(kit.deviceId.eq(deviceId))
+			.orderBy(kit.modifiedAt.desc())
+			.fetch();
+	}
+
 	@Transactional
 	public void upsertMemberLog(String deviceId, String modelName, String ipAddress) throws Exception {
 		Member member = memberRepository.findByDeviceIdWithLock(deviceId).orElseGet(() -> Member.builder()
@@ -118,6 +134,13 @@ public class UserService implements UserDetailsService {
 		kitLogRepository.save(KitLog.of(kit));
 
 		return kit;
+	}
+
+	@Transactional
+	public void deleteKit(String deviceId, Long pageUid) throws Exception {
+		Kit kit = kitRepository.findByDeviceIdAndPageUid(deviceId, pageUid).orElseThrow(() -> new CommonException(ExceptionCode.CANNOT_FIND_MATCHED_ITEM));
+		kit.setDeviceId("");
+		kitRepository.save(kit);
 	}
 
 	@Transactional
