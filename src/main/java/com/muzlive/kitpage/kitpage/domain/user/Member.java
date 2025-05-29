@@ -62,9 +62,13 @@ public class Member extends BaseTimeEntity {
 	@Column(name = "kittor_token")
 	private String kittorToken;
 
+	@Setter
+	@Column(name = "kittor_refresh_token")
+	private String kittorRefreshToken;
+
 	@Builder
 	public Member(String deviceId, String email, String password, String name, Region region,
-		String nickName, Long profileImageUid, String ipAddress, String modelName, String kittorToken) {
+		String nickName, Long profileImageUid, String ipAddress, String modelName, String kittorToken, String kittorRefreshToken) {
 		this.deviceId = deviceId;
 		this.email = email;
 		this.password = password;
@@ -75,6 +79,7 @@ public class Member extends BaseTimeEntity {
 		this.ipAddress = ipAddress;
 		this.modelName = modelName;
 		this.kittorToken = kittorToken;
+		this.kittorRefreshToken = kittorRefreshToken;
 	}
 
 }
