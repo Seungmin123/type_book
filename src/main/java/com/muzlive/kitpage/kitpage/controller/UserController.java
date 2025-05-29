@@ -288,6 +288,7 @@ public class UserController {
 
 		Member member = userService.findByDeviceId(jwtTokenProvider.getDeviceIdByToken(jwt));
 		member.setKittorToken(resp.getAccessToken());
+		member.setKittorRefreshToken(resp.getRefreshToken());
 		userService.saveMemberAndLog(member);
 
 		Set<String> roles = jwtTokenProvider.getRolesByToken(jwt);
