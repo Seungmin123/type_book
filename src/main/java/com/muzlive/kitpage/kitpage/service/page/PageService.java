@@ -220,7 +220,7 @@ public class PageService {
 			} else {
 				String maxId = maxIdOpt.get();
 
-				String numberPart = maxId.substring(contentId.length() + 1);
+				String numberPart = maxId.substring(3 + contentId.length() + 1);
 				int number = Integer.parseInt(numberPart);
 				int nextNumber = number + 1;
 
@@ -251,7 +251,7 @@ public class PageService {
 			} else {
 				String maxId = maxIdOpt.get();
 
-				String numberPart = maxId.substring(prefix.length() + 1);
+				String numberPart = maxId.substring(maxId.indexOf(prefix + "_") + prefix.length() + 1);
 				int number = Integer.parseInt(numberPart);
 				int nextNumber = number + 1;
 
