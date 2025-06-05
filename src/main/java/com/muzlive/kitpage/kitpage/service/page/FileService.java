@@ -12,6 +12,7 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.util.UUID;
+import javax.imageio.IIOException;
 import javax.imageio.IIOImage;
 import javax.imageio.ImageIO;
 import javax.imageio.ImageWriteParam;
@@ -79,8 +80,22 @@ public class FileService {
 		return imageRepository.save(image).getImageUid();
 	}
 
+	@Transactional
 	public Long convertImageBytesToPdf(String contentId, MultipartFile multipartFile, float jpegQuality) throws Exception {
-		BufferedImage processedImage = ImageIO.read(new ByteArrayInputStream(multipartFile.getBytes()));
+		BufferedImage processedImage = null;
+
+		try {
+			processedImage = ImageIO.read(new ByteArrayInputStream(multipartFile.getBytes()));
+		} catch(IIOException e) {
+			processedImage = ImageIO.read(new ByteArrayInputStream(ffmpegConverter.convertToWebp(multipartFile)));
+		}
+
+		if(processedImage == null) {
+			throw new RuntimeException("Not Supported Image Type to Convert Pdf");
+		}
+
+		//BufferedImage processedImage = ImageIO.read(new ByteArrayInputStream(ffmpegConverter.convertToRgbJpeg(multipartFile.getBytes())));
+
 
 		// JPEG 압축
 		ByteArrayOutputStream jpegOutput = new ByteArrayOutputStream();
