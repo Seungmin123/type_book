@@ -30,14 +30,17 @@ import com.muzlive.kitpage.kitpage.service.transfer.kihno.dto.resp.KihnoMicLocat
 import com.muzlive.kitpage.kitpage.service.transfer.kihno.dto.resp.KihnoMicProcessedResp;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.KittorTransferSerivce;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.KittorAccountCloseReq;
+import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.KittorAppUserLoginReq;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.KittorChangePasswordReq;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.KittorGetPreSignedUrlReq;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.KittorOAuthLoginReq;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.KittorResetPasswordReq;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.KittorUpdateProfileReq;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.KittorUpdateProfileValidNickNameReq;
-import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.KittorUserReq;
+import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.KittorWebUserLoginReq;
+import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.KittorWebUserJoinReq;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.SendVerificationReq;
+import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.resp.KittorAppUserLoginResp;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.resp.KittorOAuthLoginResp;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.resp.KittorPreSignedUrlResp;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.resp.KittorProfileResp;
@@ -243,7 +246,7 @@ public class UserController {
 	@Operation(summary = "회원가입 API")
 	@PostMapping("/join")
 	public CommonResp<String> userJoin(
-		@Valid @RequestBody KittorUserReq kittorUserReq,
+		@Valid @RequestBody KittorWebUserJoinReq kittorWebUserJoinReq,
 		@Parameter(
 			name = "Authorization Bearer ",
 			description = "JWT",
@@ -252,7 +255,7 @@ public class UserController {
 		@CurrentToken String jwt
 	) throws Exception {
 
-		KittorTokenResp resp = kittorTransferSerivce.userJoin(kittorUserReq);
+		KittorTokenResp resp = kittorTransferSerivce.userJoin(kittorWebUserJoinReq);
 
 		Member member = userService.findByDeviceId(jwtTokenProvider.getDeviceIdByToken(jwt));
 		member.setKittorToken(resp.getAccessToken());
@@ -260,22 +263,22 @@ public class UserController {
 
 		Set<String> roles = jwtTokenProvider.getRolesByToken(jwt);
 		roles.add(UserRole.LINKER.getKey());
-		String token = jwtTokenProvider.createAccessToken(member.getDeviceId(), kittorUserReq.getEmail(), roles);
+		String token = jwtTokenProvider.createAccessToken(member.getDeviceId(), kittorWebUserJoinReq.getEmail(), roles);
 		userService.insertTokenLog(
 			TokenLog.builder()
 				.token(token)
 				.deviceId(member.getDeviceId())
-				.email(kittorUserReq.getEmail())
+				.email(kittorWebUserJoinReq.getEmail())
 				.tokenType(TokenType.JOIN)
 				.build());
 
 		return new CommonResp<>(token);
 	}
 
-	@Operation(summary = "로그인 API")
+	@Operation(summary = "자동 로그인 API")
 	@PostMapping("/login")
 	public CommonResp<String> userLogin(
-		@Valid @RequestBody KittorUserReq kittorUserReq,
+		@Valid @RequestBody KittorAppUserLoginReq kittorAppUserLoginReq,
 		@Parameter(
 			name = "Authorization Bearer ",
 			description = "JWT",
@@ -283,22 +286,71 @@ public class UserController {
 		)
 		@CurrentToken String jwt
 	) throws Exception {
-
-		KittorTokenResp resp = kittorTransferSerivce.userLogin(kittorUserReq);
+		String deviceId = jwtTokenProvider.getDeviceIdByToken(jwt);
+		kittorAppUserLoginReq.setDeviceId(deviceId);
 
 		Member member = userService.findByDeviceId(jwtTokenProvider.getDeviceIdByToken(jwt));
+
+		if(member.getDeviceId() == null)
+			member.setDeviceId(deviceId);
+
+		if(member.getKittorRefreshToken() != null)
+			kittorAppUserLoginReq.setRefreshToken(member.getKittorRefreshToken());
+
+		KittorAppUserLoginResp resp = kittorTransferSerivce.appUserLogin(kittorAppUserLoginReq);
 		member.setKittorToken(resp.getAccessToken());
 		member.setKittorRefreshToken(resp.getRefreshToken());
 		userService.saveMemberAndLog(member);
 
 		Set<String> roles = jwtTokenProvider.getRolesByToken(jwt);
 		roles.add(UserRole.LINKER.getKey());
-		String token = jwtTokenProvider.createAccessToken(member.getDeviceId(), kittorUserReq.getEmail(), roles);
+		String token = jwtTokenProvider.createAccessToken(member.getDeviceId(), kittorAppUserLoginReq.getEmail(), roles);
 		userService.insertTokenLog(
 			TokenLog.builder()
 				.token(token)
 				.deviceId(member.getDeviceId())
-				.email(kittorUserReq.getEmail())
+				.email(kittorAppUserLoginReq.getEmail())
+				.tokenType(TokenType.LOGIN)
+				.build());
+
+		return new CommonResp<>(token);
+	}
+
+	@Operation(summary = "일반 로그인 API")
+	@PostMapping("/login/text")
+	public CommonResp<String> userTextLogin(
+		@Valid @RequestBody KittorAppUserLoginReq kittorAppUserLoginReq,
+		@Parameter(
+			name = "Authorization Bearer ",
+			description = "JWT",
+			in = ParameterIn.HEADER
+		)
+		@CurrentToken String jwt
+	) throws Exception {
+		String deviceId = jwtTokenProvider.getDeviceIdByToken(jwt);
+		kittorAppUserLoginReq.setDeviceId(deviceId);
+
+		Member member = userService.findByDeviceId(jwtTokenProvider.getDeviceIdByToken(jwt));
+
+		if(member.getDeviceId() == null)
+			member.setDeviceId(deviceId);
+
+		if(member.getKittorRefreshToken() != null)
+			kittorAppUserLoginReq.setRefreshToken(member.getKittorRefreshToken());
+
+		KittorAppUserLoginResp resp = kittorTransferSerivce.appUserTextLogin(kittorAppUserLoginReq);
+		member.setKittorToken(resp.getAccessToken());
+		member.setKittorRefreshToken(resp.getRefreshToken());
+		userService.saveMemberAndLog(member);
+
+		Set<String> roles = jwtTokenProvider.getRolesByToken(jwt);
+		roles.add(UserRole.LINKER.getKey());
+		String token = jwtTokenProvider.createAccessToken(member.getDeviceId(), kittorAppUserLoginReq.getEmail(), roles);
+		userService.insertTokenLog(
+			TokenLog.builder()
+				.token(token)
+				.deviceId(member.getDeviceId())
+				.email(kittorAppUserLoginReq.getEmail())
 				.tokenType(TokenType.LOGIN)
 				.build());
 
