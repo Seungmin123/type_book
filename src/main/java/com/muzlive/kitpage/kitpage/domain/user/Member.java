@@ -32,9 +32,11 @@ public class Member extends BaseTimeEntity {
 	@Column(name = "device_id")
 	private String deviceId;
 
+	@Setter
 	@Column(name = "email")
 	private String email;
 
+	@Setter
 	@Column(name = "password")
 	private String password;
 

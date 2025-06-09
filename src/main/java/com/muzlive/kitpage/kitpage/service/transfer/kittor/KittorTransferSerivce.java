@@ -6,14 +6,17 @@ import com.muzlive.kitpage.kitpage.config.transfer.domain.KittorDomain;
 import com.muzlive.kitpage.kitpage.domain.common.dto.resp.Result;
 import com.muzlive.kitpage.kitpage.domain.common.dto.resp.SimpleResult;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.KittorAccountCloseReq;
+import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.KittorAppUserLoginReq;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.KittorChangePasswordReq;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.KittorGetPreSignedUrlReq;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.KittorOAuthLoginReq;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.KittorResetPasswordReq;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.KittorUpdateProfileReq;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.KittorUpdateProfileValidNickNameReq;
-import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.KittorUserReq;
+import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.KittorWebUserLoginReq;
+import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.KittorWebUserJoinReq;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.SendVerificationReq;
+import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.resp.KittorAppUserLoginResp;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.resp.KittorOAuthLoginResp;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.resp.KittorPreSignedUrlResp;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.resp.KittorProfileResp;
@@ -37,8 +40,14 @@ public class KittorTransferSerivce {
     // 회원가입
     private final String JOIN_URL = "/v1/web/user/join";
 
-    // 로그인
-    private final String LOGIN_URL = "/v1/web/user/login";
+    // 웹 로그인
+    private final String WEB_LOGIN_URL = "/v1/web/user/login";
+
+    // 앱 자동 로그인
+    private final String APP_LOGIN_URL = "/v1/web/user/login";
+
+    // 앱 일반 로그인
+    private final String APP_TEXT_LOGIN_URL = "/v1/web/user/login";
 
     // 인증코드 발송
     private final String SEND_VERIFICATION_URL = "/v1/web/send/verification-code";
@@ -78,11 +87,11 @@ public class KittorTransferSerivce {
         this.webClient = builder.baseUrl(kittorDomain.getDomain()).build();
     }
 
-    public KittorTokenResp userJoin(KittorUserReq kittorUserReq) throws Exception {
+    public KittorTokenResp userJoin(KittorWebUserJoinReq kittorWebUserJoinReq) throws Exception {
         return webClient.post()
             .uri(JOIN_URL)
             .accept(MediaType.APPLICATION_JSON)
-            .body(Mono.just(kittorUserReq), KittorUserReq.class)
+            .body(Mono.just(kittorWebUserJoinReq), KittorWebUserJoinReq.class)
             .retrieve()
             .onStatus(HttpStatus::is4xxClientError, response ->
                 Mono.error(new CommonException(HttpStatus.BAD_REQUEST, "Client error during join")))
@@ -99,11 +108,12 @@ public class KittorTransferSerivce {
             .block();
     }
 
-    public KittorTokenResp userLogin(KittorUserReq kittorUserReq) throws Exception {
+    // 미사용
+    public KittorTokenResp webUserLogin(KittorWebUserLoginReq kittorWebUserLoginReq) throws Exception {
         return webClient.post()
-            .uri(LOGIN_URL)
+            .uri(WEB_LOGIN_URL)
             .accept(MediaType.APPLICATION_JSON)
-            .body(Mono.just(kittorUserReq), KittorUserReq.class)
+            .body(Mono.just(kittorWebUserLoginReq), KittorWebUserLoginReq.class)
             .retrieve()
             .onStatus(HttpStatus::is4xxClientError, response ->
                 Mono.error(new CommonException(HttpStatus.BAD_REQUEST, "Client error during login")))
@@ -112,6 +122,50 @@ public class KittorTransferSerivce {
             .bodyToMono(new ParameterizedTypeReference<Result<KittorTokenResp>>() {})
             .timeout(Duration.ofMillis(15000))
             .doOnError(e -> log.error("로그인 중 오류", e))
+            .flatMap(result ->
+                result == null || result.getData() == null
+                    ? Mono.error(new CommonException(HttpStatus.BAD_REQUEST, getErrorMessage(result)))
+                    : Mono.just(result.getData())
+            )
+            .block();
+    }
+
+    // 자동 로그인
+    public KittorAppUserLoginResp appUserLogin(KittorAppUserLoginReq kittorAppUserLoginReq) throws Exception {
+        return webClient.post()
+            .uri(APP_LOGIN_URL)
+            .accept(MediaType.APPLICATION_JSON)
+            .body(Mono.just(kittorAppUserLoginReq), KittorAppUserLoginReq.class)
+            .retrieve()
+            .onStatus(HttpStatus::is4xxClientError, response ->
+                Mono.error(new CommonException(HttpStatus.BAD_REQUEST, "Client error during login")))
+            .onStatus(HttpStatus::is5xxServerError, response ->
+                Mono.error(new CommonException(ExceptionCode.KITTOR_EXTERNAL_SERVER_ERROR, "Server error during login")))
+            .bodyToMono(new ParameterizedTypeReference<Result<KittorAppUserLoginResp>>() {})
+            .timeout(Duration.ofMillis(15000))
+            .doOnError(e -> log.error("자동 로그인 중 오류", e))
+            .flatMap(result ->
+                result == null || result.getData() == null
+                    ? Mono.error(new CommonException(HttpStatus.BAD_REQUEST, getErrorMessage(result)))
+                    : Mono.just(result.getData())
+            )
+            .block();
+    }
+
+    // 일반 로그인
+    public KittorAppUserLoginResp appUserTextLogin(KittorAppUserLoginReq kittorAppUserLoginReq) throws Exception {
+        return webClient.post()
+            .uri(APP_TEXT_LOGIN_URL)
+            .accept(MediaType.APPLICATION_JSON)
+            .body(Mono.just(kittorAppUserLoginReq), KittorAppUserLoginReq.class)
+            .retrieve()
+            .onStatus(HttpStatus::is4xxClientError, response ->
+                Mono.error(new CommonException(HttpStatus.BAD_REQUEST, "Client error during text login")))
+            .onStatus(HttpStatus::is5xxServerError, response ->
+                Mono.error(new CommonException(ExceptionCode.KITTOR_EXTERNAL_SERVER_ERROR, "Server error during text login")))
+            .bodyToMono(new ParameterizedTypeReference<Result<KittorAppUserLoginResp>>() {})
+            .timeout(Duration.ofMillis(15000))
+            .doOnError(e -> log.error("일반 로그인 중 오류", e))
             .flatMap(result ->
                 result == null || result.getData() == null
                     ? Mono.error(new CommonException(HttpStatus.BAD_REQUEST, getErrorMessage(result)))
