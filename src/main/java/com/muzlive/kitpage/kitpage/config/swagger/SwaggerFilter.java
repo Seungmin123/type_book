@@ -30,7 +30,7 @@ public class SwaggerFilter extends OncePerRequestFilter {
             result = false;
 
             for(String accessIP : splitAddress){
-                if(accessIP.equals(realIp)){
+                if(realIp.startsWith(accessIP)){
                     result = true;
                 }
             }
