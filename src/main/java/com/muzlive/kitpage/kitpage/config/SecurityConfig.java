@@ -56,7 +56,7 @@ public class SecurityConfig {
 			.antMatchers("/v1/video/public/**")
 			.permitAll()
 			// check tag 이전 필요한 API
-			.antMatchers("/v1/user/checkTag", "/v1/user/login**", "/v1/user/join", // Token 발급
+			.antMatchers("/v1/user/checkTag", "/v1/user/login", "/v1/user/login/text", "/v1/user/join", // Token 발급
 				"/v1/user/send/verification-code", "/v1/user/password/reset", "/v1/user/password/change", // User 비밀번호 관련
 				"/v1/user/mic/processed", "/v1/user/mic", "/v1/user/version", "/v1/user/clear", // 체크 태그, 버전 정보, 초기화
 				"/v1/page/list/**",
