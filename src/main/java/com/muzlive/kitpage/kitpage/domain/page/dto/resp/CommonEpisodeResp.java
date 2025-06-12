@@ -12,6 +12,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
+// TODO 형태에 너무 종속적이게 됨. 제거 필요
 @Schema(
 	description = "컨텐츠 상세 volume 단위 응답 공통 클래스",
 	subTypes = {
