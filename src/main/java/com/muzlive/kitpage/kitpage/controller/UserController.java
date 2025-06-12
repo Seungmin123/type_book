@@ -275,7 +275,9 @@ public class UserController {
 		return new CommonResp<>(token);
 	}
 
-	@Operation(summary = "자동 로그인 API")
+	@Operation(summary = "자동 로그인 API",
+	description = "이메일 자동 로그인 - 이메일, 인코딩된 패스워드 사용<br>"
+		+ "OAuth2 자동 로그인 - provider 추가(google, apple) 그 외 이메일, 패스워드 미사용")
 	@PostMapping("/login")
 	public CommonResp<String> userLogin(
 		@Valid @RequestBody KittorAppUserLoginReq kittorAppUserLoginReq,
@@ -293,6 +295,11 @@ public class UserController {
 
 		if(member.getDeviceId() == null)
 			member.setDeviceId(deviceId);
+
+		if(kittorAppUserLoginReq.getProvider() != null &&
+			(kittorAppUserLoginReq.getProvider().equals("google") || kittorAppUserLoginReq.getProvider().equals("apple"))) {
+			kittorAppUserLoginReq.setRefreshToken(member.getKittorRefreshToken());
+		}
 
 		KittorAppUserLoginResp resp = kittorTransferSerivce.appUserLogin(kittorAppUserLoginReq);
 		member.setKittorToken(resp.getAccessToken());
