@@ -294,9 +294,6 @@ public class UserController {
 		if(member.getDeviceId() == null)
 			member.setDeviceId(deviceId);
 
-		if(member.getKittorRefreshToken() != null)
-			kittorAppUserLoginReq.setRefreshToken(member.getKittorRefreshToken());
-
 		KittorAppUserLoginResp resp = kittorTransferSerivce.appUserLogin(kittorAppUserLoginReq);
 		member.setKittorToken(resp.getAccessToken());
 		member.setKittorRefreshToken(resp.getRefreshToken());
@@ -334,9 +331,6 @@ public class UserController {
 
 		if(member.getDeviceId() == null)
 			member.setDeviceId(deviceId);
-
-		if(member.getKittorRefreshToken() != null)
-			kittorAppUserLoginReq.setRefreshToken(member.getKittorRefreshToken());
 
 		KittorAppUserLoginResp resp = kittorTransferSerivce.appUserTextLogin(kittorAppUserLoginReq);
 		member.setKittorToken(resp.getAccessToken());

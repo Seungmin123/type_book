@@ -44,10 +44,10 @@ public class KittorTransferSerivce {
     private final String WEB_LOGIN_URL = "/v1/web/user/login";
 
     // 앱 자동 로그인
-    private final String APP_LOGIN_URL = "/v1/web/user/login";
+    private final String APP_LOGIN_URL = "/v1/app/user/login";
 
     // 앱 일반 로그인
-    private final String APP_TEXT_LOGIN_URL = "/v1/web/user/login";
+    private final String APP_TEXT_LOGIN_URL = "/v1/app/user/login/text";
 
     // 인증코드 발송
     private final String SEND_VERIFICATION_URL = "/v1/web/send/verification-code";
