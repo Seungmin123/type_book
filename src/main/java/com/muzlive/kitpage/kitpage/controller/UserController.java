@@ -382,7 +382,10 @@ public class UserController {
 		return new CommonResp<>(kittorTransferSerivce.changePassword(member.getKittorToken(), kittorChangePasswordReq));
 	}
 
-	@Operation(summary = "OAuth 로그인 콜백 API", description = "OAuth 로그인 후 토큰을 이용한 콜백 호출용 API")
+	@Operation(summary = "OAuth 로그인 콜백 API",
+		description = "OAuth 로그인 후 토큰을 이용한 콜백 호출용 API<br>"
+			+ "구글 로그인 - google<br>"
+			+ "애플 로그인 - apple")
 	@PostMapping("/oauth/callback/{provider}")
 	public CommonResp<KittorOAuthLoginResp> oAuthCallback(
 		@PathVariable String provider,
