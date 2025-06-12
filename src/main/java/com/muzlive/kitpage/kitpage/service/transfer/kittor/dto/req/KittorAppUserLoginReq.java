@@ -10,6 +10,9 @@ import lombok.Setter;
 @Setter
 public class KittorAppUserLoginReq {
 
+	@JsonProperty("provider")
+	private String provider;
+
 	@NotNull
 	@JsonProperty("email")
 	private String email;
