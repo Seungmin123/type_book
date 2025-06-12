@@ -394,7 +394,7 @@ public class UserController {
 			+ "구글 로그인 - google<br>"
 			+ "애플 로그인 - apple")
 	@PostMapping("/oauth/callback/{provider}")
-	public CommonResp<KittorOAuthLoginResp> oAuthCallback(
+	public CommonResp<String> oAuthCallback(
 		@PathVariable String provider,
 		@Valid @RequestBody KittorOAuthLoginReq kittorChangePasswordReq,
 		@Parameter(
@@ -404,22 +404,33 @@ public class UserController {
 		)
 		@CurrentToken String jwt
 	) throws Exception {
-
-		kittorChangePasswordReq.setDevice(jwtTokenProvider.getDeviceIdByToken(jwt));
+		String deviceId = jwtTokenProvider.getDeviceIdByToken(jwt);
+		kittorChangePasswordReq.setDevice(deviceId);
 		KittorOAuthLoginResp kittorOAuthLoginResp;
 
 		switch (provider) {
 			case "google":
-				kittorOAuthLoginResp = kittorTransferSerivce.oAuthGoogleLogin(kittorChangePasswordReq);
+				kittorTransferSerivce.oAuthGoogleLogin(kittorChangePasswordReq);
 				break;
 			case "apple":
-				kittorOAuthLoginResp = kittorTransferSerivce.oAuthAppleLogin(kittorChangePasswordReq);
+				kittorTransferSerivce.oAuthAppleLogin(kittorChangePasswordReq);
 				break;
 			default:
 				throw new CommonException(ExceptionCode.INVALID_REQUEST_PRAMETER);
 		}
 
-		return new CommonResp<>(kittorOAuthLoginResp);
+		Set<String> roles = jwtTokenProvider.getRolesByToken(jwt);
+		roles.add(UserRole.LINKER.getKey());
+		String token = jwtTokenProvider.createAccessToken(deviceId, kittorChangePasswordReq.getIdToken(), roles);
+		userService.insertTokenLog(
+			TokenLog.builder()
+				.token(token)
+				.deviceId(deviceId)
+				.email(kittorChangePasswordReq.getIdToken())
+				.tokenType(TokenType.LOGIN)
+				.build());
+
+		return new CommonResp<>(token);
 	}
 
 	@Operation(summary = "프로필 조회 API")
