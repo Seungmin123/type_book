@@ -2,6 +2,7 @@ package com.muzlive.kitpage.kitpage.config.jwt;
 
 import com.muzlive.kitpage.kitpage.config.exception.CommonException;
 import com.muzlive.kitpage.kitpage.config.exception.ExceptionCode;
+import com.muzlive.kitpage.kitpage.config.exception.JwtAuthenticationException;
 import com.muzlive.kitpage.kitpage.utils.constants.ApplicationConstants;
 import com.muzlive.kitpage.kitpage.utils.constants.HeaderConstants;
 import com.muzlive.kitpage.kitpage.utils.enums.UserRole;
@@ -118,16 +119,16 @@ public class JwtTokenProvider {
 
         } catch (SecurityException | MalformedJwtException e) {
             log.error(e.getMessage());
-            throw new CommonException(ExceptionCode.INVALID_JWT_SIGNATURE);
+            throw new JwtAuthenticationException(new CommonException(ExceptionCode.INVALID_JWT_SIGNATURE));
         } catch (ExpiredJwtException e) {
             log.error(e.getMessage());
-            throw new CommonException(ExceptionCode.EXPIRED_JWT);
+            throw new JwtAuthenticationException(new CommonException(ExceptionCode.EXPIRED_JWT));
         } catch (UnsupportedJwtException e) {
             log.error(e.getMessage());
-            throw new CommonException(ExceptionCode.NOT_SUPPORTED_JWT);
+            throw new JwtAuthenticationException(new CommonException(ExceptionCode.NOT_SUPPORTED_JWT));
         } catch (Exception e) {
             log.error(e.getMessage());
-            throw new CommonException(ExceptionCode.INVALID_JWT);
+            throw new JwtAuthenticationException(new CommonException(ExceptionCode.INVALID_JWT));
         }
     }
 
