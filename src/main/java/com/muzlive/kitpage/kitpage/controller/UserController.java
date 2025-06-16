@@ -245,7 +245,7 @@ public class UserController {
 
 	@Operation(summary = "회원가입 API")
 	@PostMapping("/join")
-	public CommonResp<String> userJoin(
+	public CommonResp<Boolean> userJoin(
 		@Valid @RequestBody KittorWebUserJoinReq kittorWebUserJoinReq,
 		@Parameter(
 			name = "Authorization Bearer ",
@@ -260,19 +260,7 @@ public class UserController {
 		Member member = userService.findByDeviceId(jwtTokenProvider.getDeviceIdByToken(jwt));
 		member.setKittorToken(resp.getAccessToken());
 		userService.saveMemberAndLog(member);
-
-		Set<String> roles = jwtTokenProvider.getRolesByToken(jwt);
-		roles.add(UserRole.LINKER.getKey());
-		String token = jwtTokenProvider.createAccessToken(member.getDeviceId(), kittorWebUserJoinReq.getEmail(), roles);
-		userService.insertTokenLog(
-			TokenLog.builder()
-				.token(token)
-				.deviceId(member.getDeviceId())
-				.email(kittorWebUserJoinReq.getEmail())
-				.tokenType(TokenType.JOIN)
-				.build());
-
-		return new CommonResp<>(token);
+		return new CommonResp<>(true);
 	}
 
 	@Operation(summary = "자동 로그인 API",
