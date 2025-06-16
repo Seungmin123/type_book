@@ -13,4 +13,6 @@ public class KittorUpdateProfileReq {
 
 	private String profileFileName;
 
+	private boolean resetProfile = false;
+
 }
