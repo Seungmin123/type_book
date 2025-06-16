@@ -1,5 +1,7 @@
 package com.muzlive.kitpage.kitpage.config.jwt;
 
+import com.muzlive.kitpage.kitpage.config.exception.CustomAuthenticationEntryPoint;
+import com.muzlive.kitpage.kitpage.config.exception.JwtAuthenticationException;
 import com.muzlive.kitpage.kitpage.domain.user.repository.TokenLogRepository;
 import com.muzlive.kitpage.kitpage.utils.enums.TokenType;
 import com.muzlive.kitpage.kitpage.utils.enums.UserRole;
@@ -24,29 +26,39 @@ import org.springframework.web.filter.OncePerRequestFilter;
 @RequiredArgsConstructor
 public class JwtFilter extends OncePerRequestFilter {
 
-	private final JwtTokenProvider tokenProvider;
+	private final CustomAuthenticationEntryPoint authenticationEntryPoint;
 
+	private final JwtTokenProvider tokenProvider;
 
 	private final TokenLogRepository tokenLogRepository;
 
 	@Override
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-		String jwt = tokenProvider.resolveToken(request);
+		try {
+			String jwt = tokenProvider.resolveToken(request);
 
-		if (StringUtils.hasText(jwt) && tokenProvider.validateAccessToken(jwt)) {
-			SimpleGrantedAuthority role = this.getRoleAuthority(jwt);
+			if (StringUtils.hasText(jwt)) {
+				if (tokenProvider.validateAccessToken(jwt)) {
+					SimpleGrantedAuthority role = this.getRoleAuthority(jwt);
 
-			if(role == null) {
-				response.sendError(HttpServletResponse.SC_FORBIDDEN);
-				return;
+					if (role == null) {
+						response.sendError(HttpServletResponse.SC_FORBIDDEN);
+						return;
+					}
+
+					UsernamePasswordAuthenticationToken authentication =
+						new UsernamePasswordAuthenticationToken(tokenProvider.getDeviceIdByToken(jwt), null, Collections.singleton(role));
+					authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+					SecurityContextHolder.getContext().setAuthentication(authentication);
+				}
 			}
 
-			UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(tokenProvider.getDeviceIdByToken(jwt),null, Collections.singleton(role));
-			authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-			SecurityContextHolder.getContext().setAuthentication(authentication);
-		}
+			filterChain.doFilter(request, response);
 
-		filterChain.doFilter(request, response);
+		} catch (JwtAuthenticationException ex) {
+			SecurityContextHolder.clearContext();
+			authenticationEntryPoint.commence(request, response, ex);
+		}
 	}
 
 	private SimpleGrantedAuthority getRoleAuthority(String jwt) {

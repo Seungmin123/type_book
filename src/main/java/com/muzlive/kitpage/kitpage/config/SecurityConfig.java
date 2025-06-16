@@ -1,5 +1,6 @@
 package com.muzlive.kitpage.kitpage.config;
 
+import com.muzlive.kitpage.kitpage.config.exception.CustomAuthenticationEntryPoint;
 import com.muzlive.kitpage.kitpage.config.jwt.JwtFilter;
 import com.muzlive.kitpage.kitpage.config.logging.HttpRequestLoggingFilter;
 import com.muzlive.kitpage.kitpage.config.swagger.SwaggerFilter;
@@ -25,6 +26,8 @@ public class SecurityConfig {
 
 	private final SwaggerFilter swaggerFilter;
 
+	private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
+
 	@Bean
 	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 		http
@@ -32,7 +35,8 @@ public class SecurityConfig {
 			.csrf().disable()
 			.formLogin().disable()
 			.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-
+			.and()
+			.exceptionHandling().authenticationEntryPoint(customAuthenticationEntryPoint)
 			.and()
 			.headers()
 			.contentSecurityPolicy("default-src 'self'; img-src 'self' data:;")
