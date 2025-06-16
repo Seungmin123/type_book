@@ -318,7 +318,7 @@ public class KittorTransferSerivce {
             .flatMap(result ->
                 result == null || result.getStatus() != 200
                     ? Mono.error(new CommonException(HttpStatus.BAD_REQUEST, getErrorMessage(result)))
-                    : Mono.just(true)
+                    : Mono.just(result.getMessage().equals("Success") ? Boolean.TRUE : Boolean.FALSE)
             )
             .block();
     }
@@ -340,7 +340,7 @@ public class KittorTransferSerivce {
             .flatMap(result ->
                 result == null || result.getStatus() != 200
                     ? Mono.error(new CommonException(HttpStatus.BAD_REQUEST, getErrorMessage(result)))
-                    : Mono.just(true)
+                    : Mono.just(result.getMessage().equals("Success") ? Boolean.TRUE : Boolean.FALSE)
             )
             .block();
     }
@@ -384,7 +384,7 @@ public class KittorTransferSerivce {
             .flatMap(result ->
                 result == null || result.getStatus() != 200
                     ? Mono.error(new CommonException(HttpStatus.BAD_REQUEST, getErrorMessage(result)))
-                    : Mono.just(true)
+                    : Mono.just(result.getMessage().equals("Success") ? Boolean.TRUE : Boolean.FALSE)
             )
             .block();
     }
