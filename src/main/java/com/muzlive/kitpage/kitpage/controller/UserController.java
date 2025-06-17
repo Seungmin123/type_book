@@ -32,6 +32,7 @@ import com.muzlive.kitpage.kitpage.service.transfer.kittor.KittorTransferSerivce
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.KittorAccountCloseReq;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.KittorAppUserLoginReq;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.KittorChangePasswordReq;
+import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.KittorCheckEmailReq;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.KittorGetPreSignedUrlReq;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.KittorOAuthLoginReq;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.KittorResetPasswordReq;
@@ -41,6 +42,7 @@ import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.KittorWebUser
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.KittorWebUserJoinReq;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.SendVerificationReq;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.resp.KittorAppUserLoginResp;
+import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.resp.KittorCheckEmailResp;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.resp.KittorOAuthLoginResp;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.resp.KittorPreSignedUrlResp;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.resp.KittorProfileResp;
@@ -506,6 +508,15 @@ public class UserController {
 	) throws Exception {
 		Member member = userService.findByDeviceId(jwtTokenProvider.getDeviceIdByToken(jwt));
 		return new CommonResp<>(kittorTransferSerivce.accountClose(member.getKittorToken(), kittorAccountCloseReq));
+	}
+
+	@Operation(summary = "이메일 중복 검사 API")
+	@PostMapping("/check/email")
+	public CommonResp<KittorCheckEmailResp> checkEmail(
+		@Valid @RequestBody KittorCheckEmailReq kittorCheckEmailReq
+	) throws Exception {
+		// message 로 추가 확인 정보를 전달하여 service 단에서 가공
+		return kittorTransferSerivce.checkEmail(kittorCheckEmailReq);
 	}
 
 }
