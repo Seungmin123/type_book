@@ -316,9 +316,21 @@ public class KittorTransferSerivce {
             .timeout(Duration.ofMillis(15000))
             .doOnError(e -> log.error("닉네임 유효성 검사 중 오류", e))
             .flatMap(result ->
-                result == null || result.getStatus() != 200
-                    ? Mono.error(new CommonException(HttpStatus.BAD_REQUEST, getErrorMessage(result)))
-                    : Mono.just(result.getMessage().equals("Success") ? Boolean.TRUE : Boolean.FALSE)
+                {
+                    if (result == null) {
+                        return Mono.error(new CommonException(HttpStatus.BAD_REQUEST, "response of kittor is null"));
+                    }
+
+                    if (result.getStatus() == 404 && "Failure".equals(result.getMessage())) {
+                        return Mono.just(Boolean.FALSE);
+                    }
+
+                    if (result.getStatus() != 200) {
+                        return Mono.error(new CommonException(HttpStatus.BAD_REQUEST, getErrorMessage(result)));
+                    }
+
+                    return Mono.just("Success".equals(result.getMessage()));
+                }
             )
             .block();
     }
@@ -338,9 +350,21 @@ public class KittorTransferSerivce {
             .timeout(Duration.ofMillis(15000))
             .doOnError(e -> log.error("프로필 수정 중 오류", e))
             .flatMap(result ->
-                result == null || result.getStatus() != 200
-                    ? Mono.error(new CommonException(HttpStatus.BAD_REQUEST, getErrorMessage(result)))
-                    : Mono.just(result.getMessage().equals("Success") ? Boolean.TRUE : Boolean.FALSE)
+                {
+                    if (result == null) {
+                        return Mono.error(new CommonException(HttpStatus.BAD_REQUEST, "response of kittor is null"));
+                    }
+
+                    if (result.getStatus() == 404 && "Failure".equals(result.getMessage())) {
+                        return Mono.just(Boolean.FALSE);
+                    }
+
+                    if (result.getStatus() != 200) {
+                        return Mono.error(new CommonException(HttpStatus.BAD_REQUEST, getErrorMessage(result)));
+                    }
+
+                    return Mono.just("Success".equals(result.getMessage()));
+                }
             )
             .block();
     }
