@@ -3,11 +3,13 @@ package com.muzlive.kitpage.kitpage.service.transfer.kittor;
 import com.muzlive.kitpage.kitpage.config.exception.CommonException;
 import com.muzlive.kitpage.kitpage.config.exception.ExceptionCode;
 import com.muzlive.kitpage.kitpage.config.transfer.domain.KittorDomain;
+import com.muzlive.kitpage.kitpage.domain.common.dto.resp.CommonResp;
 import com.muzlive.kitpage.kitpage.domain.common.dto.resp.Result;
 import com.muzlive.kitpage.kitpage.domain.common.dto.resp.SimpleResult;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.KittorAccountCloseReq;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.KittorAppUserLoginReq;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.KittorChangePasswordReq;
+import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.KittorCheckEmailReq;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.KittorGetPreSignedUrlReq;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.KittorOAuthLoginReq;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.KittorResetPasswordReq;
@@ -17,6 +19,7 @@ import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.KittorWebUser
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.KittorWebUserJoinReq;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.SendVerificationReq;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.resp.KittorAppUserLoginResp;
+import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.resp.KittorCheckEmailResp;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.resp.KittorOAuthLoginResp;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.resp.KittorPreSignedUrlResp;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.resp.KittorProfileResp;
@@ -78,6 +81,9 @@ public class KittorTransferSerivce {
 
     // 회원 탈퇴 (POST)
     private final String ACCOUNT_CLOSE_URL = "/v1/web/user/account/close";
+
+    // 이메일 중복 검사
+    private final String CHECK_EMAIL_URL = "/v1/web/user/check/email";
 
     private WebClient webClient;
 
@@ -409,6 +415,27 @@ public class KittorTransferSerivce {
                 result == null || result.getStatus() != 200
                     ? Mono.error(new CommonException(HttpStatus.BAD_REQUEST, getErrorMessage(result)))
                     : Mono.just(result.getMessage().equals("Success") ? Boolean.TRUE : Boolean.FALSE)
+            )
+            .block();
+    }
+
+    public CommonResp<KittorCheckEmailResp> checkEmail(KittorCheckEmailReq kittorCheckEmailReq) throws Exception  {
+        return webClient.post()
+            .uri(CHECK_EMAIL_URL)
+            .accept(MediaType.APPLICATION_JSON)
+            .body(Mono.just(kittorCheckEmailReq), KittorCheckEmailReq.class)
+            .retrieve()
+            .onStatus(HttpStatus::is4xxClientError, response ->
+                Mono.error(new CommonException(HttpStatus.BAD_REQUEST, "Client error during check email")))
+            .onStatus(HttpStatus::is5xxServerError, response ->
+                Mono.error(new CommonException(ExceptionCode.KITTOR_EXTERNAL_SERVER_ERROR, "Server error during check email")))
+            .bodyToMono(new ParameterizedTypeReference<Result<KittorCheckEmailResp>>() {})
+            .timeout(Duration.ofMillis(15000))
+            .doOnError(e -> log.error("이메일 중복 검사 중 오류", e))
+            .flatMap(result ->
+                result == null || result.getStatus() != 200 || result.getData() == null
+                    ? Mono.error(new CommonException(HttpStatus.BAD_REQUEST, getErrorMessage(result)))
+                    : Mono.just(new CommonResp<>(result.getMessage(), result.getData()))
             )
             .block();
     }
