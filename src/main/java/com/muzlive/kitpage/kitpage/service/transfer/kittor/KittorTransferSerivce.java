@@ -3,13 +3,13 @@ package com.muzlive.kitpage.kitpage.service.transfer.kittor;
 import com.muzlive.kitpage.kitpage.config.exception.CommonException;
 import com.muzlive.kitpage.kitpage.config.exception.ExceptionCode;
 import com.muzlive.kitpage.kitpage.config.transfer.domain.KittorDomain;
-import com.muzlive.kitpage.kitpage.domain.common.dto.resp.CommonResp;
 import com.muzlive.kitpage.kitpage.domain.common.dto.resp.Result;
 import com.muzlive.kitpage.kitpage.domain.common.dto.resp.SimpleResult;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.KittorAccountCloseReq;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.KittorAppUserLoginReq;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.KittorChangePasswordReq;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.KittorCheckEmailReq;
+import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.KittorCheckVerificationCodeReq;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.KittorGetPreSignedUrlReq;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.KittorOAuthLoginReq;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.KittorResetPasswordReq;
@@ -84,6 +84,9 @@ public class KittorTransferSerivce {
 
     // 이메일 중복 검사
     private final String CHECK_EMAIL_URL = "/v1/web/user/check/email";
+
+    // 인증번호 확인
+    private final String CHECK_VERIFICATION_CODE_URL = "/v1/web/check/verification-code";
 
     private WebClient webClient;
 
@@ -419,7 +422,7 @@ public class KittorTransferSerivce {
             .block();
     }
 
-    public CommonResp<KittorCheckEmailResp> checkEmail(KittorCheckEmailReq kittorCheckEmailReq) throws Exception  {
+    public Result<KittorCheckEmailResp> checkEmail(KittorCheckEmailReq kittorCheckEmailReq) throws Exception  {
         return webClient.post()
             .uri(CHECK_EMAIL_URL)
             .accept(MediaType.APPLICATION_JSON)
@@ -432,11 +435,32 @@ public class KittorTransferSerivce {
             .bodyToMono(new ParameterizedTypeReference<Result<KittorCheckEmailResp>>() {})
             .timeout(Duration.ofMillis(15000))
             .doOnError(e -> log.error("이메일 중복 검사 중 오류", e))
-            .flatMap(result ->
-                result == null || result.getStatus() != 200 || result.getData() == null
-                    ? Mono.error(new CommonException(HttpStatus.BAD_REQUEST, getErrorMessage(result)))
-                    : Mono.just(new CommonResp<>(result.getMessage(), result.getData()))
-            )
+//            .flatMap(result ->
+//                result == null || result.getStatus() != 200 || result.getData() == null
+//                    ? Mono.error(new CommonException(HttpStatus.BAD_REQUEST, getErrorMessage(result)))
+//                    : Mono.just(result)
+//            )
+            .block();
+    }
+
+    public Result<Void> checkVerificationCode(KittorCheckVerificationCodeReq kittorCheckVerificationCodeReq) throws Exception  {
+        return webClient.post()
+            .uri(CHECK_VERIFICATION_CODE_URL)
+            .accept(MediaType.APPLICATION_JSON)
+            .body(Mono.just(kittorCheckVerificationCodeReq), KittorCheckVerificationCodeReq.class)
+            .retrieve()
+            .onStatus(HttpStatus::is4xxClientError, response ->
+                Mono.error(new CommonException(HttpStatus.BAD_REQUEST, "Client error during check verification code")))
+            .onStatus(HttpStatus::is5xxServerError, response ->
+                Mono.error(new CommonException(ExceptionCode.KITTOR_EXTERNAL_SERVER_ERROR, "Server error during check verification code")))
+            .bodyToMono(new ParameterizedTypeReference<Result<Void>>() {})
+            .timeout(Duration.ofMillis(15000))
+            .doOnError(e -> log.error("인증번호 확인 중 오류", e))
+//            .flatMap(result ->
+//                result == null || result.getStatus() != 200
+//                    ? Mono.error(new CommonException(HttpStatus.BAD_REQUEST, getErrorMessage(result)))
+//                    : Mono.just(result)
+//            )
             .block();
     }
 

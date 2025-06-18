@@ -7,6 +7,7 @@ import com.muzlive.kitpage.kitpage.config.exception.ExceptionCode;
 import com.muzlive.kitpage.kitpage.config.aspect.CurrentToken;
 import com.muzlive.kitpage.kitpage.config.jwt.JwtTokenProvider;
 import com.muzlive.kitpage.kitpage.domain.common.dto.resp.CommonResp;
+import com.muzlive.kitpage.kitpage.domain.common.dto.resp.Result;
 import com.muzlive.kitpage.kitpage.domain.page.Page;
 import com.muzlive.kitpage.kitpage.domain.page.dto.resp.MyKitResp;
 import com.muzlive.kitpage.kitpage.domain.user.Kit;
@@ -33,6 +34,7 @@ import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.KittorAccount
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.KittorAppUserLoginReq;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.KittorChangePasswordReq;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.KittorCheckEmailReq;
+import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.KittorCheckVerificationCodeReq;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.KittorGetPreSignedUrlReq;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.KittorOAuthLoginReq;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.KittorResetPasswordReq;
@@ -43,6 +45,7 @@ import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.KittorWebUser
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.SendVerificationReq;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.resp.KittorAppUserLoginResp;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.resp.KittorCheckEmailResp;
+import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.resp.KittorCheckVerificationCodeResp;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.resp.KittorOAuthLoginResp;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.resp.KittorPreSignedUrlResp;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.resp.KittorProfileResp;
@@ -512,11 +515,18 @@ public class UserController {
 
 	@Operation(summary = "이메일 중복 검사 API")
 	@PostMapping("/check/email")
-	public CommonResp<KittorCheckEmailResp> checkEmail(
+	public Result<KittorCheckEmailResp> checkEmail(
 		@Valid @RequestBody KittorCheckEmailReq kittorCheckEmailReq
 	) throws Exception {
-		// message 로 추가 확인 정보를 전달하여 service 단에서 가공
 		return kittorTransferSerivce.checkEmail(kittorCheckEmailReq);
+	}
+
+	@Operation(summary = "인증번호 확인 API")
+	@PostMapping("/check/verification-codee")
+	public Result<Void> checkVerificationCode(
+		@Valid @RequestBody KittorCheckVerificationCodeReq kittorCheckVerificationCodeReq
+	) throws Exception {
+		return kittorTransferSerivce.checkVerificationCode(kittorCheckVerificationCodeReq);
 	}
 
 }
