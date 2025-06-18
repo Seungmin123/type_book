@@ -62,7 +62,9 @@ public class SecurityConfig {
 			// check tag 이전 필요한 API
 			.antMatchers("/v1/user/checkTag", "/v1/user/login", "/v1/user/login/text", "/v1/user/join", // Token 발급
 				"/v1/user/send/verification-code", "/v1/user/password/reset", "/v1/user/password/change", // User 비밀번호 관련
-				"/v1/user/mic/processed", "/v1/user/mic", "/v1/user/version", "/v1/user/clear", // 체크 태그, 버전 정보, 초기화
+				"/v1/user/mic/processed", "/v1/user/mic", "/v1/user/version", "/v1/user/clear", "/v1/user/checkStatus", // 체크 태그, 버전 정보, 초기화, 버전 정보 조회
+				"/v1/user/kit/**", "/v1/user/send/verification-code", "/v1/user/password/reset", "/v1/user/oauth/callback/**",
+				"/v1/user/check/email", "/v1/user/check/verification-code",
 				"/v1/page/list/**",
 				// TODO 제거 예정
 				"/v1/comic/list", "/v1/comic/detail/**",

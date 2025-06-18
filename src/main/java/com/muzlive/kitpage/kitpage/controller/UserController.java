@@ -40,12 +40,10 @@ import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.KittorOAuthLo
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.KittorResetPasswordReq;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.KittorUpdateProfileReq;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.KittorUpdateProfileValidNickNameReq;
-import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.KittorWebUserLoginReq;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.KittorWebUserJoinReq;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.req.SendVerificationReq;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.resp.KittorAppUserLoginResp;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.resp.KittorCheckEmailResp;
-import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.resp.KittorCheckVerificationCodeResp;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.resp.KittorOAuthLoginResp;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.resp.KittorPreSignedUrlResp;
 import com.muzlive.kitpage.kitpage.service.transfer.kittor.dto.resp.KittorProfileResp;
@@ -522,7 +520,7 @@ public class UserController {
 	}
 
 	@Operation(summary = "인증번호 확인 API")
-	@PostMapping("/check/verification-codee")
+	@PostMapping("/check/verification-code")
 	public Result<Void> checkVerificationCode(
 		@Valid @RequestBody KittorCheckVerificationCodeReq kittorCheckVerificationCodeReq
 	) throws Exception {
