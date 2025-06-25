@@ -214,8 +214,8 @@ public class UserController {
 		return new CommonResp<>(userService.findKitByDeviceIdOrderByModifiedAtDesc(jwtTokenProvider.getDeviceIdByToken(jwt)));
 	}
 
-	@Operation(summary = "키트 삭제 API")
-	@DeleteMapping("/kit/{pageUid}")
+	@Operation(summary = "키트 삭제 API", description = "Long 타입 pageUid | String 타입 contentId 모두 작동함. 이후 pageUid는 제거 예정")
+	@DeleteMapping("/kit/{contentId}")
 	public CommonResp<Boolean> deleteKit(
 		@Parameter(
 			name = "Authorization Bearer ",
@@ -223,9 +223,16 @@ public class UserController {
 			in = ParameterIn.HEADER
 		)
 		@CurrentToken String jwt,
-		@PathVariable Long pageUid
+		@PathVariable String contentId
 	) throws Exception {
-		userService.deleteKit(jwtTokenProvider.getDeviceIdByToken(jwt), pageUid);
+
+		try {
+			Long pageUid = Long.parseLong(contentId);
+			userService.deleteKit(jwtTokenProvider.getDeviceIdByToken(jwt), pageUid);
+		} catch (NumberFormatException e) {
+			userService.deleteKit(jwtTokenProvider.getDeviceIdByToken(jwt), contentId);
+		}
+
 		return new CommonResp<>(true);
 	}
 
