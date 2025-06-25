@@ -144,6 +144,11 @@ public class UserService implements UserDetailsService {
 	}
 
 	@Transactional
+	public void deleteKit(String deviceId, String contentId) throws Exception {
+		kitRepository.deleteKitMappingByContentId(deviceId, contentId);
+	}
+
+	@Transactional
 	public void clearDeviceIdHistory(String deviceId) throws Exception {
 		List<Kit> kits = kitRepository.findByDeviceId(deviceId).orElseThrow(() -> new CommonException(ExceptionCode.CANNOT_FIND_MATCHED_ITEM));
 		kits.forEach(k -> k.setDeviceId(""));
