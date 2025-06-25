@@ -18,4 +18,7 @@ public class KittorOAuthLoginReq {
 	@JsonProperty("device")
 	private String device;
 
+	@JsonProperty("project")
+	private String project;
+
 }
