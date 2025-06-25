@@ -14,7 +14,10 @@ public class ComicBookResp {
 
 	private Long pageUid;
 
+	// TODO 삭제 필요
 	private Long coverImageUid;
+
+	private String coverImagePath;
 
 	private String title;
 
@@ -33,6 +36,7 @@ public class ComicBookResp {
 	public ComicBookResp(Page page) {
 		this.pageUid = page.getPageUid();
 		this.coverImageUid = page.getCoverImageUid();
+		this.coverImagePath = page.getImage().getImagePath();
 		this.title = page.getTitle();
 		this.subtitle = page.getSubTitle();
 		this.totalSize = 0L;

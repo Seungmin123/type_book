@@ -15,6 +15,8 @@ public class PhotoBookResp {
 
 	private Long coverImageUid;
 
+	private String coverImagePath;
+
 	private String title;
 
 	private String subtitle;
@@ -30,6 +32,7 @@ public class PhotoBookResp {
 	public PhotoBookResp(Page page) {
 		this.pageUid = page.getPageUid();
 		this.coverImageUid = page.getCoverImageUid();
+		this.coverImagePath = page.getImage().getImagePath();
 		this.title = page.getTitle();
 		this.subtitle = page.getSubTitle();
 		this.totalSize = 0L;

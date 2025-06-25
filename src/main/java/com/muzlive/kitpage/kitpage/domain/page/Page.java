@@ -3,6 +3,7 @@ package com.muzlive.kitpage.kitpage.domain.page;
 import com.muzlive.kitpage.kitpage.domain.common.BaseTimeEntity;
 import com.muzlive.kitpage.kitpage.domain.page.comicbook.ComicBook;
 import com.muzlive.kitpage.kitpage.domain.page.photobook.PhotoBook;
+import com.muzlive.kitpage.kitpage.domain.user.Image;
 import com.muzlive.kitpage.kitpage.utils.enums.PageContentType;
 import com.muzlive.kitpage.kitpage.utils.enums.Region;
 import java.util.List;
@@ -18,6 +19,7 @@ import javax.persistence.JoinColumn;
 import javax.persistence.JoinColumns;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 import javax.persistence.OrderBy;
 import javax.persistence.Table;
 import lombok.Builder;
@@ -71,6 +73,10 @@ public class Page extends BaseTimeEntity {
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "content_id", referencedColumnName = "content_id", insertable = false, updatable = false)
 	private Content content;
+
+	@OneToOne
+	@JoinColumn(name = "cover_image_uid", insertable = false, updatable = false)
+	private Image image;
 
 	@Builder
 	public Page(String contentId, String albumId, Long coverImageUid,

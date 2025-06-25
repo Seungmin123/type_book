@@ -15,7 +15,10 @@ public class VideoResp {
 
 	private String streamUrl;
 
+	// TODO 삭제 필요
 	private Long coverImageUid;
+
+	private String coverImagePath;
 
 	private VideoCode videoCode;
 
@@ -26,6 +29,7 @@ public class VideoResp {
 		this.duration = video.getDuration();
 		this.streamUrl = video.getStreamUrl();
 		this.coverImageUid = video.getCoverImageUid();
+		this.coverImagePath = video.getImage().getImagePath();
 		this.videoCode = video.getVideoCode();
 		this.videoId = video.getVideoId();
 	}
