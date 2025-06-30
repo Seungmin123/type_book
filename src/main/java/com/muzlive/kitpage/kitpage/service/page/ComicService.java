@@ -21,13 +21,11 @@ import com.muzlive.kitpage.kitpage.domain.page.comicbook.repository.ComicBookRep
 import com.muzlive.kitpage.kitpage.domain.page.comicbook.repository.VideoRepository;
 import com.muzlive.kitpage.kitpage.domain.page.dto.req.UploadComicBookDetailReq;
 import com.muzlive.kitpage.kitpage.domain.page.dto.req.UploadComicBookReq;
-import com.muzlive.kitpage.kitpage.domain.page.dto.resp.CommonEpisodeResp;
 import com.muzlive.kitpage.kitpage.domain.page.repository.ContentRepository;
 import com.muzlive.kitpage.kitpage.domain.page.repository.PageRepository;
 import com.muzlive.kitpage.kitpage.domain.user.Image;
 import com.muzlive.kitpage.kitpage.domain.user.repository.ImageRepository;
 import com.muzlive.kitpage.kitpage.service.aws.s3.S3Service;
-import com.muzlive.kitpage.kitpage.service.page.converter.ComicBookEpisodeConverter;
 import com.muzlive.kitpage.kitpage.utils.constants.ApplicationConstants;
 import com.muzlive.kitpage.kitpage.utils.enums.ImageCode;
 import com.muzlive.kitpage.kitpage.utils.enums.KitStatus;
@@ -64,8 +62,6 @@ public class ComicService {
 	private final FileService fileService;
 
 	private final S3Service s3Service;
-
-	private final ComicBookEpisodeConverter comicBookEpisodeConverter;
 
 	private final ContentRepository contentRepository;
 
@@ -237,11 +233,22 @@ public class ComicService {
 
 		return comicBooks.stream()
 			.map(comicBook -> {
+				List<ComicBookImageResp> details = new ArrayList<>();
+				LocalDateTime lastModifiedAt = null;
+
+				for (ComicBookDetail detail : comicBook.getComicBookDetails()) {
+					details.add(ComicBookImageResp.of(detail));
+
+					LocalDateTime modifiedAt = detail.getModifiedAt();
+					if (modifiedAt != null && (lastModifiedAt == null || modifiedAt.isAfter(lastModifiedAt))) {
+						lastModifiedAt = modifiedAt;
+					}
+				}
 				ComicBookEpisodeResp resp = new ComicBookEpisodeResp(comicBook);
-				CommonEpisodeResp commonEpisodeResp = comicBookEpisodeConverter.convert(comicBook, null);
-				resp.setPageSize(commonEpisodeResp.getPageSize());
-				resp.setDetailPages(commonEpisodeResp.getDetailPages());
-				resp.setLastModifiedAt(commonEpisodeResp.getLastModifiedAt());
+				resp.setPageSize(CollectionUtils.isEmpty(details) ? 0 : details.size());
+				resp.setDetailPages(details);
+				resp.setLastModifiedAt(lastModifiedAt);
+
 				return resp;
 			})
 			.sorted(Comparator.comparing(ComicBookEpisodeResp::getVolume))

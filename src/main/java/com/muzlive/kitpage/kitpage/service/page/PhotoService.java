@@ -1,34 +1,21 @@
 package com.muzlive.kitpage.kitpage.service.page;
 
-import static com.muzlive.kitpage.kitpage.domain.page.QContent.content;
 import static com.muzlive.kitpage.kitpage.domain.page.QPage.page;
-import static com.muzlive.kitpage.kitpage.domain.page.comicbook.QComicBook.comicBook;
-import static com.muzlive.kitpage.kitpage.domain.page.comicbook.QComicBookDetail.comicBookDetail;
 import static com.muzlive.kitpage.kitpage.domain.page.photobook.QPdf.pdf;
 import static com.muzlive.kitpage.kitpage.domain.page.photobook.QPhotoBook.photoBook;
 import static com.muzlive.kitpage.kitpage.domain.page.photobook.QPhotoBookDetail.photoBookDetail;
 import static com.muzlive.kitpage.kitpage.domain.user.QImage.image;
-import static com.muzlive.kitpage.kitpage.domain.user.QKit.kit;
 
 import com.muzlive.kitpage.kitpage.config.exception.CommonException;
 import com.muzlive.kitpage.kitpage.config.exception.ExceptionCode;
-import com.muzlive.kitpage.kitpage.domain.common.BaseTimeEntity;
 import com.muzlive.kitpage.kitpage.domain.page.Page;
-import com.muzlive.kitpage.kitpage.domain.page.comicbook.ComicBook;
-import com.muzlive.kitpage.kitpage.domain.page.comicbook.ComicBookDetail;
-import com.muzlive.kitpage.kitpage.domain.page.comicbook.dto.resp.ComicBookContentResp;
-import com.muzlive.kitpage.kitpage.domain.page.comicbook.dto.resp.ComicBookDetailResp;
-import com.muzlive.kitpage.kitpage.domain.page.comicbook.dto.resp.ComicBookEpisodeResp;
-import com.muzlive.kitpage.kitpage.domain.page.comicbook.dto.resp.ComicBookImageResp;
-import com.muzlive.kitpage.kitpage.domain.page.comicbook.dto.resp.ComicBookResp;
 import com.muzlive.kitpage.kitpage.domain.page.comicbook.dto.resp.VideoResp;
 import com.muzlive.kitpage.kitpage.domain.page.comicbook.repository.VideoRepository;
 import com.muzlive.kitpage.kitpage.domain.page.dto.req.UploadPhotoBookDetailReq;
 import com.muzlive.kitpage.kitpage.domain.page.dto.req.UploadPhotoBookReq;
-import com.muzlive.kitpage.kitpage.domain.page.dto.resp.CommonEpisodeDetailResp;
-import com.muzlive.kitpage.kitpage.domain.page.dto.resp.CommonEpisodeResp;
 import com.muzlive.kitpage.kitpage.domain.page.photobook.PhotoBook;
 import com.muzlive.kitpage.kitpage.domain.page.photobook.PhotoBookDetail;
+import com.muzlive.kitpage.kitpage.domain.page.photobook.dto.resp.PhotoBookCommonEpisodeDetailResp;
 import com.muzlive.kitpage.kitpage.domain.page.photobook.dto.resp.PhotoBookContentResp;
 import com.muzlive.kitpage.kitpage.domain.page.photobook.dto.resp.PhotoBookDetailResp;
 import com.muzlive.kitpage.kitpage.domain.page.photobook.dto.resp.PhotoBookEpisodeDetailResp;
@@ -39,14 +26,9 @@ import com.muzlive.kitpage.kitpage.domain.page.photobook.repository.PhotoBookDet
 import com.muzlive.kitpage.kitpage.domain.page.photobook.repository.PhotoBookRepository;
 import com.muzlive.kitpage.kitpage.domain.page.repository.ContentRepository;
 import com.muzlive.kitpage.kitpage.domain.page.repository.PageRepository;
-import com.muzlive.kitpage.kitpage.service.FfmpegConverter;
-import com.muzlive.kitpage.kitpage.service.aws.s3.S3Service;
-import com.muzlive.kitpage.kitpage.service.page.converter.PhotoBookEpisodeConverter;
-import com.muzlive.kitpage.kitpage.utils.constants.ApplicationConstants;
 import com.muzlive.kitpage.kitpage.utils.enums.ClientPlatformType;
 import com.muzlive.kitpage.kitpage.utils.enums.ImageCode;
 import com.muzlive.kitpage.kitpage.utils.enums.KitStatus;
-import com.querydsl.core.BooleanBuilder;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -55,9 +37,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -76,8 +56,6 @@ public class PhotoService {
 	private final JPAQueryFactory queryFactory;
 
 	private final FileService fileService;
-
-	private final PhotoBookEpisodeConverter photoBookEpisodeConverter;
 
 	private final ContentRepository contentRepository;
 
@@ -136,19 +114,35 @@ public class PhotoService {
 	}
 
 	private List<PhotoBookEpisodeResp> getEpisodeResps(Long pageUid, ClientPlatformType clientPlatformType) {
-		// 조회 단계의 분기
+		// TODO Client 별로 Response 가 다름. -> 리팩토링 필요
 		List<PhotoBook> photoBooks = clientPlatformType.equals(ClientPlatformType.IOS)
 			? photoBookRepository.findAllWithPdfByPageUid(pageUid).orElse(new ArrayList<>())
 			: photoBookRepository.findAllWithImageByPageUid(pageUid).orElse(new ArrayList<>());
 
-		// converter 는 변환 단계이기 때문에 내부적으로 clientType 별도의 분기로 처리함.
 		return photoBooks.stream()
 			.map(photoBook -> {
+				List<PhotoBookCommonEpisodeDetailResp> details = new ArrayList<>();
+				LocalDateTime lastModifiedAt = null;
+
+				for(PhotoBookDetail detail : photoBook.getPhotoBookDetails()) {
+					if (ClientPlatformType.IOS.equals(clientPlatformType)) {
+						details.add(PhotoBookEpisodeDetailResp.of(detail));
+					} else {
+						details.add(PhotoBookImageResp.of(detail));
+					}
+
+					LocalDateTime modifiedAt = detail.getModifiedAt();
+					if (modifiedAt != null && (lastModifiedAt == null || modifiedAt.isAfter(
+						lastModifiedAt))) {
+						lastModifiedAt = modifiedAt;
+					}
+				}
+
 				PhotoBookEpisodeResp resp = new PhotoBookEpisodeResp(photoBook);
-				CommonEpisodeResp commonEpisodeResp = photoBookEpisodeConverter.convert(photoBook, clientPlatformType);
-				resp.setPageSize(commonEpisodeResp.getPageSize());
-				resp.setDetailPages(commonEpisodeResp.getDetailPages());
-				resp.setLastModifiedAt(commonEpisodeResp.getLastModifiedAt());
+				resp.setPageSize(CollectionUtils.isEmpty(details) ? 0 : details.size());
+				resp.setDetailPages(details);
+				resp.setLastModifiedAt(lastModifiedAt);
+
 				return resp;
 			})
 			.sorted(Comparator.comparing(PhotoBookEpisodeResp::getPhotoBookUid))

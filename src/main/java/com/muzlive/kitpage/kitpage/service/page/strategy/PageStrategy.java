@@ -10,6 +10,8 @@ public interface PageStrategy<T extends CommonContentResp, D extends CommonConte
 
 	// 컨텐츠 추가될 경우 공통적으로 필요한 메소드 추가
 
+	// 템플릿 메소드 패턴 고민 필요.
+
 	default T getContentList(String contentId) {
 		throw new UnsupportedOperationException("not implemented");
 	};

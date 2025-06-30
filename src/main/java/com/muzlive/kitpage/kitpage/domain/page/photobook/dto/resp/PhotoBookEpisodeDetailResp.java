@@ -1,6 +1,5 @@
 package com.muzlive.kitpage.kitpage.domain.page.photobook.dto.resp;
 
-import com.muzlive.kitpage.kitpage.domain.page.dto.resp.CommonEpisodeDetailResp;
 import com.muzlive.kitpage.kitpage.domain.page.photobook.PhotoBookDetail;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
@@ -9,7 +8,7 @@ import lombok.Setter;
 @Schema(name = "PhotoBookEpisodeDetailResp", description = "웹화보 상세 page 단위 PDF 타입 정보")
 @Getter
 @Setter
-public class PhotoBookEpisodeDetailResp extends CommonEpisodeDetailResp {
+public class PhotoBookEpisodeDetailResp extends PhotoBookCommonEpisodeDetailResp {
 
 	private Long photoBookDetailUid;
 
